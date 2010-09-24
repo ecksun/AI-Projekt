@@ -359,44 +359,4 @@ public class Board implements Cloneable
         }
     }
 
-    static public void main(String args[])
-    {
-        Board b = new Board(4, 5, 1, 1);
-        b.cells[0][0] = WALL;
-        b.cells[0][1] = WALL;
-        b.cells[0][2] = WALL;
-        b.cells[0][3] = WALL;
-
-        b.cells[1][0] = WALL;
-        b.cells[1][1] = 0;
-        b.cells[1][2] = 0;
-        b.cells[1][3] = WALL;
-
-        b.cells[2][0] = WALL;
-        b.cells[2][1] = 0;
-        b.cells[2][2] = BOX;
-        b.cells[2][3] = WALL;
-
-        b.cells[3][0] = WALL;
-        b.cells[3][1] = 0;
-        b.cells[3][2] = GOAL;
-        b.cells[3][3] = WALL;
-
-        b.cells[4][0] = WALL;
-        b.cells[4][1] = WALL;
-        b.cells[4][2] = WALL;
-        b.cells[4][3] = WALL;
-
-        b.refresh();
-        System.out.println(b.toString());
-        
-        System.out.println("----------- Clone test --------------");
-        Board b2 = (Board) b.clone();
-        b.cells[0][0] = GOAL;
-        System.out.println(b.toString());
-        System.out.println(b2.toString());
-        
-        Solver solver = new IDS(b);
-        System.out.println(solver.solve());
-    }
 }
