@@ -37,7 +37,7 @@ public class BoardParser
             }
         }
 
-        Board board = new Board(boardWidth, boardHeight, playerX, playerY);
+        Board board = new Board(boardWidth, boardHeight, playerY, playerX);
 
         int row = 0;
         int col = 0;

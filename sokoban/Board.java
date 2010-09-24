@@ -75,12 +75,12 @@ public class Board implements Cloneable
      *            The width of the board
      * @param height
      *            The height of the board
-     * @param playerCol
-     *            The X position of the player
      * @param playerRow
      *            The Y position of the player
+     * @param playerCol
+     *            The X position of the player
      */
-    public Board(int width, int height, int playerCol, int playerRow)
+    public Board(int width, int height, int playerRow, int playerCol)
     {
         cells = new byte[height][width];
         this.width = width;
@@ -182,7 +182,7 @@ public class Board implements Cloneable
      * @return The Sokoban char for the specified cell according to
      *         http://www.sokobano.de/wiki/index.php?title=Level_format.
      */
-    private char cellToChar(int row, int col)
+    public char cellToChar(int row, int col)
     {
         if (playerRow == row && playerCol == col) {
             return is(cells[row][col], Board.GOAL) ? '+' : '@';
