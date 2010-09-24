@@ -1,8 +1,5 @@
 package sokoban;
 
-import sokoban.solvers.IDS;
-import sokoban.solvers.Solver;
-
 /**
  *
  */
