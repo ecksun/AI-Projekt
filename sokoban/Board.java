@@ -3,7 +3,7 @@ package sokoban;
 /**
  *
  */
-public class Board
+public class Board implements Cloneable
 {
     // Input values
     /**
@@ -171,7 +171,7 @@ public class Board
     private char cellToChar(int row, int col)
     {
         if (playerRow == row && playerCol == col) {
-            return cells[row][col] == Board.GOAL ? '+' : '@';
+            return is(cells[row][col], Board.GOAL) ? '+' : '@';
         }
         else {
             return valueToChar(cells[row][col]);
@@ -253,6 +253,29 @@ public class Board
             }
         }
     }
+    
+    /**
+     * Returns a clone of this board.
+     */
+    public Object clone() {
+       
+        try {
+            Board copy = (Board) super.clone();
+
+            // Deep copy cells
+            copy.cells = new byte[height][width];
+            for (int row = 0; row < height; ++row) {
+                for (int col = 0; col < width; ++col) {
+                    copy.cells[row][col] = this.cells[row][col];
+                }
+            }
+            
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            throw new Error("This should not occur since we implement Cloneable");
+        }
+
+    }
 
     static public void main(String args[])
     {
@@ -284,5 +307,12 @@ public class Board
 
         b.refresh();
         System.out.println(b.toString());
+        
+        System.out.println("----------- Clone test --------------");
+        Board b2 = (Board) b.clone();
+        b.cells[0][0] = GOAL;
+        System.out.println(b.toString());
+        System.out.println(b2.toString());
+        
     }
 }
