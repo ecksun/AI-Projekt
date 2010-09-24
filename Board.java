@@ -4,21 +4,21 @@
 public class Board
 {
     // Input values
-    final static byte WALL     = 0x01;
-    final static byte BOX      = 0x02;
-    final static byte GOAL     = 0x04;
+    final static byte WALL = 0x01;
+    final static byte BOX = 0x02;
+    final static byte GOAL = 0x04;
     // Generated values
-    final byte        NO_BOX   = 0x08;
+    final byte NO_BOX = 0x08;
     // Bitmasks
-    final byte        OCCUPIED = 0x03;
+    final byte OCCUPIED = 0x03;
 
-    final int         width;
-    final int         height;
+    final int width;
+    final int height;
 
-    byte              cells[][];
-    int               playerX;
-    int               playerY;
-    int               remainingBoxes;
+    byte cells[][];
+    int playerX;
+    int playerY;
+    int remainingBoxes;
 
     /**
      * Initialize a new board
