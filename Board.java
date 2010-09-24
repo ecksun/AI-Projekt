@@ -29,4 +29,25 @@ public class Board
         this.playerX = playerX;
         this.playerY = playerY;
     }
+    
+    /**
+     * Updates some variables after a board has been loaded.
+     */
+    public void refresh() {
+        countBoxes();
+    }
+    
+    /**
+     * Counts the boxes that are not in a goal, and updates remainingBoxes. 
+     */
+    private void countBoxes()
+    {
+        int remaining = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if ((cells[y][x] & (BOX | GOAL)) == BOX) remaining++;
+            }
+        }
+        remainingBoxes = remaining;
+    }
 }
