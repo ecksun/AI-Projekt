@@ -5,6 +5,7 @@ public class BoardParser
 {
     /**
      * Parse a board from an array of bytes
+     * 
      * @param boardBytes The array of bytes representing the board
      * @return A real board
      */

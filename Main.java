@@ -8,6 +8,7 @@ public class Main
 {
     /**
      * The main method that is run when the program is executed
+     * 
      * @param args The CLI argument list
      */
     public static void main(String[] args)
@@ -20,7 +21,7 @@ public class Main
             byte[] boardbytes = new byte[1024];
             String result;
             int boardNumber = Integer.parseInt(args[0]);
-            
+
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
             InputStream inRaw = socket.getInputStream();
             BufferedReader in = new BufferedReader(new InputStreamReader(inRaw));
@@ -30,14 +31,14 @@ public class Main
 
             inRaw.read(boardbytes);
             Board board = BoardParser.parse(boardbytes);
-            
+
             String solution = new String(
                     "U R R D U U L D L L U L L D R R R R L D D R U R U D L L U R");
 
             out.println(solution);
 
             result = in.readLine();
-            
+
             out.close();
             in.close();
             socket.close();
