@@ -28,12 +28,11 @@ public class Board
      * @param playerX The X position of the player
      * @param playerY The Y position of the player
      */
-    Board(int x, int y, int playerX, int playerY)
+    Board(int width, int height, int playerX, int playerY)
     {
-        cells = new byte[x][y];
-        this.height = cells.length;
-        this.width = cells[0].length;
-
+        cells = new byte[width][height];
+        this.height = width;
+        this.width = height;
         this.playerX = playerX;
         this.playerY = playerY;
     }
