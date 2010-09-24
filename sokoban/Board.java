@@ -142,21 +142,32 @@ public class Board
 
         final byte VERTICAL = TOP | BOTTOM;
         final byte HORIZONTAL = LEFT | RIGHT;
+        final byte ALL = VERTICAL | HORIZONTAL;
 
         final byte blocked[][] = new byte[height][width];
+        
+        // Mark all walls as blocked
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (is(cells[y][x], WALL)) blocked[y][x] = ALL;
+            }
+        }
 
+        // Find "non box" squares
         for (int y = 1; y < height-1; y++) {
-            for (int x = 1; x < width-1; x++) {
+            for (int x = 1; x < width; x++) {
                 // Break the "blocked lines" if there's a goal
                 if (is(cells[y][x], GOAL)) {
                     continue;
                 }
-
+                
+                final boolean rightIsWall =
+                    (x < width-1 ? is(cells[y][x+1], WALL) : true);
                 final byte neighborWalls = (byte) (
                         (is(cells[y-1][x], WALL) ? TOP : 0) |
                         (is(cells[y+1][x], WALL) ? BOTTOM : 0) |
                         (is(cells[y][x-1], WALL) ? LEFT : 0) |
-                        (is(cells[y][x+1], WALL) ? RIGHT : 0));
+                        (rightIsWall ? RIGHT : 0));
 
                 // How the current cell can be blocked at most,
                 // taking cells to the left and above into account.
@@ -164,29 +175,32 @@ public class Board
                         & blocked[y][x-1] & VERTICAL);
                 final byte horizontalBlocked = (byte) (neighborWalls
                         & blocked[y-1][x] & HORIZONTAL);
-
-                if (!is(cells[y-1][x], WALL)) {
+                
+                final boolean isWall = is(cells[y][x], WALL); 
+                
+                if (!isWall) {
                     // Use common vertical blocking status
                     // with the block to the left
-                    blocked[y][x] |= verticalBlocked;
-                } else if ((blocked[y][x-1] & VERTICAL) != 0) {
-                    // There's a wall and the preceeding cells are blocked
+                    blocked[y][x] |= verticalBlocked | horizontalBlocked;
+                }
+                
+                if (isWall && (blocked[y][x-1] & VERTICAL) != 0) {
+                    // There's a wall and the preceding cells are blocked
                     // somehow
-                    for (int i = x; i > 1; i--) {
-                        if (is(cells[y][i], WALL)) {
-                            break;
-                        } else {
-                            cells[y][i] |= NO_BOX;
-                        }
+                    for (int i = x-1; i > 0; i--) {
+                        if (is(cells[y][i], WALL)) break;
+                        else cells[y][i] |= NO_BOX;
                     }
                 }
 
-                // Work in progress
-                /*
-                 * if (horizontalBlocked != 0 && !is(cells[y][x-1], WALL)) {
-                 * blocked[y][x] |= verticalBlocked;
-                 * }
-                 */
+                if ((blocked[y-1][x] & HORIZONTAL) != 0) {
+                    // There's a wall and the preceding cells are blocked
+                    // somehow
+                    for (int i = y-1; i > 0; i--) {
+                        if (is(cells[i][x], WALL)) break;
+                        else cells[i][x] |= NO_BOX;
+                    }
+                }
             }
         }
     }
