@@ -11,10 +11,10 @@ import sokoban.Board;
 public class GUI
 {
 
-    JFrame frame;
-    JPanel boardPanel;
-    Board board;
-    boolean keepRunning;
+    JFrame                    frame;
+    JPanel                    boardPanel;
+    Board                     board;
+    boolean                   keepRunning;
 
     private static final long serialVersionUID = 1L;
 
@@ -36,7 +36,7 @@ public class GUI
                 boardPanel.add(cell);
             }
         }
-        
+
         frame.getContentPane().add(boardPanel, BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);
@@ -51,19 +51,17 @@ public class GUI
             public void run()
             {
                 createAndShowGUI();
+                board.cells[10][10] = Board.GOAL;
+                updateBoardPanel(board);
+                frame.repaint();
             }
         });
 
-        while (keepRunning) {
-
-            updateBoardPanel(board);
-
-            try {
-                Thread.sleep(500);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            Thread.sleep(500);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -71,12 +69,10 @@ public class GUI
     {
         for (int x = 0; x < board.getWidth(); ++x) {
             for (int y = 0; y < board.getHeight(); ++y) {
-                //boardPanel.getComponentAt(x, y).update(board.cells[x][y]);
+                // boardPanel.getComponentAt(x, y).update(board.cells[x][y]);
             }
         }
     }
-
-
 
     public static void main(String[] args)
     {

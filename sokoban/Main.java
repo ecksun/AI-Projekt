@@ -1,7 +1,12 @@
 package sokoban;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+import sokoban.solvers.Solver;
 
 /**
  * The main class that handles the execution of the program
@@ -32,9 +37,13 @@ public class Main
 
             inRaw.read(boardbytes);
             Board board = BoardParser.parse(boardbytes);
+            System.out.println(board);
+            
+            Solver solver = new IDS(board);
+            String solution = solver.solve();
 
-            String solution = new String(
-                    "U R R D U U L D L L U L L D R R R R L D D R U R U D L L U R");
+//            String solution = new String(
+//                    "U R R D U U L D L L U L L D R R R R L D D R U R U D L L U R");
 
             out.println(solution);
 

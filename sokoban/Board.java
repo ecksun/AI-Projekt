@@ -29,7 +29,7 @@ public class Board
     /**
      * A bitmask that says if a cell is occupied by something
      */
-    public final static byte OCCUPIED = 0x03;
+    public final static byte OCCUPIED = WALL | BOX;
 
     final int width;
     final int height;

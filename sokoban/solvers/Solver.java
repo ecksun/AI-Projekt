@@ -1,5 +1,7 @@
 package sokoban.solvers;
 
+import sokoban.Board;
+
 /**
  * 
  */
@@ -9,9 +11,11 @@ package sokoban.solvers;
  */
 public interface Solver
 {
+    
     /**
      * Solve the board
      * 
+     * @param board The board to solve.
      * @return A string corresponding to the movements of the player
      */
     String solve();
