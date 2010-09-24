@@ -2,7 +2,6 @@ package sokoban.solvers;
 
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
 
 import sokoban.Board;
 
@@ -73,14 +72,14 @@ public class IDS implements Solver
     @Override
     public String solve()
     {
-        System.out.println(startBoard);
-        
-        for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth++) {
+        System.out.println("IDS depth limit (progress): ");
+        for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             Deque<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
+                System.out.println();
                 return solutionToString(solution); 
             }
-            System.out.println("Reached depth limit: "+maxDepth);
+            System.out.print(maxDepth + ".");
         }
         
         System.out.println("no solution!");

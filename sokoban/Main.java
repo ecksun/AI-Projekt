@@ -37,16 +37,19 @@ public class Main
             out.println(boardNumber);
 
             inRaw.read(boardbytes);
+            long beforeParse = System.currentTimeMillis();
             Board board = BoardParser.parse(boardbytes);
+            long parseTime = System.currentTimeMillis() - beforeParse;
             System.out.println(board);
+            System.out.println("Parse time (ms): " + parseTime);
             
+            long beforeSolve = System.currentTimeMillis();
             Solver solver = new IDS(board);
             String solution = solver.solve();
-
-//            String solution = new String(
-//                    "U R R D U U L D L L U L L D R R R R L D D R U R U D L L U R");
+            long solveTime = System.currentTimeMillis() - beforeSolve;
 
             out.println(solution);
+            System.out.println("Solve time (ms): " + solveTime);
 
             String result = in.readLine();
 

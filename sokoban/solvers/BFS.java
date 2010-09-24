@@ -1,6 +1,5 @@
 package sokoban.solvers;
 
-import sokoban.Board;
 
 /**
  *

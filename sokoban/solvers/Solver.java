@@ -1,11 +1,5 @@
 package sokoban.solvers;
 
-import sokoban.Board;
-
-/**
- * 
- */
-
 /**
  * An interface for the different solver.
  */
