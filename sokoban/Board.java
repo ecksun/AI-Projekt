@@ -22,14 +22,23 @@ public class Board
 
     // Generated values
     /**
-     * No box allowed.
+     * Boxes will get stuck in this square
      */
-    public final static byte NO_BOX = 0x08;
+    public final static byte BOX_TRAP = 0x08;
+    /**
+     * The player has already passed this cell the since last move
+     */
+    public final static byte STEPPED = 0x10;
+    
     // Bitmasks
     /**
-     * A bitmask that says if a cell is occupied by something
+     * A bitmask that says that a cell can't be walked into
      */
-    public final static byte OCCUPIED = WALL | BOX;
+    public final static byte REJECT_WALK = WALL | BOX | STEPPED;
+    /**
+     * A bitmask that says that a block can't move into this cell
+     */
+    public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
     final int width;
     final int height;
@@ -189,7 +198,7 @@ public class Board
                     // somehow
                     for (int i = x-1; i > 0; i--) {
                         if (is(cells[y][i], WALL)) break;
-                        else cells[y][i] |= NO_BOX;
+                        else cells[y][i] |= REJECT_BOX;
                     }
                 }
 
@@ -198,7 +207,7 @@ public class Board
                     // somehow
                     for (int i = y-1; i > 0; i--) {
                         if (is(cells[i][x], WALL)) break;
-                        else cells[i][x] |= NO_BOX;
+                        else cells[i][x] |= REJECT_BOX;
                     }
                 }
             }
