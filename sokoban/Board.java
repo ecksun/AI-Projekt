@@ -12,15 +12,15 @@ public class Board implements Cloneable
     /**
      * Value for a WALL on the board
      */
-    public final static byte WALL     = 0x01;
+    public final static byte WALL = 0x01;
     /**
      * Value for a BOX on the board
      */
-    public final static byte BOX      = 0x02;
+    public final static byte BOX = 0x02;
     /**
      * Value for a GOAL position on the board
      */
-    public final static byte GOAL     = 0x04;
+    public final static byte GOAL = 0x04;
 
     // Generated values
     /**
@@ -31,7 +31,7 @@ public class Board implements Cloneable
      * The player has already passed this cell the since last move
      */
     public final static byte VISITED = 0x10;
-    
+
     // Bitmasks
     /**
      * A bitmask that says that a cell can't be walked into
@@ -43,21 +43,20 @@ public class Board implements Cloneable
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
     /**
-     * All four allowed moves:  { row, column }
+     * All four allowed moves: { row, column }
      */
-    private static final int moves[][] = {
-            { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 }
-    };
-    
+    private static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
+            { 0, 1 } };
+
     public enum Direction {
         UP, DOWN, LEFT, RIGHT,
     }
-    
+
     public final int width;
     public final int height;
-    
+
     /**
-     * A bitmask for the input cell values. 
+     * A bitmask for the input cell values.
      */
     public final static byte INPUT_CELL_MASK = WALL | GOAL | BOX;
 
@@ -93,7 +92,8 @@ public class Board implements Cloneable
     /**
      * Gets the number of goal cells that don't have box yet.
      */
-    public int getRemainingBoxes() {
+    public int getRemainingBoxes()
+    {
         return remainingBoxes;
     }
 
@@ -226,15 +226,15 @@ public class Board implements Cloneable
 
                 final boolean rightIsWall = (col < width - 1 ? is(
                         cells[row][col + 1], WALL) : true);
-                
+
                 // Eclipse fails at indenting this if written as a
                 // single statement, so these have to be splitted up.
                 final byte twv = is(cells[row - 1][col], WALL) ? TOP : 0;
                 final byte bwv = is(cells[row + 1][col], WALL) ? BOTTOM : 0;
                 final byte lwv = is(cells[row][col - 1], WALL) ? LEFT : 0;
                 final byte rwv = rightIsWall ? RIGHT : 0;
-                final byte neighborWalls = (byte) (twv | bwv | lwv | rwv); 
-                
+                final byte neighborWalls = (byte) (twv | bwv | lwv | rwv);
+
                 // How the current cell can be blocked at most,
                 // taking cells to the left and above into account.
                 final byte verticalBlocked = (byte) (neighborWalls
@@ -253,29 +253,34 @@ public class Board implements Cloneable
                 if (isWall && (blocked[row][col - 1] & VERTICAL) != 0) {
                     // There's a wall and the preceding cells are blocked
                     // somehow
-                    for (int i = col-1; i > 0; i--) {
-                        if (is(cells[row][i], WALL)) break;
-                        else cells[row][i] |= BOX_TRAP;
+                    for (int i = col - 1; i > 0; i--) {
+                        if (is(cells[row][i], WALL))
+                            break;
+                        else
+                            cells[row][i] |= BOX_TRAP;
                     }
                 }
 
                 if (isWall && (blocked[row - 1][col] & HORIZONTAL) != 0) {
                     // There's a wall and the preceding cells are blocked
                     // somehow
-                    for (int i = row-1; i > 0; i--) {
-                        if (is(cells[i][col], WALL)) break;
-                        else cells[i][col] |= BOX_TRAP;
+                    for (int i = row - 1; i > 0; i--) {
+                        if (is(cells[i][col], WALL))
+                            break;
+                        else
+                            cells[i][col] |= BOX_TRAP;
                     }
                 }
             }
         }
     }
-    
+
     /**
      * Returns a clone of this board.
      */
-    public Object clone() {
-       
+    public Object clone()
+    {
+
         try {
             Board copy = (Board) super.clone();
 
@@ -286,70 +291,74 @@ public class Board implements Cloneable
                     copy.cells[row][col] = this.cells[row][col];
                 }
             }
-            
+
             return copy;
-        } catch (CloneNotSupportedException e) {
-            throw new Error("This should not occur since we implement Cloneable");
+        }
+        catch (CloneNotSupportedException e) {
+            throw new Error(
+                    "This should not occur since we implement Cloneable");
         }
     }
-    
+
     /**
      * Returns true if the player can move in the given direction
      */
-    public boolean canMove(Direction dir) {
+    public boolean canMove(Direction dir)
+    {
         int move[] = moves[dir.ordinal()];
-        
+
         // The cell that the player moves to
         int row = playerRow + move[0];
         int col = playerCol + move[1];
-        
+
         // The cell that the box (if any) moves to
-        int row2 = playerRow + 2*move[0];
-        int col2 = playerCol + 2*move[1];
-        
-        //System.out.println("("+playerRow+","+playerCol+") --> ("+row+","+col+"):  "+cells[row][col]);
-        
+        int row2 = playerRow + 2 * move[0];
+        int col2 = playerCol + 2 * move[1];
+
+        // System.out.println("("+playerRow+","+playerCol+") --> ("+row+","+col+"):  "+cells[row][col]);
+
         // Reject move if the player can't move there
-        if (is(cells[row][col], REJECT_WALK)) return false;
-        
+        if (is(cells[row][col], REJECT_WALK))
+            return false;
+
         // Reject move if there's a box and it can't move
         // in the desired direction
-        if (is(cells[row][col], BOX) &&
-                is(cells[row2][col2], REJECT_BOX)) return false;
-        
-        // The move is possible 
+        if (is(cells[row][col], BOX) && is(cells[row2][col2], REJECT_BOX))
+            return false;
+
+        // The move is possible
         return true;
     }
-    
-    public void move(Direction dir) {
+
+    public void move(Direction dir)
+    {
         int move[] = moves[dir.ordinal()];
-        
+
         // The cell that the player moves to
         int row = playerRow + move[0];
         int col = playerCol + move[1];
-        
+
         // The cell that the box (if any) moves to
-        int row2 = playerRow + 2*move[0];
-        int col2 = playerCol + 2*move[1];
-        
+        int row2 = playerRow + 2 * move[0];
+        int col2 = playerCol + 2 * move[1];
+
         // Mark as visited
         cells[playerRow][playerCol] |= VISITED;
-        
+
         // Move player
         playerRow = row;
         playerCol = col;
-        
+
         if (is(cells[row][col], BOX)) {
             // Move box
             cells[row][col] &= ~BOX;
             cells[row2][col2] |= BOX;
-            
+
             // Keep track of remaining boxes
-            remainingBoxes +=
-                (is(cells[row][col], GOAL) ? +1 : 0) +
-                (is(cells[row2][col2], GOAL) ? -1 : 0);
-            //System.out.println("remaining boxes: "+remainingBoxes);
-            
+            remainingBoxes += (is(cells[row][col], GOAL) ? +1 : 0)
+                    + (is(cells[row2][col2], GOAL) ? -1 : 0);
+            // System.out.println("remaining boxes: "+remainingBoxes);
+
             // Clear "visited" marks
             for (int r = 0; r < height; r++) {
                 for (int c = 0; c < width; c++) {
