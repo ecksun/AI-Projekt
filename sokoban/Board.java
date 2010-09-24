@@ -226,12 +226,15 @@ public class Board implements Cloneable
 
                 final boolean rightIsWall = (col < width - 1 ? is(
                         cells[row][col + 1], WALL) : true);
-                final byte neighborWalls = (byte) ((is(cells[row - 1][col],
-                        WALL) ? TOP : 0)
-                        | (is(cells[row + 1][col], WALL) ? BOTTOM : 0)
-                        | (is(cells[row][col - 1], WALL) ? LEFT : 0) | (rightIsWall ? RIGHT
-                        : 0));
-
+                
+                // Eclipse fails at indenting this if written as a
+                // single statement, so these have to be splitted up.
+                final byte twv = is(cells[row - 1][col], WALL) ? TOP : 0;
+                final byte bwv = is(cells[row + 1][col], WALL) ? BOTTOM : 0;
+                final byte lwv = is(cells[row][col - 1], WALL) ? LEFT : 0;
+                final byte rwv = rightIsWall ? RIGHT : 0;
+                final byte neighborWalls = (byte) (twv | bwv | lwv | rwv); 
+                
                 // How the current cell can be blocked at most,
                 // taking cells to the left and above into account.
                 final byte verticalBlocked = (byte) (neighborWalls
@@ -256,7 +259,7 @@ public class Board implements Cloneable
                     }
                 }
 
-                if ((blocked[row - 1][col] & HORIZONTAL) != 0) {
+                if (isWall && (blocked[row - 1][col] & HORIZONTAL) != 0) {
                     // There's a wall and the preceding cells are blocked
                     // somehow
                     for (int i = row-1; i > 0; i--) {
