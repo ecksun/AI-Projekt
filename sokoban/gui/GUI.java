@@ -27,11 +27,11 @@ public class GUI
         frame = new JFrame("Sokoban solver");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        boardPanel = new JPanel(new GridLayout(board.getWidth(), board
-                .getHeight(), 1, 1));
+        boardPanel = new JPanel(new GridLayout(board.width, board
+                .height, 1, 1));
 
-        for (int x = 0; x < board.getWidth(); ++x) {
-            for (int y = 0; y < board.getHeight(); ++y) {
+        for (int x = 0; x < board.width; ++x) {
+            for (int y = 0; y < board.height; ++y) {
                 CellPanel cell = new CellPanel(board.cells[x][y]);
                 boardPanel.add(cell);
             }
@@ -67,8 +67,8 @@ public class GUI
 
     private void updateBoardPanel(Board board)
     {
-        for (int x = 0; x < board.getWidth(); ++x) {
-            for (int y = 0; y < board.getHeight(); ++y) {
+        for (int x = 0; x < board.width; ++x) {
+            for (int y = 0; y < board.height; ++y) {
                 // boardPanel.getComponentAt(x, y).update(board.cells[x][y]);
             }
         }
