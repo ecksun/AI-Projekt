@@ -13,7 +13,20 @@ public class BoardReader
         this.boardNumber = boardNumber;
     }
 
-    public void parseData()
+    public Board read()
+    {
+        readFromServer();
+        parse();
+        return new Board(12, 12, 1, 1); // TODO
+    }
+
+    private void readFromServer()
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void parse()
     {
         try {
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
