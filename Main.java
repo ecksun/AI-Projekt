@@ -1,8 +1,15 @@
 import java.io.*;
 import java.net.*;
 
+/**
+ * The main class that handles the execution of the program
+ */
 public class Main
 {
+    /**
+     * The main method that is run when the program is executed
+     * @param args The CLI argument list
+     */
     public static void main(String[] args)
     {
         if (args.length < 1) {
