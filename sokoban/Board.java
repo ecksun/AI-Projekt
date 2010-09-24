@@ -10,7 +10,6 @@ public class Board
      * Value for a WALL on the board
      */
     public final static byte WALL     = 0x01;
-
     /**
      * Value for a BOX on the board
      */
@@ -42,6 +41,11 @@ public class Board
 
     public final int width;
     public final int height;
+    
+    /**
+     * A bitmask for the input cell values. 
+     */
+    public final static byte INPUT_CELL_MASK = WALL | GOAL | BOX;
 
     /**
      * The actual board
@@ -139,7 +143,7 @@ public class Board
      */
     private char valueToChar(byte value)
     {
-        switch (value) {
+        switch (value & Board.INPUT_CELL_MASK) {
             case Board.WALL:
                 return '#';
             case Board.GOAL:
