@@ -1,5 +1,8 @@
 package sokoban;
 
+import sokoban.solvers.IDS;
+import sokoban.solvers.Solver;
+
 /**
  *
  */
@@ -27,18 +30,29 @@ public class Board implements Cloneable
     /**
      * The player has already passed this cell the since last move
      */
-    public final static byte STEPPED = 0x10;
+    public final static byte VISITED = 0x10;
     
     // Bitmasks
     /**
      * A bitmask that says that a cell can't be walked into
      */
-    public final static byte REJECT_WALK = WALL | BOX | STEPPED;
+    public final static byte REJECT_WALK = WALL | VISITED;
     /**
      * A bitmask that says that a block can't move into this cell
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
+    /**
+     * All four allowed moves:  { row, column }
+     */
+    private static final int moves[][] = {
+            { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 }
+    };
+    
+    public enum Direction {
+        UP, DOWN, LEFT, RIGHT,
+    }
+    
     public final int width;
     public final int height;
     
@@ -238,7 +252,7 @@ public class Board implements Cloneable
                     // somehow
                     for (int i = col-1; i > 0; i--) {
                         if (is(cells[row][i], WALL)) break;
-                        else cells[row][i] |= REJECT_BOX;
+                        else cells[row][i] |= BOX_TRAP;
                     }
                 }
 
@@ -247,7 +261,7 @@ public class Board implements Cloneable
                     // somehow
                     for (int i = row-1; i > 0; i--) {
                         if (is(cells[i][col], WALL)) break;
-                        else cells[i][col] |= REJECT_BOX;
+                        else cells[i][col] |= BOX_TRAP;
                     }
                 }
             }
@@ -274,7 +288,72 @@ public class Board implements Cloneable
         } catch (CloneNotSupportedException e) {
             throw new Error("This should not occur since we implement Cloneable");
         }
-
+    }
+    
+    /**
+     * Returns true if the player can move in the given direction
+     */
+    public boolean canMove(Direction dir) {
+        int move[] = moves[dir.ordinal()];
+        
+        // The cell that the player moves to
+        int row = playerRow + move[0];
+        int col = playerCol + move[1];
+        
+        // The cell that the box (if any) moves to
+        int row2 = playerRow + 2*move[0];
+        int col2 = playerCol + 2*move[1];
+        
+        //System.out.println("("+playerRow+","+playerCol+") --> ("+row+","+col+"):  "+cells[row][col]);
+        
+        // Reject move if the player can't move there
+        if (is(cells[row][col], REJECT_WALK)) return false;
+        
+        // Reject move if there's a box and it can't move
+        // in the desired direction
+        if (is(cells[row][col], BOX) &&
+                is(cells[row2][col2], REJECT_BOX)) return false;
+        
+        // The move is possible 
+        return true;
+    }
+    
+    public void move(Direction dir) {
+        int move[] = moves[dir.ordinal()];
+        
+        // The cell that the player moves to
+        int row = playerRow + move[0];
+        int col = playerCol + move[1];
+        
+        // The cell that the box (if any) moves to
+        int row2 = playerRow + 2*move[0];
+        int col2 = playerCol + 2*move[1];
+        
+        // Mark as visited
+        cells[playerRow][playerCol] |= VISITED;
+        
+        // Move player
+        playerRow = row;
+        playerCol = col;
+        
+        if (is(cells[row][col], BOX)) {
+            // Move box
+            cells[row][col] &= ~BOX;
+            cells[row2][col2] |= BOX;
+            
+            // Keep track of remaining boxes
+            remainingBoxes +=
+                (is(cells[row][col], GOAL) ? +1 : 0) +
+                (is(cells[row2][col2], GOAL) ? -1 : 0);
+            //System.out.println("remaining boxes: "+remainingBoxes);
+            
+            // Clear "visited" marks
+            for (int r = 0; r < height; r++) {
+                for (int c = 0; c < width; c++) {
+                    cells[r][c] &= ~VISITED;
+                }
+            }
+        }
     }
 
     static public void main(String args[])
@@ -314,5 +393,7 @@ public class Board implements Cloneable
         System.out.println(b.toString());
         System.out.println(b2.toString());
         
+        Solver solver = new IDS(b);
+        System.out.println(solver.solve());
     }
 }

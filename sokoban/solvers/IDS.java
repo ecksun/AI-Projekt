@@ -8,12 +8,12 @@ import sokoban.Board;
 public class IDS implements Solver
 {
 
-    private final Board board;
+    private final Board startBoard;
     private final int DEPTH_LIMIT = 1000;
     
     public IDS(Board startBoard)
     {
-        this.board = startBoard;
+        this.startBoard = startBoard;
     }
     
     /**
@@ -21,8 +21,10 @@ public class IDS implements Solver
      * @param maxDepth  The maximum depth.
      * @return
      */
-    private List<Character> dfs(int maxDepth)
+    private List<Character> dfs(Board board, int maxDepth)
     {
+        //System.out.println(board.toString());
+        
         if (board.getRemainingBoxes() == 0) {
             // Found a solution
             return new LinkedList<Character>();
@@ -30,7 +32,21 @@ public class IDS implements Solver
         
         if (maxDepth == 0) return null;
         
-        // TODO implement DFS here
+        for (Board.Direction dir : Board.Direction.values()) {
+            // Check that the move is possible
+            if (!board.canMove(dir)) continue;
+            
+            // The move is possible
+            
+            // Make the move on a copy of the board
+            Board successor = (Board)board.clone();
+            successor.move(dir);
+            
+            // Recurse
+            List<Character> sol = dfs(successor, maxDepth - 1);
+            if (sol != null) return sol;
+        }
+        
         return null;
     }
     
@@ -51,13 +67,14 @@ public class IDS implements Solver
     @Override
     public String solve()
     {
-        System.out.println(board);
+        System.out.println(startBoard);
         
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth++) {
-            List<Character> solution = dfs(maxDepth);
+            List<Character> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 return solutionToString(solution); 
             }
+            System.out.println("Reached depth limit: "+maxDepth);
         }
         
         return null;
