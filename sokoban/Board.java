@@ -52,9 +52,9 @@ public class Board
      */
     public Board(int width, int height, int playerX, int playerY)
     {
-        cells = new byte[width][height];
-        this.height = width;
-        this.width = height;
+        cells = new byte[height][width];
+        this.width = width;
+        this.height = height;
         this.playerX = playerX;
         this.playerY = playerY;
     }
