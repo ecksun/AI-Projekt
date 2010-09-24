@@ -46,6 +46,7 @@ public class Main
             socket.close();
         }
         catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
