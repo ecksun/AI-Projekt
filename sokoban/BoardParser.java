@@ -46,8 +46,9 @@ public class BoardParser
         for (int i = 0; i < boardBytes.length; ++i, ++col) {
             switch (boardBytes[i]) {
                 case '\n':
+                    // col is incremented before first char on every row
+                    col = -1;
                     ++row;
-                    col = 0;
                     break;
                 case '#':
                     System.out.println("wall found at " + row + " col " + col);
