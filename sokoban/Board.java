@@ -40,16 +40,16 @@ public class Board
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
-    final int                width;
-    final int                height;
+    public final int width;
+    public final int height;
 
     /**
-     * The actuall board
+     * The actual board
      */
-    public byte              cells[][];
-    int                      playerCol;
-    int                      playerRow;
-    int                      remainingBoxes;
+    public byte cells[][];
+    public int playerCol;
+    public int playerRow;
+    private int remainingBoxes;
 
     /**
      * Initialize a new board
@@ -73,23 +73,10 @@ public class Board
     }
 
     /**
-     * Get the width of the board
-     * 
-     * @return The width of the board
+     * Gets the number of goal cells that don't have box yet.
      */
-    public int getWidth()
-    {
-        return width;
-    }
-
-    /**
-     * Get the height of the board
-     * 
-     * @return The height of the board.
-     */
-    public int getHeight()
-    {
-        return height;
+    public int getRemainingBoxes() {
+        return remainingBoxes;
     }
 
     /**
