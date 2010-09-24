@@ -22,14 +22,23 @@ public class Board
 
     // Generated values
     /**
-     * No box allowed.
+     * Boxes will get stuck in this square
      */
-    public final static byte NO_BOX   = 0x08;
+    public final static byte BOX_TRAP = 0x08;
+    /**
+     * The player has already passed this cell the since last move
+     */
+    public final static byte STEPPED = 0x10;
+    
     // Bitmasks
     /**
-     * A bitmask that says if a cell is occupied by something
+     * A bitmask that says that a cell can't be walked into
      */
-    public final static byte OCCUPIED = WALL | BOX;
+    public final static byte REJECT_WALK = WALL | BOX | STEPPED;
+    /**
+     * A bitmask that says that a block can't move into this cell
+     */
+    public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
     final int                width;
     final int                height;
@@ -236,22 +245,18 @@ public class Board
                 if (isWall && (blocked[row][col - 1] & VERTICAL) != 0) {
                     // There's a wall and the preceding cells are blocked
                     // somehow
-                    for (int i = col - 1; i > 0; i--) {
-                        if (is(cells[row][i], WALL))
-                            break;
-                        else
-                            cells[row][i] |= NO_BOX;
+                    for (int i = col-1; i > 0; i--) {
+                        if (is(cells[row][i], WALL)) break;
+                        else cells[row][i] |= REJECT_BOX;
                     }
                 }
 
                 if ((blocked[row - 1][col] & HORIZONTAL) != 0) {
                     // There's a wall and the preceding cells are blocked
                     // somehow
-                    for (int i = row - 1; i > 0; i--) {
-                        if (is(cells[i][col], WALL))
-                            break;
-                        else
-                            cells[i][col] |= NO_BOX;
+                    for (int i = row-1; i > 0; i--) {
+                        if (is(cells[i][col], WALL)) break;
+                        else cells[i][col] |= REJECT_BOX;
                     }
                 }
             }
