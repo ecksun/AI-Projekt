@@ -1,21 +1,21 @@
+package sokoban.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Label;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuBar;
 import javax.swing.JPanel;
+
+import sokoban.Board;
 
 public class GUI
 {
 
-    JFrame                    frame;
-    JPanel                    boardPanel;
-    Board                     board;
-    boolean                   keepRunning;
+    JFrame frame;
+    JPanel boardPanel;
+    Board board;
+    boolean keepRunning;
 
     /**
      * 
@@ -31,9 +31,10 @@ public class GUI
         frame = new JFrame("Sokoban solver");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        boardPanel = new JPanel(new GridLayout(board.width, board.height, 1, 1));
+        boardPanel = new JPanel(new GridLayout(board.getWidth(), board
+                .getHeight(), 1, 1));
 
-        for (int i = 0; i < board.width * board.height; ++i) {
+        for (int i = 0; i < board.getWidth() * board.getHeight(); ++i) {
             JPanel cell = new JPanel();
             cell.setBackground(new Color(100, 200, 120));
             boardPanel.add(cell);
@@ -61,7 +62,7 @@ public class GUI
         while (keepRunning) {
 
             updateBoardPanel(board);
-            
+
             try {
                 Thread.sleep(500);
             }
@@ -73,8 +74,8 @@ public class GUI
 
     private void updateBoardPanel(Board board)
     {
-        for (int x = 0; x < board.width; ++x) {
-            for (int y = 0; y < board.height; ++y) {
+        for (int x = 0; x < board.getWidth(); ++x) {
+            for (int y = 0; y < board.getHeight(); ++y) {
                 System.out.println(x + " " + y);
                 boardPanel.getComponentAt(x, y).setBackground(
                         getCellColor(board.cells[x][y]));
