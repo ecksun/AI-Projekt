@@ -16,8 +16,6 @@ public class IDS implements Solver
     public String solve()
     {
 
-        System.out.println(startBoard);
-        
         return null;
     }
 

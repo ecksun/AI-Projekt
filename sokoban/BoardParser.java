@@ -15,13 +15,12 @@ public class BoardParser
     public static Board parse(byte[] boardBytes)
     {
         int boardWidth = 0;
-        int boardHeight = 0;
+        int boardHeight = 1; // board input string doesn't end with '\n'
         int playerX = 0;
         int playerY = 0;
         int rowLength = 0;
         for (int i = 0; i < boardBytes.length; ++i) {
             rowLength++;
-            boardHeight++;
             switch (boardBytes[i]) {
                 case '\n':
                     if (rowLength > boardWidth) {
@@ -31,15 +30,14 @@ public class BoardParser
                     ++boardHeight;
                     break;
                 case '@':
-                    playerX = rowLength - 1; // 0-indexed
-                    playerY = boardHeight;
+                    // Player position is 0-indexed.
+                    playerX = rowLength - 1;
+                    playerY = boardHeight - 1; 
                     break;
             }
         }
 
         Board board = new Board(boardWidth, boardHeight, playerX, playerY);
-
-        System.out.println("width " + boardWidth);
 
         int row = 0;
         int col = 0;
@@ -51,7 +49,6 @@ public class BoardParser
                     ++row;
                     break;
                 case '#':
-                    System.out.println("wall found at " + row + " col " + col);
                     board.cells[row][col] = Board.WALL;
                     break;
                 case '$':
