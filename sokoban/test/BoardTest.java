@@ -41,6 +41,11 @@ public class BoardTest
         b1.cells[4][1] = Board.WALL;
         b1.cells[4][2] = Board.WALL;
         b1.cells[4][3] = Board.WALL;
+        b1.playerCol = 1;
+        b1.playerRow = 1;
+        
+        b1.refresh();
+        assertEquals(1, b1.getRemainingBoxes());
     }
 
     @After
@@ -70,6 +75,30 @@ public class BoardTest
         
         assertEquals("", b2.cells[3][1], Board.BOX);
         
+    }
+    
+    @Test
+    public void move()
+    {
+        b1.move(Board.Direction.RIGHT);
+        assertEquals(1, b1.playerRow);
+        assertEquals(2, b1.playerCol);
+        assertEquals(1, b1.getRemainingBoxes());
+        
+        b1.move(Board.Direction.DOWN);
+        assertEquals(2, b1.playerRow);
+        assertEquals(2, b1.playerCol);
+        assertEquals(0, b1.getRemainingBoxes());
+        
+        b1.move(Board.Direction.LEFT);
+        assertEquals(2, b1.playerRow);
+        assertEquals(1, b1.playerCol);
+        assertEquals(0, b1.getRemainingBoxes());
+        
+        b1.move(Board.Direction.DOWN);
+        assertEquals(3, b1.playerRow);
+        assertEquals(1, b1.playerCol);
+        assertEquals(0, b1.getRemainingBoxes());
     }
 
 }
