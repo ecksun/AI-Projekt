@@ -65,6 +65,8 @@ public class BoardParser
                     break;
             }
         }
+        
+        board.refresh();
         return board;
     }
 }
