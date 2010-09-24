@@ -16,8 +16,8 @@ public class BoardParser
     {
         int boardWidth = 0;
         int boardHeight = 1; // board input string doesn't end with '\n'
-        int playerX = 0;
-        int playerY = 0;
+        int playerCol = 0;
+        int playerRow = 0;
         int rowLength = 0;
         for (int i = 0; i < boardBytes.length; ++i) {
             rowLength++;
@@ -31,13 +31,13 @@ public class BoardParser
                     break;
                 case '@':
                     // Player position is 0-indexed.
-                    playerX = rowLength - 1;
-                    playerY = boardHeight - 1; 
+                    playerCol = rowLength - 1;
+                    playerRow = boardHeight - 1;
                     break;
             }
         }
 
-        Board board = new Board(boardWidth, boardHeight, playerY, playerX);
+        Board board = new Board(boardWidth, boardHeight, playerRow, playerCol);
 
         int row = 0;
         int col = 0;
@@ -65,7 +65,7 @@ public class BoardParser
                     break;
             }
         }
-        
+
         board.refresh();
         return board;
     }
