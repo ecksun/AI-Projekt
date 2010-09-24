@@ -19,7 +19,6 @@ public class Main
         }
         try {
             byte[] boardbytes = new byte[1024];
-            String result;
             int boardNumber = Integer.parseInt(args[0]);
 
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
@@ -37,8 +36,9 @@ public class Main
 
             out.println(solution);
 
-            result = in.readLine();
+            String result = in.readLine();
 
+            System.out.println(result);
             out.close();
             in.close();
             socket.close();
