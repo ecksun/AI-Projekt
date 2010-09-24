@@ -58,7 +58,7 @@ public class BoardParser
                     board.cells[row][col] = Board.GOAL;
                     break;
                 case '*':
-                    board.cells[row][col] = Board.BOX & Board.GOAL;
+                    board.cells[row][col] = Board.BOX | Board.GOAL;
                     break;
                 case '.':
                     board.cells[row][col] = Board.GOAL;
