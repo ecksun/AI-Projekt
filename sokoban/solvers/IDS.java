@@ -1,5 +1,6 @@
 package sokoban.solvers;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,13 +22,13 @@ public class IDS implements Solver
      * @param maxDepth  The maximum depth.
      * @return
      */
-    private List<Character> dfs(Board board, int maxDepth)
+    private Deque<Board.Direction> dfs(Board board, int maxDepth)
     {
         //System.out.println(board.toString());
         
         if (board.getRemainingBoxes() == 0) {
             // Found a solution
-            return new LinkedList<Character>();
+            return new LinkedList<Board.Direction>();
         }
         
         if (maxDepth == 0) return null;
@@ -43,22 +44,27 @@ public class IDS implements Solver
             successor.move(dir);
             
             // Recurse
-            List<Character> sol = dfs(successor, maxDepth - 1);
-            if (sol != null) return sol;
+            Deque<Board.Direction> sol = dfs(successor, maxDepth - 1);
+            if (sol != null) {
+                sol.addFirst(dir);
+                return sol;
+            }
         }
         
         return null;
     }
+    
+    private static final char moveChars[] = { 'U', 'D', 'L', 'R' };
     
     /**
      * 
      * @param solution  An array from dfs()
      * @return The solution as a string
      */
-    private String solutionToString(List<Character> solution) {
+    private String solutionToString(Deque<Board.Direction> solution) {
         StringBuilder sb = new StringBuilder(2*solution.size());
-        for (Character move : solution) {
-            sb.append(move);
+        for (Board.Direction move : solution) {
+            sb.append(moveChars[move.ordinal()]);
             sb.append(' ');
         }
         return sb.toString();
@@ -70,13 +76,14 @@ public class IDS implements Solver
         System.out.println(startBoard);
         
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth++) {
-            List<Character> solution = dfs(startBoard, maxDepth);
+            Deque<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 return solutionToString(solution); 
             }
             System.out.println("Reached depth limit: "+maxDepth);
         }
         
+        System.out.println("no solution!");
         return null;
     }
 
