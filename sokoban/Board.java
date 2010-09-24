@@ -167,7 +167,7 @@ public class Board implements Cloneable
             case Board.GOAL | Board.BOX:
                 return '*';
             default:
-                return ' ';
+                return ((value & Board.BOX_TRAP) == 0 ? ' ' : '-');
         }
     }
 
