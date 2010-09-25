@@ -135,14 +135,14 @@ public class Board implements Cloneable
     @Override
     public String toString()
     {
-        String tmp = "";
+        StringBuilder sb = new StringBuilder(width * height + height);
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
-                tmp += cellToChar(i, j);
+                sb.append(cellToChar(i, j));
             }
-            tmp += "\n";
+            sb.append("\n");
         }
-        return tmp;
+        return sb.toString();
     }
 
     /**
