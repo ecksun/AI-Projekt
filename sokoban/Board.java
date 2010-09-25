@@ -35,7 +35,14 @@ public class Board implements Cloneable
      */
     public final static byte REJECT_WALK = WALL | VISITED;
     /**
-     * A bitmask that says that a block can't move into this cell
+     * A bitmask that says that a box can't be moved into the cell, for one or
+     * more of the following reasons:
+     * <ul>
+     * <li>The cell is a wall.</li>
+     * <li>The cell contains another box.</li>
+     * <li>The cell is a box trap, meaning that the box could never be moved
+     * away from there.</li>
+     * </ul>
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
