@@ -1,4 +1,4 @@
 #!/bin/bash
 
-javac */*.java
+javac **/*.java
 java sokoban/Main 2
