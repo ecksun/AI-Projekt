@@ -280,20 +280,19 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns a clone of this board.
+     * Returns a deep copy of this board.
      */
     public Object clone()
     {
-
         try {
             Board copy = (Board) super.clone();
 
             // Deep copy cells
             copy.cells = new byte[height][width];
             for (int row = 0; row < height; ++row) {
-                for (int col = 0; col < width; ++col) {
-                    copy.cells[row][col] = this.cells[row][col];
-                }
+                // Fastest way according to the following web page:
+                // http://www.javapractices.com/topic/TopicAction.do?Id=3
+                System.arraycopy(this.cells[row], 0, copy.cells[row], 0, width);
             }
 
             return copy;
