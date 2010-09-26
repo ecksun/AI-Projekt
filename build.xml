@@ -1,4 +1,4 @@
-<project>
+<project default="compile">
 
     <target name="clean">
         <delete>
