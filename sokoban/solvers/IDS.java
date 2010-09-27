@@ -1,6 +1,5 @@
 package sokoban.solvers;
 
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -25,7 +24,7 @@ public class IDS implements Solver
      * @param maxDepth The maximum depth.
      * @return
      */
-    private Deque<Board.Direction> dfs(Board board, int maxDepth)
+    private LinkedList<Board.Direction> dfs(Board board, int maxDepth)
     {
         // System.out.println(board.toString());
 
@@ -49,7 +48,7 @@ public class IDS implements Solver
             successor.move(dir);
 
             // Recurse
-            Deque<Board.Direction> sol = dfs(successor, maxDepth - 1);
+            LinkedList<Board.Direction> sol = dfs(successor, maxDepth - 1);
             if (sol != null) {
                 sol.addFirst(dir);
                 return sol;
@@ -86,7 +85,7 @@ public class IDS implements Solver
      * @param solution An array from dfs()
      * @return The solution as a string
      */
-    private String solutionToString(Deque<Board.Direction> solution)
+    private String solutionToString(LinkedList<Board.Direction> solution)
     {
         StringBuilder sb = new StringBuilder(2 * solution.size());
         for (Board.Direction move : solution) {
@@ -96,12 +95,11 @@ public class IDS implements Solver
         return sb.toString();
     }
 
-    @Override
     public String solve()
     {
         System.out.println("IDS depth limit (progress): ");
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
-            Deque<Board.Direction> solution = dfs(startBoard, maxDepth);
+            LinkedList<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 System.out.println();
                 return solutionToString(solution);

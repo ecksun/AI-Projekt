@@ -1,4 +1,5 @@
 #!/bin/bash
 
-javac **/*.java
-java sokoban/Main 2
+javac -sourcepath . sokoban/Main.java
+java -classpath . sokoban.Main 2
+
