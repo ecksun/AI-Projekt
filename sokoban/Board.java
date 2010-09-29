@@ -35,7 +35,14 @@ public class Board implements Cloneable
      */
     public final static byte REJECT_WALK = WALL | VISITED;
     /**
-     * A bitmask that says that a block can't move into this cell
+     * A bitmask that says that a box can't be moved into the cell, for one or
+     * more of the following reasons:
+     * <ul>
+     * <li>The cell is a wall.</li>
+     * <li>The cell contains another box.</li>
+     * <li>The cell is a box trap, meaning that the box could never be moved
+     * away from there.</li>
+     * </ul>
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
 
@@ -135,14 +142,14 @@ public class Board implements Cloneable
     @Override
     public String toString()
     {
-        String tmp = "";
+        StringBuilder sb = new StringBuilder(width * height + height);
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
-                tmp += cellToChar(i, j);
+                sb.append(cellToChar(i, j));
             }
-            tmp += "\n";
+            sb.append("\n");
         }
-        return tmp;
+        return sb.toString();
     }
 
     /**
@@ -273,20 +280,19 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns a clone of this board.
+     * Returns a deep copy of this board.
      */
     public Object clone()
     {
-
         try {
             Board copy = (Board) super.clone();
 
             // Deep copy cells
             copy.cells = new byte[height][width];
             for (int row = 0; row < height; ++row) {
-                for (int col = 0; col < width; ++col) {
-                    copy.cells[row][col] = this.cells[row][col];
-                }
+                // Fastest way according to the following web page:
+                // http://www.javapractices.com/topic/TopicAction.do?Id=3
+                System.arraycopy(this.cells[row], 0, copy.cells[row], 0, width);
             }
 
             return copy;

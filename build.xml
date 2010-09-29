@@ -1,0 +1,14 @@
+<project default="compile">
+
+    <target name="clean">
+        <delete>
+            <fileset dir="." includes="**/*.class"/>
+        </delete>
+    </target>
+
+    <target name="compile">
+        <javac srcdir="." excludes="sokoban/test/**"/>
+    </target>
+
+</project>
+

@@ -1,5 +1,13 @@
 # AI project #
 
+## Authors ##
+
+*   Joel Bohman (jbohman)
+*   Joel Pettersson (joelpet)
+*   Linus Wallgren (linuswa)
+*   Samuel Lidén Borell (samuellb)
+
+
 ## Eclipse ##
 
 ### Code style ###
