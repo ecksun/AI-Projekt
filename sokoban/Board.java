@@ -28,6 +28,14 @@ public class Board implements Cloneable
      * The player has already passed this cell the since last move
      */
     public final static byte VISITED = 0x10;
+    /**
+     * Starting position of a box
+     */
+    public final static byte BOX_START = 0x20;
+    /**
+     * Starting position of the player
+     */
+    public final static byte PLAYER_START = 0x40;
 
     // Bitmasks
     /**
