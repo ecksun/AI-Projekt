@@ -78,22 +78,6 @@ public class IDS implements Solver
         return directions;
     }
 
-    private static final char moveChars[] = { 'U', 'D', 'L', 'R' };
-
-    /**
-     * 
-     * @param solution An array from dfs()
-     * @return The solution as a string
-     */
-    private String solutionToString(LinkedList<Board.Direction> solution)
-    {
-        StringBuilder sb = new StringBuilder(2 * solution.size());
-        for (Board.Direction move : solution) {
-            sb.append(moveChars[move.ordinal()]);
-            sb.append(' ');
-        }
-        return sb.toString();
-    }
 
     public String solve()
     {
@@ -102,7 +86,7 @@ public class IDS implements Solver
             LinkedList<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 System.out.println();
-                return solutionToString(solution);
+                return Board.solutionToString(solution);
             }
             System.out.print(maxDepth + ".");
         }

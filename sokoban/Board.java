@@ -1,5 +1,7 @@
 package sokoban;
 
+import java.util.LinkedList;
+
 /**
  *
  */
@@ -194,6 +196,23 @@ public class Board implements Cloneable
         else {
             return valueToChar(cells[row][col]);
         }
+    }
+    
+    private static final char moveChars[] = { 'U', 'D', 'L', 'R' };
+    
+    /**
+     * Print the solution.
+     * @param solution A list of board directions
+     * @return The solution as a string
+     */
+    public static String solutionToString(LinkedList<Board.Direction> solution)
+    {
+        StringBuilder sb = new StringBuilder(2 * solution.size());
+        for (Board.Direction move : solution) {
+            sb.append(moveChars[move.ordinal()]);
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
     /**
