@@ -50,7 +50,7 @@ public class Puller implements Solver
      * Resets the board to the starting board.
      */
     private void reset() {
-        
+        board = (Board)startBoard.clone();
     }
     
     @Override
