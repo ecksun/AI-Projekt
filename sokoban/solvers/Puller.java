@@ -4,6 +4,8 @@
 package sokoban.solvers;
 
 import java.util.ArrayList;
+import java.util.Random;
+
 import sokoban.Board;
 
 /**
@@ -14,7 +16,8 @@ public class Puller implements Solver
     private final Board startBoard;
     private Board board;
     private int numBoxes;
-
+    private Random rand;
+    
     private ArrayList<Position> boxes;
 
     /**
@@ -132,7 +135,25 @@ public class Puller implements Solver
 
     private PlayerPosDir choosePosition()
     {
-        // TODO Auto-generated method stub
+        final int boxCount = boxes.size();
+        final int max = 4*boxCount;
+        final int[] stepX = { 0, 1, 0,-1};
+        final int[] stepY = {-1, 0, 1, 0};
+        int triesLeft = max;
+        int p = rand.nextInt(max);
+        
+        while (triesLeft > 0) {
+            Position box = boxes.get(max / 4);
+            int dir = max % 4;
+            int x = box.x + stepX[dir];
+            int y = box.y + stepY[dir];
+            if (x >= 0 && x < board.width && y >= 0 && y < board.height &&
+                    !Board.is(board.cells[y][x], Board.REJECT_PULL)) {
+                return new PlayerPosDir(x, y, -stepX[dir], -stepY[dir]);
+            }
+            p = (p+1) % max;
+            triesLeft--;
+        }
         return null;
     }
 

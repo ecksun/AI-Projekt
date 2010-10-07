@@ -41,9 +41,15 @@ public class Board implements Cloneable
 
     // Bitmasks
     /**
-     * A bitmask that says that a cell can't be walked into
+     * A bitmask that says that a cell can't be walked into when
+     * pushing, but not pulling, is allowed.
      */
     public final static byte REJECT_WALK = WALL | VISITED;
+    /**
+     * A bitmask that says that a cell can't be walked into when
+     * pulling, but not pushing, is allowed.
+     */
+    public final static byte REJECT_PULL = WALL | VISITED | BOX;
     /**
      * A bitmask that says that a box can't be moved into the cell, for one or
      * more of the following reasons:
@@ -123,7 +129,7 @@ public class Board implements Cloneable
     /**
      * Returns true if the square has any of the bits in the mask.
      */
-    private boolean is(byte square, byte mask)
+    public static boolean is(byte square, byte mask)
     {
         return (square & mask) != 0;
     }
