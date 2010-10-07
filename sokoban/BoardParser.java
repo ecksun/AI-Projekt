@@ -30,6 +30,7 @@ public class BoardParser
                     ++boardHeight;
                     break;
                 case '@':
+                case '+':
                     // Player position is 0-indexed.
                     playerCol = rowLength - 1;
                     playerRow = boardHeight - 1;
