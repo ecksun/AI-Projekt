@@ -81,6 +81,7 @@ public class Board implements Cloneable
     public int playerCol;
     public int playerRow;
     private int remainingBoxes;
+    private int boxesInStart;
 
     /**
      * Initialize a new board
@@ -109,6 +110,14 @@ public class Board implements Cloneable
     public int getRemainingBoxes()
     {
         return remainingBoxes;
+    }
+    
+    /**
+     * Gets the number of boxes that are in their starting positions.
+     */
+    public int getBoxesInStart()
+    {
+        return boxesInStart;
     }
 
     /**
@@ -142,6 +151,7 @@ public class Board implements Cloneable
             }
         }
         remainingBoxes = remaining;
+        boxesInStart = 0; // TODO check how many boxes are in the start positions
     }
 
     /**
@@ -410,7 +420,9 @@ public class Board implements Cloneable
                 }
             }
         }
-        remainingBoxes = 0;
+        int temp = remainingBoxes;
+        remainingBoxes = boxesInStart;
+        boxesInStart = temp;
     }
 
 }

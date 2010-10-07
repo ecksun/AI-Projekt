@@ -12,6 +12,7 @@ public class Puller implements Solver
 {
     private final Board startBoard;
     private Board board;
+    private int numBoxes;
     
     private ArrayList<Position> boxes;
     
@@ -35,7 +36,7 @@ public class Puller implements Solver
     public Puller(Board startBoard)
     {
         this.startBoard = (Board) startBoard.clone();
-        int numBoxes = startBoard.getRemainingBoxes();
+        numBoxes = startBoard.getRemainingBoxes();
         startBoard.reverse();
         boxes = new ArrayList<Position>(numBoxes);
     }
@@ -76,8 +77,7 @@ public class Puller implements Solver
 
     private boolean solved()
     {
-        // TODO Auto-generated method stub
-        return false;
+        return board.getBoxesInStart() == numBoxes;
     }
 
     private boolean deadlock()
