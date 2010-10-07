@@ -45,8 +45,8 @@ public class Puller implements Solver
                 Box box = chooseBox();
                 while (moveBox(box)) { }
                 
-            } while (!deadlock())
-        } while (!solved())
+            } while (!deadlock());
+        } while (!solved());
         
         return null;
     }
