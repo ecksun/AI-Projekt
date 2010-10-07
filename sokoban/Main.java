@@ -44,8 +44,8 @@ public class Main
             System.out.println("Parse time (ms): " + parseTime);
             
             long beforeSolve = System.currentTimeMillis();
-            Solver solver = new IDS(board);
-            String solution = solver.solve();
+            Solver solver = new IDS();
+            String solution = solver.solve(board);
             long solveTime = System.currentTimeMillis() - beforeSolve;
 
             out.println(solution);

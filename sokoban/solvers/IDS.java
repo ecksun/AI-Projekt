@@ -9,14 +9,9 @@ import sokoban.Board.Direction;
 public class IDS implements Solver
 {
 
-    private final Board startBoard;
     private final int DEPTH_LIMIT = 1000;
     private Random rand = new Random();
-
-    public IDS(Board startBoard)
-    {
-        this.startBoard = startBoard;
-    }
+    private int iterationsCount = 0; 
 
     /**
      * Recursive Depth-First algorithm
@@ -26,8 +21,8 @@ public class IDS implements Solver
      */
     private LinkedList<Board.Direction> dfs(Board board, int maxDepth)
     {
-        // System.out.println(board.toString());
-
+        iterationsCount++;
+        
         if (board.getRemainingBoxes() == 0) {
             // Found a solution
             return new LinkedList<Board.Direction>();
@@ -79,20 +74,28 @@ public class IDS implements Solver
     }
 
 
-    public String solve()
+    public String solve(Board board)
     {
+        final Board startBoard = board;
+        
         System.out.println("IDS depth limit (progress): ");
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+            System.out.print(maxDepth + ".");
             LinkedList<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 System.out.println();
                 return Board.solutionToString(solution);
             }
-            System.out.print(maxDepth + ".");
         }
 
         System.out.println("no solution!");
         return null;
+    }
+
+    @Override
+    public int getIterationsCount()
+    {
+        return iterationsCount;
     }
 
 }
