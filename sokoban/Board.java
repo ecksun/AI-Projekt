@@ -410,6 +410,7 @@ public class Board implements Cloneable
                 }
             }
         }
+        remainingBoxes = 0;
     }
 
 }

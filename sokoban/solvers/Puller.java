@@ -3,6 +3,7 @@
  */
 package sokoban.solvers;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import sokoban.Board;
@@ -12,7 +13,7 @@ public class Puller implements Solver
     private final Board startBoard;
     private Board board;
     
-    private LinkedList<Position> boxes;
+    private ArrayList<Position> boxes;
     
     public class Position {
         final int x, y;
@@ -33,17 +34,10 @@ public class Puller implements Solver
 
     public Puller(Board startBoard)
     {
-        // Store all boxes
-        boxes = new LinkedList<Position>();
-        this.startBoard = startBoard;
-        
-        for (int i = 0; i < board.height; ++i) {
-            for (int j = 0; j < board.width; ++j) {
-                if (board.cells[i][j] == Board.BOX) {
-                    boxes.add(new Position(i, j));
-                }
-            }
-        }
+        this.startBoard = (Board) startBoard.clone();
+        int numBoxes = startBoard.getRemainingBoxes();
+        startBoard.reverse();
+        boxes = new ArrayList<Position>(numBoxes);
     }
     
     /**
@@ -51,6 +45,17 @@ public class Puller implements Solver
      */
     private void reset() {
         board = (Board)startBoard.clone();
+        
+        // Store all boxes
+        int b = 0;
+        for (int i = 0; i < board.height; ++i) {
+            for (int j = 0; j < board.width; ++j) {
+                if (board.cells[i][j] == Board.BOX) {
+                    boxes.set(b, new Position(i, j));
+                    b++;
+                }
+            }
+        }
     }
     
     @Override
