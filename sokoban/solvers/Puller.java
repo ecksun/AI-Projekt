@@ -9,10 +9,10 @@ import sokoban.Board;
 
 public class Puller implements Solver
 {
-    private final int DEPTH_LIMIT = 1000;
-
     private final Board startBoard;
     private Board board;
+    
+    private LinkedList<Box> boxes;
     
     public class Box {
         final int x, y;
@@ -22,10 +22,19 @@ public class Puller implements Solver
         }
     }
 
-
     public Puller(Board startBoard)
     {
+        // Store all boxes
+        boxes = new LinkedList<Box>();
         this.startBoard = startBoard;
+        
+        for (int i = 0; i < board.height; ++i) {
+            for (int j = 0; j < board.width; ++j) {
+                if (board.cells[i][j] == Board.BOX) {
+                    boxes.add(new Box(i, j));
+                }
+            }
+        }
     }
     
     /**
