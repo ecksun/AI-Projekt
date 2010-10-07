@@ -102,13 +102,17 @@ public class Puller implements Solver
     {
         finished: while (true) {
             reset();
-
+            
+            PlayerPosDir playerPosDir;
             do {
-                PlayerPosDir playerPosDir = choosePosition();
+                // TODO must be able to move to this block!
+                playerPosDir = choosePosition();
                 while (moveBox(playerPosDir)) {
                     if (solved()) break finished;
+                    // TODO choose Condition X and exit from
+                    //      loop if Condition X fails
                 }
-            } while (!deadlock());
+            } while (!deadlock(playerPosDir));
         }
         
         return null;
@@ -119,10 +123,12 @@ public class Puller implements Solver
         return board.getBoxesInStart() == numBoxes;
     }
 
-    private boolean deadlock()
+    private boolean deadlock(PlayerPosDir pos)
     {
-        // TODO Auto-generated method stub
-        return false;
+        return !(Board.is(board.cells[pos.x-1][pos.y], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.x+1][pos.y], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.x][pos.y-1], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.x][pos.y+1], Board.REJECT_PULL));
     }
 
     private boolean moveBox(PlayerPosDir pos)
