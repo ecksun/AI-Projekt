@@ -15,8 +15,11 @@ public class Puller implements Solver
     private Board board;
     
     public class Box {
-        int x, y;
-        // TODO construnctor
+        final int x, y;
+        public Box(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 
 
