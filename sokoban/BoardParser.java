@@ -30,6 +30,7 @@ public class BoardParser
                     ++boardHeight;
                     break;
                 case '@':
+                case '+':
                     // Player position is 0-indexed.
                     playerCol = rowLength - 1;
                     playerRow = boardHeight - 1;
@@ -52,13 +53,13 @@ public class BoardParser
                     board.cells[row][col] = Board.WALL;
                     break;
                 case '$':
-                    board.cells[row][col] = Board.BOX;
+                    board.cells[row][col] = Board.BOX | Board.BOX_START;
                     break;
                 case '+':
                     board.cells[row][col] = Board.GOAL;
                     break;
                 case '*':
-                    board.cells[row][col] = Board.BOX | Board.GOAL;
+                    board.cells[row][col] = Board.BOX | Board.GOAL | Board.BOX_START;
                     break;
                 case '.':
                     board.cells[row][col] = Board.GOAL;
@@ -66,6 +67,7 @@ public class BoardParser
             }
         }
 
+        board.cells[playerRow][playerCol] |= Board.PLAYER_START;
         board.refresh();
         return board;
     }
