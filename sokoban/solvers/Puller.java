@@ -25,7 +25,7 @@ public class Puller implements Solver
      */
     public class Position
     {
-        final int x, y;
+        int x, y;
 
         /**
          * Create a new position
@@ -100,19 +100,17 @@ public class Puller implements Solver
     @Override
     public String solve()
     {
-        do {
+        finished: while (true) {
             reset();
 
             do {
                 PlayerPosDir playerPosDir = choosePosition();
                 while (moveBox(playerPosDir)) {
+                    if (solved()) break finished;
                 }
-
-            }
-            while (!deadlock());
+            } while (!deadlock());
         }
-        while (!solved());
-
+        
         return null;
     }
 
@@ -127,10 +125,21 @@ public class Puller implements Solver
         return false;
     }
 
-    private boolean moveBox(Position box)
+    private boolean moveBox(PlayerPosDir pos)
     {
-        // TODO Auto-generated method stub
-        return false;
+        int newx = pos.x - pos.bx;
+        int newy = pos.y - pos.by;
+        
+        // See if there next square is empty
+        if (Board.is(board.cells[newy][newx], Board.REJECT_PULL))
+            return false;
+        
+        // Move the box
+        board.pull(pos.x, pos.y, pos.bx, pos.by);
+        pos.x += newx;
+        pos.y += newy;
+        
+        return true;
     }
 
     private PlayerPosDir choosePosition()
