@@ -397,5 +397,20 @@ public class Board implements Cloneable
             }
         }
     }
+    
+    /**
+     * Swaps boxes with goals.
+     */ 
+    public void reverse() {
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                cells[row][col] &= ~BOX;
+                if (is(cells[row][col], GOAL)) {
+                    cells[row][col] |= BOX;
+                }
+            }
+        }
+    }
 
 }
+
