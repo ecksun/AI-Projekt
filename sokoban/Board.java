@@ -62,6 +62,11 @@ public class Board implements Cloneable
      * </ul>
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
+    
+    /**
+     * Don't move boxes here at any time!
+     */
+    public final static byte WALL_OR_TRAP = WALL | BOX_TRAP;
 
     /**
      * All four allowed moves: { row, column }
@@ -236,11 +241,21 @@ public class Board implements Cloneable
      */
     public char cellToChar(int row, int col)
     {
+        byte cell = cells[row][col];
+        
+        // Check for some errors first
+        if (is(cell, BOX_TRAP) && is(cell, GOAL))
+            return 'E'; // Goal on trap = error!
+        
+        if (is(cell, BOX_TRAP) && is(cell, BOX))
+            return 'e'; // Box in trap = error!
+        
+        // No errors detected in this cell
         if (playerRow == row && playerCol == col) {
-            return is(cells[row][col], Board.GOAL) ? '+' : '@';
+            return is(cell, Board.GOAL) ? '+' : '@';
         }
         else {
-            return valueToChar(cells[row][col]);
+            return valueToChar(cell);
         }
     }
 
@@ -263,86 +278,79 @@ public class Board implements Cloneable
     }
 
     /**
-     * Marks squares that boxes would get stuck in.
+     * Marks squares that boxes would get stuck in (dead squares / box traps).
      */
     private void markNonBoxSquares()
     {
-        final byte TOP = 0x1;
-        final byte BOTTOM = 0x2;
-        final byte LEFT = 0x4;
-        final byte RIGHT = 0x8;
-
-        final byte VERTICAL = TOP | BOTTOM;
-        final byte HORIZONTAL = LEFT | RIGHT;
-        final byte ALL = VERTICAL | HORIZONTAL;
-
-        final byte blocked[][] = new byte[height][width];
-
-        // Mark all walls as blocked
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (is(cells[y][x], WALL))
-                    blocked[y][x] = ALL;
+        // Mark corners
+        for (int row = 1; row < height-1; row++) {
+            for (int col = 1; col < width-1; col++) {
+                // Goal squares usually aren't traps
+                // (if the right block is placed there)
+                if (is(cells[row][col], GOAL)) continue;
+                
+                boolean horizontalBlocked = is(cells[row-1][col], WALL) ||
+                    is(cells[row+1][col], WALL);
+                boolean verticalBlocked = is(cells[row][col-1], WALL) ||
+                    is(cells[row][col+1], WALL);
+                
+                // This is a corner
+                if (horizontalBlocked && verticalBlocked)
+                    cells[row][col] |= BOX_TRAP;
             }
         }
 
-        // Find "non box" squares
-        for (int row = 1; row < height - 1; row++) {
-            for (int col = 1; col < width; col++) {
-                // Break the "blocked lines" if there's a goal
-                if (is(cells[row][col], GOAL)) {
-                    continue;
-                }
-
-                final boolean rightIsWall = (col < width - 1 ? is(
-                        cells[row][col + 1], WALL) : true);
-
-                // Eclipse fails at indenting this if written as a
-                // single statement, so these have to be splitted up.
-                final byte twv = is(cells[row - 1][col], WALL) ? TOP : 0;
-                final byte bwv = is(cells[row + 1][col], WALL) ? BOTTOM : 0;
-                final byte lwv = is(cells[row][col - 1], WALL) ? LEFT : 0;
-                final byte rwv = rightIsWall ? RIGHT : 0;
-                final byte neighborWalls = (byte) (twv | bwv | lwv | rwv);
-
-                // How the current cell can be blocked at most,
-                // taking cells to the left and above into account.
-                final byte verticalBlocked = (byte) (neighborWalls
-                        & blocked[row][col - 1] & VERTICAL);
-                final byte horizontalBlocked = (byte) (neighborWalls
-                        & blocked[row - 1][col] & HORIZONTAL);
-
-                final boolean isWall = is(cells[row][col], WALL);
-
-                if (!isWall) {
-                    // Use common vertical blocking status
-                    // with the block to the left
-                    blocked[row][col] |= verticalBlocked | horizontalBlocked;
-                }
-
-                if (isWall && (blocked[row][col - 1] & VERTICAL) != 0) {
-                    // There's a wall and the preceding cells are blocked
-                    // somehow
-                    for (int i = col - 1; i > 0; i--) {
-                        if (is(cells[row][i], WALL))
+        // Find dead lines between dead squares 
+        boolean changed;
+        do {
+            changed = false;
+            for (int row = 1; row < height-1; row++) {
+                for (int col = 1; col < width-1; col++) {
+                    // Always start at a box trap
+                    if (!is(cells[row][col], BOX_TRAP)) continue;
+                    
+                    // Look to the right
+                    for (int right = col+1; right < width-1; right++) {
+                        // Stop at goals
+                        if (is(cells[row][right], GOAL)) break;
+                        
+                        // Stop and mark cells if there's either wall or a trap cell
+                        if (is(cells[row][right], WALL_OR_TRAP)) {
+                            // Mark cells
+                            for (int i = col+1; i < right; i++) {
+                                cells[row][i] |= BOX_TRAP;
+                                changed = true;
+                            }
                             break;
-                        else
-                            cells[row][i] |= BOX_TRAP;
+                        }
+                        
+                        // Check if there's a way to move out the block
+                        if (!is(cells[row-1][right], WALL) &&
+                            !is(cells[row+1][right], WALL)) break;
                     }
-                }
-
-                if (isWall && (blocked[row - 1][col] & HORIZONTAL) != 0) {
-                    // There's a wall and the preceding cells are blocked
-                    // somehow
-                    for (int i = row - 1; i > 0; i--) {
-                        if (is(cells[i][col], WALL))
+                    
+                    // Look below
+                    for (int down = row+1; down < height-1; down++) {
+                        // Stop at goals
+                        if (is(cells[down][col], GOAL)) break;
+                        
+                        // Stop and mark cells if there's either wall or a trap cell
+                        if (is(cells[down][col], WALL_OR_TRAP)) {
+                            // Mark cells
+                            for (int i = row+1; i < down; i++) {
+                                cells[i][col] |= BOX_TRAP;
+                                changed = true;
+                            }
                             break;
-                        else
-                            cells[i][col] |= BOX_TRAP;
+                        }
+                        
+                        // Check if there's a way to move out the block
+                        if (!is(cells[down][col-1], WALL) &&
+                            !is(cells[down][col+1], WALL)) break;
                     }
                 }
             }
-        }
+        } while (changed);
     }
 
     /**
