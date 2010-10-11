@@ -6,7 +6,8 @@ package sokoban.solvers;
 import java.util.ArrayList;
 import java.util.Random;
 
-import sokoban.Board;
+import sokoban.*;
+
 
 /**
  * A Solover that pulls the boxes instead of the usual pushing
@@ -20,49 +21,6 @@ public class Puller implements Solver
     private int iterationsCount = 0;
     
     private Position[] boxes;
-
-    /**
-     * Small class that stores a position
-     */
-    public class Position
-    {
-        int x, y;
-
-        /**
-         * Create a new position
-         * 
-         * @param x X coordinate
-         * @param y Y coordinate
-         */
-        public Position(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
-    /**
-     * Small class containing the player position and its relative box position
-     */
-    public class PlayerPosDir extends Position
-    {
-        final int bx, by; // relative box position
-
-        /**
-         * Create a new player position
-         * 
-         * @param x TODO
-         * @param y TODO
-         * @param bx TODO
-         * @param by TODO
-         */
-        public PlayerPosDir(int x, int y, int bx, int by)
-        {
-            super(x, y);
-            this.bx = bx;
-            this.by = by;
-        }
-    }
 
     /**
      * Resets the board to the starting board.
