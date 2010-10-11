@@ -162,7 +162,7 @@ public class Puller implements Solver
             int dir = p % 4;
             int x = box.x + stepX[dir];
             int y = box.y + stepY[dir];
-            if (x >= 0 && x < board.width && y >= 0 && y < board.height &&
+            if (x > 0 && x < board.width-1 && y > 0 && y < board.height-1 &&
                     !Board.is(board.cells[y][x], Board.REJECT_PULL)) {
                 return new PlayerPosDir(x, y, -stepX[dir], -stepY[dir]);
             }
