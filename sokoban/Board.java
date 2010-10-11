@@ -532,6 +532,35 @@ public class Board implements Cloneable
         return hash;
     }
 
+    
+    @Override
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof Board)) return false;
+        
+        Board o = (Board) other;
+        
+        if (playerRow != o.playerRow || playerCol != o.playerCol)
+            return false;
+        
+        // The outer rows/columns are always walls (or not reachable)
+        for (int y = 1; y < height-1; y++) {
+            for (int x = 1; x < width-1; x++) {
+                int cell1 = cells[y][x] & BOX;
+                int cell2 = o.cells[y][x] & BOX;
+                if (cell1 != cell2) return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        long h = getPlayerBoxesHash();
+        return (int) (h ^ (h >> 32));
+    }
+    
     /**
      * Returns true if there's a box ahead of the player, in the direction dir.
      * @param dir The direction in which to check
