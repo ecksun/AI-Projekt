@@ -1,11 +1,17 @@
 #!/bin/bash
 
 if [ -n "$1" ]; then
-    BOARD=$1
+    SOLVER=$1
+else
+    SOLVER="IDS"
+fi
+
+if [ -n "$2" ]; then
+    BOARD=$2
 else
     BOARD=3
 fi
 
 javac -sourcepath . sokoban/Main.java
-java -classpath . sokoban.Main $BOARD
+java -classpath . sokoban.Main $SOLVER $BOARD
 
