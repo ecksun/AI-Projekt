@@ -482,6 +482,19 @@ public class Board implements Cloneable
     }
     
     /**
+     * Returns a hash of the boxes and player position.
+     */
+    public long getPlayerBoxesHash()
+    {
+        long hash = getBoxesHash();
+        
+        // Add player position to the last 16 bytes of the hash
+        hash ^= (playerRow << 56) ^ (playerCol << 48);
+        
+        return hash;
+    }
+    
+    /**
      * Returns true if there's a box ahead of the player, in the direction dir.
      */
     public boolean isBoxAhead(Direction dir) {
