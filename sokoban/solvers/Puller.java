@@ -13,10 +13,11 @@ import sokoban.Board;
  */
 public class Puller implements Solver
 {
-    private final Board startBoard;
+    private Board startBoard;
     private Board board;
     private int numBoxes;
     private Random rand;
+    private int iterationsCount = 0;
     
     private ArrayList<Position> boxes;
 
@@ -64,21 +65,6 @@ public class Puller implements Solver
     }
 
     /**
-     * Initialize the class by copying the startBoard and reversing it and
-     * setting
-     * some local variables
-     * 
-     * @param startBoard The original board
-     */
-    public Puller(Board startBoard)
-    {
-        this.startBoard = (Board) startBoard.clone();
-        numBoxes = startBoard.getRemainingBoxes();
-        startBoard.reverse();
-        boxes = new ArrayList<Position>(numBoxes);
-    }
-
-    /**
      * Resets the board to the starting board.
      */
     private void reset()
@@ -98,7 +84,17 @@ public class Puller implements Solver
     }
 
     @Override
-    public String solve()
+    public String solve(Board inputBoard)
+    {
+        startBoard = (Board) inputBoard.clone();
+        numBoxes = startBoard.getRemainingBoxes();
+        startBoard.reverse();
+        boxes = new ArrayList<Position>(numBoxes);
+        
+        return solverAlgorithm();
+    }
+    
+    public String solverAlgorithm()
     {
         finished: while (true) {
             reset();
@@ -136,6 +132,8 @@ public class Puller implements Solver
         int newx = pos.x - pos.bx;
         int newy = pos.y - pos.by;
         
+        iterationsCount++;
+        
         // See if there next square is empty
         if (Board.is(board.cells[newy][newx], Board.REJECT_PULL))
             return false;
@@ -170,6 +168,12 @@ public class Puller implements Solver
             triesLeft--;
         }
         return null;
+    }
+    
+    @Override
+    public int getIterationsCount()
+    {
+        return iterationsCount;
     }
 
 }
