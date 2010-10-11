@@ -1,7 +1,11 @@
 package sokoban;
 
+
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  *
@@ -12,29 +16,29 @@ public class Board implements Cloneable
     /**
      * Value for a WALL on the board
      */
-    public final static byte WALL = 0x01;
+    public final static byte WALL         = 0x01;
     /**
      * Value for a BOX on the board
      */
-    public final static byte BOX = 0x02;
+    public final static byte BOX          = 0x02;
     /**
      * Value for a GOAL position on the board
      */
-    public final static byte GOAL = 0x04;
+    public final static byte GOAL         = 0x04;
 
     // Generated values
     /**
      * Boxes will get stuck in this square
      */
-    public final static byte BOX_TRAP = 0x08;
+    public final static byte BOX_TRAP     = 0x08;
     /**
      * The player has already passed this cell the since last move
      */
-    public final static byte VISITED = 0x10;
+    public final static byte VISITED      = 0x10;
     /**
      * Starting position of a box
      */
-    public final static byte BOX_START = 0x20;
+    public final static byte BOX_START    = 0x20;
     /**
      * Starting position of the player
      */
@@ -45,12 +49,12 @@ public class Board implements Cloneable
      * A bitmask that says that a cell can't be walked into when
      * pushing, but not pulling, is allowed.
      */
-    public final static byte REJECT_WALK = WALL | VISITED;
+    public final static byte REJECT_WALK  = WALL | VISITED;
     /**
      * A bitmask that says that a cell can't be walked into when
      * pulling, but not pushing, is allowed.
      */
-    public final static byte REJECT_PULL = WALL | VISITED | BOX;
+    public final static byte REJECT_PULL  = WALL | VISITED | BOX;
     /**
      * A bitmask that says that a box can't be moved into the cell, for one or
      * more of the following reasons:
@@ -68,11 +72,12 @@ public class Board implements Cloneable
      */
     public final static byte WALL_OR_TRAP = WALL | BOX_TRAP;
 
+
     /**
      * All four allowed moves: { row, column }
      */
-    private static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
-            { 0, 1 } };
+    private static final int moves[][]    = { { -1, 0 }, { 1, 0 }, { 0, -1 },
+            { 0, 1 }                     };
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT,
@@ -106,6 +111,7 @@ public class Board implements Cloneable
     public int playerRow;
     private int remainingBoxes;
     private int boxesInStart;
+
 
     /**
      * Initialize a new board
@@ -456,10 +462,14 @@ public class Board implements Cloneable
     /**
      * Pulls a box.
      * 
-     * @param column Players x position
-     * @param row Players y position
-     * @param boxColumn Relative x position of box
-     * @param boxRow Relative y position of box
+     * @param column
+     *            Players x position
+     * @param row
+     *            Players y position
+     * @param boxColumn
+     *            Relative x position of box
+     * @param boxRow
+     *            Relative y position of box
      */
     public void pull(int row, int column, int boxRow, int boxColumn)
     {
@@ -540,7 +550,6 @@ public class Board implements Cloneable
         return hash;
     }
 
-    
     @Override
     public boolean equals(Object other)
     {
@@ -601,6 +610,67 @@ public class Board implements Cloneable
             }
         }
         return tmp;
+    }
+
+    /**
+     * Finds a path from the player's current position on this board to the
+     * specified goal position.
+     * 
+     * TODO: We might want to traverse the whole board (starting at players
+     * position) and for each ripple (think of water) out from the player we
+     * denote the direction in which we should go from that square to get back
+     * to the player.
+     * 
+     * TODO: We might want to get a list of goal positions here, so that we in
+     * just one search can find the path to multiple goals.
+     * 
+     * @param goal
+     *            The position of the cell that we want to find a path to.
+     * @return A collection
+     */
+    public List<Direction> findPath(Position goal)
+    {
+        HashSet<Position> visited = new HashSet<Position>();
+
+        return findPath(new Position(playerRow, playerCol), goal, visited);
+    }
+
+    /**
+     * Finds a path from the start position to the goal position recursively.
+     * 
+     * @param start
+     *            Starting position.
+     * @param goal
+     *            Goal position.
+     * @param visited
+     *            A set of already visited positions that we are not interested
+     *            in examining.
+     * @return A list of directions to go from start to goal.
+     */
+    public List<Direction> findPath(Position start, Position goal,
+            HashSet<Position> visited)
+    {
+        // TODO: might want to skip .equals() in favour for performance
+        if (start.equals(goal)) {
+            return new LinkedList<Direction>();
+        }
+
+        visited.add(start);
+
+        for (Direction dir : Direction.values()) {
+            Position newPosition = new Position(start, moves[dir.ordinal()]);
+
+            if (!visited.contains(newPosition) && canMove(dir)) {
+                List<Direction> solution = findPath(newPosition, goal, visited);
+
+                if (solution != null) {
+                    solution.add(dir);
+                    return solution;
+                }
+            }
+        }
+
+        return null;
     }
 
 }
