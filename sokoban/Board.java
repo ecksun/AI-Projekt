@@ -73,7 +73,13 @@ public class Board implements Cloneable
         UP, DOWN, LEFT, RIGHT,
     }
 
+    /**
+     * The width of the board
+     */
     public final int width;
+    /**
+     * The height of the board
+     */
     public final int height;
 
     /**
@@ -85,7 +91,13 @@ public class Board implements Cloneable
      * The actual board
      */
     public byte cells[][];
+    /**
+     * The column at which the player resides
+     */
     public int playerCol;
+    /**
+     * The row at which the player resides
+     */
     public int playerRow;
     private int remainingBoxes;
     private int boxesInStart;
@@ -113,6 +125,8 @@ public class Board implements Cloneable
 
     /**
      * Gets the number of goal cells that don't have box yet.
+     * 
+     * @return The number of remaining boxes
      */
     public int getRemainingBoxes()
     {
@@ -121,6 +135,8 @@ public class Board implements Cloneable
 
     /**
      * Gets the number of boxes that are in their starting positions.
+     * 
+     * @return The number of boxes in their start position
      */
     public int getBoxesInStart()
     {
@@ -129,6 +145,10 @@ public class Board implements Cloneable
 
     /**
      * Returns true if the square has any of the bits in the mask.
+     * 
+     * @param square The square at which to check for the bitmask
+     * @param mask The mask to check against
+     * @return true if the square and the mask matches, false otherwise
      */
     public static boolean is(byte square, byte mask)
     {
@@ -351,6 +371,9 @@ public class Board implements Cloneable
 
     /**
      * Returns true if the player can move in the given direction
+     * 
+     * @param dir The given direction
+     * @return True if it is possible for the player to move in the direction
      */
     public boolean canMove(Direction dir)
     {
@@ -379,6 +402,11 @@ public class Board implements Cloneable
         return true;
     }
 
+    /**
+     * Move the player in the specified direction
+     * 
+     * @param dir The direction to move the player in
+     */
     public void move(Direction dir)
     {
         int move[] = moves[dir.ordinal()];
@@ -425,12 +453,15 @@ public class Board implements Cloneable
      * @param boxColumn Relative x position of box
      * @param boxRow Relative y position of box
      */
-    public void pull(int row, int column, int boxRow, int boxColumn) {
+    public void pull(int row, int column, int boxRow, int boxColumn)
+    {
         cells[row][column] |= Board.BOX;
-        cells[row+boxRow][column+boxColumn] &= ~Board.BOX;
-        
-        if (is(cells[row+boxRow][column+boxColumn], BOX_START)) boxesInStart--;
-        if (is(cells[row][column], BOX_START)) boxesInStart++;
+        cells[row + boxRow][column + boxColumn] &= ~Board.BOX;
+
+        if (is(cells[row + boxRow][column + boxColumn], BOX_START))
+            boxesInStart--;
+        if (is(cells[row][column], BOX_START))
+            boxesInStart++;
     }
 
     /**
@@ -450,7 +481,7 @@ public class Board implements Cloneable
         remainingBoxes = boxesInStart;
         boxesInStart = temp;
     }
-    
+
     /**
      * Gets a hash value of all of the boxes. This does not include
      * the player position.
@@ -458,50 +489,56 @@ public class Board implements Cloneable
      * This works by XOR:ing the box spacing when the cells are laid
      * out on a line. To use the bits better in the hash, we rotate
      * the position we XOR with.
+     * @return The hash
      */
     public long getBoxesHash()
     {
-        long hash = 0;      // 64 bits
+        long hash = 0; // 64 bits
         final int STEP = 7; // Just some relative prime to 64 so it
-                            // doesn't wrap around to 0 and overwrite
-                            // too many previous values boards with
-                            // only a few boxes.
-        
+        // doesn't wrap around to 0 and overwrite
+        // too many previous values boards with
+        // only a few boxes.
+
         int bits = 0;
         int spacing = 0;
-        
-        for (int y = 1; y < height-1; y++) {
-            for (int x = 1; x < width-1; x++) {
+
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
                 if (is(cells[y][x], BOX)) {
-                    hash ^= (spacing << bits) ^ (spacing >> (64-bits));
+                    hash ^= (spacing << bits) ^ (spacing >> (64 - bits));
                     bits = (bits + STEP) % 64;
                     spacing = 0;
-                } else {
+                }
+                else {
                     spacing++;
                 }
             }
         }
-        
+
         return hash;
     }
-    
+
     /**
      * Returns a hash of the boxes and player position.
+     * @return The hash
      */
     public long getPlayerBoxesHash()
     {
         long hash = getBoxesHash();
-        
+
         // Add player position to the last 16 bytes of the hash
         hash ^= (playerRow << 56) ^ (playerCol << 48);
-        
+
         return hash;
     }
-    
+
     /**
      * Returns true if there's a box ahead of the player, in the direction dir.
+     * @param dir The direction in which to check
+     * @return True if there is a box ahead of the player
      */
-    public boolean isBoxAhead(Direction dir) {
+    public boolean isBoxAhead(Direction dir)
+    {
         int move[] = moves[dir.ordinal()];
 
         // The cell that the player moves to
