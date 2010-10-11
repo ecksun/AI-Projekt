@@ -1,31 +1,34 @@
 package sokoban;
 
 /**
- * Small class containing the player position and its relative box position
+ * PlayerPosDir represents a player position together with its relative position
+ * to a box.
  */
 public class PlayerPosDir extends Position
 {
     /**
-     * The relative x-position of the box 
+     * The column index of the box relative to the player.
      */
-    public final int bx;
-    /**
-     * The relative y-position of the box
-     */
-    public final int by; // relative box position
+    public final int boxColumn;
 
     /**
-     * Create a new player position
-     * 
-     * @param x TODO
-     * @param y TODO
-     * @param bx TODO
-     * @param by TODO
+     * The row index of the box relative to the player.
      */
-    public PlayerPosDir(int x, int y, int bx, int by)
+    public final int boxRow;
+
+    /**
+     * Creates a new player and (relative) box position.
+     * 
+     * @param row The row index of the player.
+     * @param column The column index of the player.
+     * @param boxRow The box row index relative to the player.
+     * @param boxColumn The box column index relative to the player.
+     */
+    public PlayerPosDir(int row, int column, int boxRow, int boxColumn)
     {
-        super(x, y);
-        this.bx = bx;
-        this.by = by;
+        super(row, column);
+        
+        this.boxRow = boxRow;
+        this.boxColumn = boxColumn;
     }
 }

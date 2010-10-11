@@ -420,20 +420,17 @@ public class Board implements Cloneable
     /**
      * Pulls a box.
      * 
-     * @param x Players x position
-     * @param y Players y position
-     * @param bx Relative x position of box
-     * @param by Relative y position of box
+     * @param column Players x position
+     * @param row Players y position
+     * @param boxColumn Relative x position of box
+     * @param boxRow Relative y position of box
      */
-    public void pull(int x, int y, int bx, int by)
-    {
-        cells[y][x] |= Board.BOX;
-        cells[y + by][x + bx] &= ~Board.BOX;
-
-        if (is(cells[y + by][x + bx], BOX_START))
-            boxesInStart--;
-        if (is(cells[y][x], BOX_START))
-            boxesInStart++;
+    public void pull(int row, int column, int boxRow, int boxColumn) {
+        cells[row][column] |= Board.BOX;
+        cells[row+boxRow][column+boxColumn] &= ~Board.BOX;
+        
+        if (is(cells[row+boxRow][column+boxColumn], BOX_START)) boxesInStart--;
+        if (is(cells[row][column], BOX_START)) boxesInStart++;
     }
 
     /**
@@ -452,6 +449,66 @@ public class Board implements Cloneable
         int temp = remainingBoxes;
         remainingBoxes = boxesInStart;
         boxesInStart = temp;
+    }
+    
+    /**
+     * Gets a hash value of all of the boxes. This does not include
+     * the player position.
+     * 
+     * This works by XOR:ing the box spacing when the cells are laid
+     * out on a line. To use the bits better in the hash, we rotate
+     * the position we XOR with.
+     */
+    public long getBoxesHash()
+    {
+        long hash = 0;      // 64 bits
+        final int STEP = 7; // Just some relative prime to 64 so it
+                            // doesn't wrap around to 0 and overwrite
+                            // too many previous values boards with
+                            // only a few boxes.
+        
+        int bits = 0;
+        int spacing = 0;
+        
+        for (int y = 1; y < height-1; y++) {
+            for (int x = 1; x < width-1; x++) {
+                if (is(cells[y][x], BOX)) {
+                    hash ^= (spacing << bits) ^ (spacing >> (64-bits));
+                    bits = (bits + STEP) % 64;
+                    spacing = 0;
+                } else {
+                    spacing++;
+                }
+            }
+        }
+        
+        return hash;
+    }
+    
+    /**
+     * Returns a hash of the boxes and player position.
+     */
+    public long getPlayerBoxesHash()
+    {
+        long hash = getBoxesHash();
+        
+        // Add player position to the last 16 bytes of the hash
+        hash ^= (playerRow << 56) ^ (playerCol << 48);
+        
+        return hash;
+    }
+    
+    /**
+     * Returns true if there's a box ahead of the player, in the direction dir.
+     */
+    public boolean isBoxAhead(Direction dir) {
+        int move[] = moves[dir.ordinal()];
+
+        // The cell that the player moves to
+        int row = playerRow + move[0];
+        int col = playerCol + move[1];
+
+        return is(cells[row][col], BOX);
     }
 
     /**
