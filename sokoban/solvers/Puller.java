@@ -19,7 +19,7 @@ public class Puller implements Solver
     private Random rand;
     private int iterationsCount = 0;
     
-    private ArrayList<Position> boxes;
+    private Position[] boxes;
 
     /**
      * Small class that stores a position
@@ -75,8 +75,8 @@ public class Puller implements Solver
         int b = 0;
         for (int i = 0; i < board.height; ++i) {
             for (int j = 0; j < board.width; ++j) {
-                if (board.cells[i][j] == Board.BOX) {
-                    boxes.set(b, new Position(i, j));
+                if (Board.is(board.cells[i][j], Board.BOX)) {
+                    boxes[b] = new Position(i, j);
                     b++;
                 }
             }
@@ -86,10 +86,12 @@ public class Puller implements Solver
     @Override
     public String solve(Board inputBoard)
     {
+        rand = new Random();
         startBoard = (Board) inputBoard.clone();
         numBoxes = startBoard.getRemainingBoxes();
         startBoard.reverse();
-        boxes = new ArrayList<Position>(numBoxes);
+        boxes = new Position[numBoxes];
+        
         
         return solverAlgorithm();
     }
@@ -148,7 +150,7 @@ public class Puller implements Solver
 
     private PlayerPosDir choosePosition()
     {
-        final int boxCount = boxes.size();
+        final int boxCount = boxes.length;
         final int max = 4*boxCount;
         final int[] stepX = { 0, 1, 0,-1};
         final int[] stepY = {-1, 0, 1, 0};
@@ -156,8 +158,8 @@ public class Puller implements Solver
         int p = rand.nextInt(max);
         
         while (triesLeft > 0) {
-            Position box = boxes.get(max / 4);
-            int dir = max % 4;
+            Position box = boxes[p / 4];
+            int dir = p % 4;
             int x = box.x + stepX[dir];
             int y = box.y + stepY[dir];
             if (x >= 0 && x < board.width && y >= 0 && y < board.height &&
