@@ -446,6 +446,40 @@ public class Board implements Cloneable
         remainingBoxes = boxesInStart;
         boxesInStart = temp;
     }
+    
+    /**
+     * Gets a hash value of all of the boxes. This does not include
+     * the player position.
+     * 
+     * This works by XOR:ing the box spacing when the cells are laid
+     * out on a line. To use the bits better in the hash, we rotate
+     * the position we XOR with.
+     */
+    public long getBoxesHash()
+    {
+        long hash = 0;      // 64 bits
+        final int STEP = 7; // Just some relative prime to 64 so it
+                            // doesn't wrap around to 0 and overwrite
+                            // too many previous values boards with
+                            // only a few boxes.
+        
+        int bits = 0;
+        int spacing = 0;
+        
+        for (int y = 1; y < height-1; y++) {
+            for (int x = 1; x < width-1; x++) {
+                if (is(cells[y][x], BOX)) {
+                    hash ^= (spacing << bits) ^ (spacing >> (64-bits));
+                    bits = (bits + STEP) % 64;
+                    spacing = 0;
+                } else {
+                    spacing++;
+                }
+            }
+        }
+        
+        return hash;
+    }
 
 }
 
