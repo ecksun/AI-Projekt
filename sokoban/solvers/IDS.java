@@ -1,7 +1,9 @@
 package sokoban.solvers;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.Set;
 
 import sokoban.Board;
 import sokoban.Board.Direction;
@@ -11,8 +13,13 @@ public class IDS implements Solver
 
     private final int DEPTH_LIMIT = 1000;
     private Random rand = new Random();
-    private int iterationsCount = 0; 
-
+    private int iterationsCount = 0;
+    
+    /**
+     * Set of visited boards, including the player position
+     */ 
+    private Set<Board> visitedBoards;
+    
     /**
      * Recursive Depth-First algorithm
      * 
@@ -28,7 +35,7 @@ public class IDS implements Solver
             return new LinkedList<Board.Direction>();
         }
 
-        if (maxDepth == 0)
+        if (maxDepth <= 0)
             return null;
 
         for (Board.Direction dir : Board.Direction.values()) {
@@ -41,9 +48,24 @@ public class IDS implements Solver
             // Make the move on a copy of the board
             Board successor = (Board) board.clone();
             successor.move(dir);
+            
+            // Penalty (in moves): Used for "soft" duplicate avoiding and heuristics 
+            int penalty = 1;
+            
+            // Avoid identical box-player setups
+            if (board.isBoxAhead(dir)) {
+                // We just moved a box
+                
+                // Check for identical state with cells and player
+                if (visitedBoards.contains(successor)) {
+                    return null;
+                } else {
+                    visitedBoards.add(successor);
+                }
+            }
 
             // Recurse
-            LinkedList<Board.Direction> sol = dfs(successor, maxDepth - 1);
+            LinkedList<Board.Direction> sol = dfs(successor, maxDepth - penalty);
             if (sol != null) {
                 sol.addFirst(dir);
                 return sol;
@@ -81,6 +103,9 @@ public class IDS implements Solver
         System.out.println("IDS depth limit (progress): ");
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
+            
+            visitedBoards = new HashSet<Board>();
+            
             LinkedList<Board.Direction> solution = dfs(startBoard, maxDepth);
             if (solution != null) {
                 System.out.println();
