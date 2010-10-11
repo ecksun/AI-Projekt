@@ -11,13 +11,14 @@ import sokoban.Board;
 import sokoban.Position;
 
 /**
- *
+ * A solver that pushes boxes around.
  */
 public class Pusher implements Solver
 {
     /**
-     *
-     *
+     * Small little container class for a searchnode
+     * Each searchnode contains the path to it, the board its handling and the
+     * parent.
      */
     private class SearchNode
     {
