@@ -31,10 +31,10 @@ public class Puller implements Solver
 
         // Store all boxes
         int b = 0;
-        for (int i = 0; i < board.height; ++i) {
-            for (int j = 0; j < board.width; ++j) {
-                if (Board.is(board.cells[i][j], Board.BOX)) {
-                    boxes[b] = new Position(i, j);
+        for (int row = 0; row < board.height; ++row) {
+            for (int column = 0; column < board.width; ++column) {
+                if (Board.is(board.cells[row][column], Board.BOX)) {
+                    boxes[b] = new Position(row, column);
                     b++;
                 }
             }
@@ -83,29 +83,29 @@ public class Puller implements Solver
 
     private boolean deadlock(PlayerPosDir pos)
     {
-        return !(Board.is(board.cells[pos.x-1][pos.y], Board.REJECT_PULL) &&
-                Board.is(board.cells[pos.x+1][pos.y], Board.REJECT_PULL) &&
-                Board.is(board.cells[pos.x][pos.y-1], Board.REJECT_PULL) &&
-                Board.is(board.cells[pos.x][pos.y+1], Board.REJECT_PULL));
+        return !(Board.is(board.cells[pos.row-1][pos.column], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.row+1][pos.column], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.row][pos.column-1], Board.REJECT_PULL) &&
+                Board.is(board.cells[pos.row][pos.column+1], Board.REJECT_PULL));
     }
 
     private boolean moveBox(PlayerPosDir pos)
     {
-        int newx = pos.x - pos.bx;
-        int newy = pos.y - pos.by;
+        int newRow = pos.row - pos.boxRow;
+        int newColumn = pos.column - pos.boxColumn;
         
-        System.err.println(pos.x+", "+pos.y+"  :  "+pos.bx+", "+pos.by+" ---> "+newx+", "+newy);
+        //System.err.println(pos.x+", "+pos.y+"  :  "+pos.bx+", "+pos.by+" ---> "+newRow+", "+newColumn);
         
         iterationsCount++;
         
         // See if there next square is empty
-        if (Board.is(board.cells[newy][newx], Board.REJECT_PULL))
+        if (Board.is(board.cells[newColumn][newRow], Board.REJECT_PULL))
             return false;
         
         // Move the box
-        board.pull(pos.x, pos.y, pos.bx, pos.by);
-        pos.x += newx;
-        pos.y += newy;
+        board.pull(pos.row, pos.column, pos.boxRow, pos.boxColumn);
+        pos.row += newRow;
+        pos.column += newColumn;
         
         return true;
     }
@@ -114,19 +114,19 @@ public class Puller implements Solver
     {
         final int boxCount = boxes.length;
         final int max = 4*boxCount;
-        final int[] stepX = { 0, 1, 0,-1};
-        final int[] stepY = {-1, 0, 1, 0};
+        final int[] stepRow = {-1, 0, 1, 0};
+        final int[] stepColumn = { 0, 1, 0,-1};
         int triesLeft = max;
         int p = rand.nextInt(max);
         
         while (triesLeft > 0) {
             Position box = boxes[p / 4];
             int dir = p % 4;
-            int x = box.x + stepX[dir];
-            int y = box.y + stepY[dir];
-            if (x > 0 && x < board.width-1 && y > 0 && y < board.height-1 &&
-                    !Board.is(board.cells[y][x], Board.REJECT_PULL)) {
-                return new PlayerPosDir(x, y, -stepX[dir], -stepY[dir]);
+            int row = box.row + stepRow[dir];
+            int column = box.column + stepColumn[dir];
+            if (column > 0 && column < board.width-1 && row > 0 && row < board.height-1 &&
+                    !Board.is(board.cells[row][column], Board.REJECT_PULL)) {
+                return new PlayerPosDir(row, column, -stepRow[dir], -stepColumn[dir]);
             }
             p = (p+1) % max;
             triesLeft--;

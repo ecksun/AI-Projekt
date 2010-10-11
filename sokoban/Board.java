@@ -417,17 +417,17 @@ public class Board implements Cloneable
     /**
      * Pulls a box.
      * 
-     * @param x Players x position
-     * @param y Players y position
-     * @param bx Relative x position of box
-     * @param by Relative y position of box
+     * @param column Players x position
+     * @param row Players y position
+     * @param boxColumn Relative x position of box
+     * @param boxRow Relative y position of box
      */
-    public void pull(int x, int y, int bx, int by) {
-        cells[y][x] |= Board.BOX;
-        cells[y+by][x+bx] &= ~Board.BOX;
+    public void pull(int row, int column, int boxRow, int boxColumn) {
+        cells[row][column] |= Board.BOX;
+        cells[row+boxRow][column+boxColumn] &= ~Board.BOX;
         
-        if (is(cells[y+by][x+bx], BOX_START)) boxesInStart--;
-        if (is(cells[y][x], BOX_START)) boxesInStart++;
+        if (is(cells[row+boxRow][column+boxColumn], BOX_START)) boxesInStart--;
+        if (is(cells[row][column], BOX_START)) boxesInStart++;
     }
     
     /**
