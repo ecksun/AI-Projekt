@@ -480,6 +480,19 @@ public class Board implements Cloneable
         
         return hash;
     }
+    
+    /**
+     * Returns true if there's a box ahead of the player, in the direction dir.
+     */
+    public boolean isBoxAhead(Direction dir) {
+        int move[] = moves[dir.ordinal()];
+
+        // The cell that the player moves to
+        int row = playerRow + move[0];
+        int col = playerCol + move[1];
+
+        return is(cells[row][col], BOX);
+    }
 
 }
 
