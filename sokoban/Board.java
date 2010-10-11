@@ -1,5 +1,6 @@
 package sokoban;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 /**
@@ -117,7 +118,7 @@ public class Board implements Cloneable
     {
         return remainingBoxes;
     }
-    
+
     /**
      * Gets the number of boxes that are in their starting positions.
      */
@@ -157,7 +158,8 @@ public class Board implements Cloneable
             }
         }
         remainingBoxes = remaining;
-        boxesInStart = 0; // TODO check how many boxes are in the start positions
+        boxesInStart = 0; // TODO check how many boxes are in the start
+        // positions
     }
 
     /**
@@ -221,11 +223,12 @@ public class Board implements Cloneable
             return valueToChar(cells[row][col]);
         }
     }
-    
+
     private static final char moveChars[] = { 'U', 'D', 'L', 'R' };
-    
+
     /**
      * Print the solution.
+     * 
      * @param solution A list of board directions
      * @return The solution as a string
      */
@@ -413,7 +416,7 @@ public class Board implements Cloneable
             }
         }
     }
-    
+
     /**
      * Pulls a box.
      * 
@@ -422,18 +425,22 @@ public class Board implements Cloneable
      * @param bx Relative x position of box
      * @param by Relative y position of box
      */
-    public void pull(int x, int y, int bx, int by) {
+    public void pull(int x, int y, int bx, int by)
+    {
         cells[y][x] |= Board.BOX;
-        cells[y+by][x+bx] &= ~Board.BOX;
-        
-        if (is(cells[y+by][x+bx], BOX_START)) boxesInStart--;
-        if (is(cells[y][x], BOX_START)) boxesInStart++;
+        cells[y + by][x + bx] &= ~Board.BOX;
+
+        if (is(cells[y + by][x + bx], BOX_START))
+            boxesInStart--;
+        if (is(cells[y][x], BOX_START))
+            boxesInStart++;
     }
-    
+
     /**
      * Swaps boxes with goals.
-     */ 
-    public void reverse() {
+     */
+    public void reverse()
+    {
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 cells[row][col] &= ~BOX;
@@ -447,5 +454,22 @@ public class Board implements Cloneable
         boxesInStart = temp;
     }
 
-}
+    /**
+     * Return the position for all boxes on the board
+     * 
+     * @return A collection of positions of boxes
+     */
+    public Collection<Position> getBoxes()
+    {
+        Collection<Position> tmp = new LinkedList<Position>();
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                if (is(cells[row][col], BOX)) {
+                    tmp.add(new Position(row, col));
+                }
+            }
+        }
+        return tmp;
+    }
 
+}
