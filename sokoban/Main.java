@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import sokoban.solvers.IDS;
+import sokoban.solvers.Puller;
 import sokoban.solvers.Solver;
 
 /**
@@ -44,7 +45,7 @@ public class Main
             System.out.println("Parse time (ms): " + parseTime);
             
             long beforeSolve = System.currentTimeMillis();
-            Solver solver = new IDS();
+            Solver solver = new Puller();
             String solution = solver.solve(board);
             long solveTime = System.currentTimeMillis() - beforeSolve;
 
