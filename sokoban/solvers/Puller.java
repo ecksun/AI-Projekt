@@ -44,7 +44,7 @@ public class Puller implements Solver
     @Override
     public String solve(Board inputBoard)
     {
-        rand = new Random();
+        rand = new Random(500);
         startBoard = (Board) inputBoard.clone();
         numBoxes = startBoard.getRemainingBoxes();
         startBoard.reverse();
@@ -61,8 +61,10 @@ public class Puller implements Solver
             
             PlayerPosDir playerPosDir;
             do {
-                // TODO must be able to move to this block!
                 playerPosDir = choosePosition();
+                // No moves are possible
+                if (playerPosDir == null) break;
+                
                 while (moveBox(playerPosDir)) {
                     if (solved()) break finished;
                     // TODO choose Condition X and exit from
@@ -91,6 +93,8 @@ public class Puller implements Solver
     {
         int newx = pos.x - pos.bx;
         int newy = pos.y - pos.by;
+        
+        System.err.println(pos.x+", "+pos.y+"  :  "+pos.bx+", "+pos.by+" ---> "+newx+", "+newy);
         
         iterationsCount++;
         
