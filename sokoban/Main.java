@@ -22,13 +22,13 @@ public class Main
      */
     public static void main(String[] args)
     {
-        if (args.length < 1) {
-            System.err.println("You need to supply board number as argument");
+        if (args.length < 2) {
+            System.err.println("You need to supply solver and board number as argument");
             return;
         }
         try {
             byte[] boardbytes = new byte[1024];
-            int boardNumber = Integer.parseInt(args[0]);
+            int boardNumber = Integer.parseInt(args[1]);
 
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
             InputStream inRaw = socket.getInputStream();
@@ -45,7 +45,23 @@ public class Main
             System.out.println("Parse time (ms): " + parseTime);
             
             long beforeSolve = System.currentTimeMillis();
-            Solver solver = new IDS();
+            
+            ClassLoader classLoader = Main.class.getClassLoader();
+            Solver solver;
+            try {
+                solver = (Solver) classLoader.
+                    loadClass("sokoban.solvers." + args[0]).newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+                return;
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+            
             String solution = solver.solve(board);
             long solveTime = System.currentTimeMillis() - beforeSolve;
 
