@@ -1,8 +1,5 @@
 package sokoban;
 
-import sokoban.Board.Direction;
-import sun.security.jca.GetInstance.Instance;
-
 /**
  * Position represents a (row, column) index in a matrix.
  */
@@ -60,9 +57,9 @@ public class Position
 
         return this.row == pos.row && this.column == pos.column;
     }
-    
+
     @Override
-    public String toString() 
+    public String toString()
     {
         return "[" + row + "][" + column + "]";
     }
