@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import sokoban.solvers.Solver;
+import sokoban.solvers.SolverFactory;
 
 /**
  * The main class that handles the execution of the program
@@ -27,7 +28,7 @@ public class Main
         }
         try {
             byte[] boardbytes = new byte[1024];
-            Solver solver = loadSolver(args[0]);
+            Solver solver = SolverFactory.loadSolver(args[0]);
             int boardNumber = Integer.parseInt(args[1]);
 
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
@@ -63,33 +64,5 @@ public class Main
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Returns a solver instance that corresponds to the given solver name.
-     * 
-     * @param solverName A string containing the name of the solver class.
-     * @return A solver instance.
-     */
-    public static Solver loadSolver(String solverName)
-    {
-        ClassLoader classLoader = Main.class.getClassLoader();
-        Solver solver = null;
-        
-        try {
-            solver = (Solver) classLoader.loadClass(
-                    "sokoban.solvers." + solverName).newInstance();
-        }
-        catch (InstantiationException e) {
-            e.printStackTrace();
-        }
-        catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        
-        return solver; 
     }
 }
