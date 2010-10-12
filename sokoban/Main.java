@@ -6,8 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import sokoban.solvers.IDS;
-import sokoban.solvers.Puller;
 import sokoban.solvers.Solver;
 
 /**
