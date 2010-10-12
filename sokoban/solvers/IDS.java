@@ -111,6 +111,10 @@ public class IDS implements Solver
             // The move is possible
 
             // Make the move on a copy of the board
+            // TODO keep track of this move (and any box that gets moved)
+            //      and restore it instead of making a copy. If the node
+            //      has to be stored in failedBoards or visitedBoards, then
+            //      make a copy "on demand".
             Board successor = (Board) board.clone();
             successor.move(dir);
             
