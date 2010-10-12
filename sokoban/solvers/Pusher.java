@@ -5,9 +5,11 @@ package sokoban.solvers;
 
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 import sokoban.Board;
 import sokoban.Position;
@@ -82,6 +84,8 @@ public class Pusher implements Solver
 
     public String solve(Board board)
     {
+        // Set of visited boards, including the player position
+        Set<Board> visitedBoards = new HashSet<Board>();
         Queue<SearchNode> queue = new LinkedList<SearchNode>();
         queue.add(new SearchNode(new LinkedList<Direction>(), board, null));
         SearchNode node;
@@ -89,6 +93,14 @@ public class Pusher implements Solver
             if ((node = queue.poll()) == null) {
                 return null;
             }
+            
+            if (visitedBoards.contains(node.board)) {
+                continue; // This node has been visited so skip it
+            } else {
+                visitedBoards.add(node.board);
+            }
+            
+            // TODO we could check that we only add unvisited nodes
             queue.addAll(getAllSuccessorStates(node));
         }
         while (node.board.getRemainingBoxes() != 0);
