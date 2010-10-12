@@ -18,10 +18,8 @@ public class Position
     /**
      * Constructs a new position.
      * 
-     * @param row
-     *            The row index.
-     * @param column
-     *            The column index.
+     * @param row The row index.
+     * @param column The column index.
      */
     public Position(int row, int column)
     {
@@ -33,9 +31,8 @@ public class Position
      * Constructs the position that is placed one step in the given direction
      * (move) from the given position.
      * 
-     * @param pos
-     * @param move
-     *            Should be a 2-length array with move[0]==row and
+     * @param pos The position to start from.
+     * @param move Should be a 2-length array with move[0]==row and
      *            move[1]==column.
      */
     public Position(Position pos, int[] move)
