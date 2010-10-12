@@ -41,7 +41,6 @@ public class Puller implements Solver
         }
     }
 
-    @Override
     public String solve(Board inputBoard)
     {
         rand = new Random(500);
@@ -141,7 +140,6 @@ public class Puller implements Solver
         return null;
     }
 
-    @Override
     public int getIterationsCount()
     {
         return iterationsCount;

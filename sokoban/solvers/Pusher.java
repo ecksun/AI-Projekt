@@ -62,14 +62,12 @@ public class Pusher implements Solver
         }
     }
 
-    @Override
     public int getIterationsCount()
     {
         // TODO Auto-generated method stub
         return 0;
     }
 
-    @Override
     public String solve(Board board)
     {
         Queue<SearchNode> queue = new LinkedList<SearchNode>();

@@ -12,6 +12,6 @@ else
     BOARD=3
 fi
 
-javac -sourcepath . sokoban/Main.java
+javac -sourcepath . sokoban/Main.java sokoban/solvers/*.java
 java -classpath . sokoban.Main $SOLVER $BOARD
 

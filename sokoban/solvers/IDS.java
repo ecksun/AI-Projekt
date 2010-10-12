@@ -216,7 +216,6 @@ public class IDS implements Solver
         return null;
     }
 
-    @Override
     public int getIterationsCount()
     {
         return iterationsCount;
