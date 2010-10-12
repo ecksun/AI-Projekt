@@ -73,7 +73,7 @@ public class Board implements Cloneable
     /**
      * All four allowed moves: { row, column }
      */
-    private static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
+    public static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
             { 0, 1 } };
 
     public enum Direction {
@@ -269,7 +269,7 @@ public class Board implements Cloneable
      * @param solution A list of board directions
      * @return The solution as a string
      */
-    public static String solutionToString(LinkedList<Board.Direction> solution)
+    public static String solutionToString(Deque<Board.Direction> solution)
     {
         StringBuilder sb = new StringBuilder(2 * solution.size());
         for (Board.Direction move : solution) {
@@ -599,7 +599,7 @@ public class Board implements Cloneable
     {
         return isBoxAhead(new Position(playerRow, playerCol), dir);
     }
-    
+
     /**
      * Returns true if there's a box in any of the four squares surrounding
      * the player.
@@ -607,7 +607,8 @@ public class Board implements Cloneable
     public boolean isBoxNearby()
     {
         for (Direction dir : Direction.values()) {
-            if (isBoxAhead(dir)) return true;
+            if (isBoxAhead(dir))
+                return true;
         }
         return false;
     }
@@ -716,14 +717,19 @@ public class Board implements Cloneable
             return new LinkedList<Direction>();
         }
 
-        visited.add(start);
+        if (!visited.add(start))
+            return null;
 
         for (Direction dir : Direction.values()) {
             Position newPosition = new Position(start, moves[dir.ordinal()]);
 
+            
             // We do not move any boxes while going this path.
-            if (contains(newPosition) && !visited.contains(newPosition)
-                    && !isBoxAhead(start, dir) && canMove(dir)) {
+            if (contains(newPosition)
+                    && !visited.contains(newPosition)
+                    && !isBoxAhead(start, dir)
+                    && !is(cells[newPosition.row][newPosition.column],
+                            (byte) (WALL | BOX))) {
 
                 Deque<Direction> solution = findPath(newPosition, goal, visited);
 
