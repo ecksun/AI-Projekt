@@ -825,7 +825,7 @@ public class Board implements Cloneable
             int row = startRow + moves[dir.ordinal()][0];
             int col = startCol + moves[dir.ordinal()][1];
             
-            if (!is(cells[row][col], REJECT_WALK)) {
+            if (!is(cells[row][col], (byte) (WALL | VISITED | BOX))) {
                 int pos = updateTopLeftReachableDFS(row, col);
                 if (pos < minimum) minimum = pos;
             }
