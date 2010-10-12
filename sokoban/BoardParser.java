@@ -109,7 +109,9 @@ public class BoardParser
             StringBuilder partialLevel = new StringBuilder();
 
             while ((line = in.readLine()) != null) {
-                if (line.startsWith(";LEVEL")) {
+                if (line.trim().isEmpty()) continue;
+                
+                if (line.startsWith(";")) {
                     if (partialLevel.length() > 0) {
                         levels.add(partialLevel.toString());
                         partialLevel = new StringBuilder();
