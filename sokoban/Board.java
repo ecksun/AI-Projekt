@@ -111,6 +111,13 @@ public class Board implements Cloneable
     public int playerRow;
     private int remainingBoxes;
     private int boxesInStart;
+    
+    /**
+     * The topmost, leftmost square the player can reach. Please update with
+     * updateTopLeftReachable() after the board has changed and before it's
+     * hashed.
+     */
+    public int topLeftReachable;
 
     /**
      * Initialize a new board
@@ -555,20 +562,24 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns a hash of the boxes and player position.
+     * Returns a hash of the boxes and the topmost, leftmost reachable
+     * player position.
      * 
      * @return The hash
      */
     public long getPlayerBoxesHash()
     {
-        long hash = getBoxesHash();
-
-        // Add player position to the last 16 bytes of the hash
-        hash ^= (playerRow << 56) ^ (playerCol << 48);
-
-        return hash;
+        // Add the topmost, leftmost reachable position
+        // to the last 16 bytes of the hash
+        return getBoxesHash() ^ (topLeftReachable << 48);
     }
 
+    /**
+     * Compares two boards for equality.
+     *
+     * @note The topmost, leftmost reachable position is compared instead of
+     *       the actual player position.
+     */
     @Override
     public boolean equals(Object other)
     {
@@ -577,7 +588,7 @@ public class Board implements Cloneable
 
         Board o = (Board) other;
 
-        if (playerRow != o.playerRow || playerCol != o.playerCol)
+        if (topLeftReachable != o.topLeftReachable)
             return false;
 
         // The outer rows/columns are always walls (or not reachable)
@@ -791,5 +802,35 @@ public class Board implements Cloneable
         }
     }
     
+    /**
+     * Updates the minimum top left position that the player can move to,
+     * defined as (row*width)+col. This is used for duplicate detection.
+     */
+    public void updateTopLeftReachable()
+    {
+        clearVisited();
+        int topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
+    }
+    
+    /**
+     * Recursive part of updateTopLeftReachable
+     */
+    public int updateTopLeftReachableDFS(int startRow, int startCol)
+    {
+        cells[startRow][startCol] |= VISITED;
+        
+        int minimum = (startRow*width) + startCol;
+        for (Direction dir : Direction.values()) {
+            int row = startRow + moves[dir.ordinal()][0];
+            int col = startCol + moves[dir.ordinal()][1];
+            
+            if (!is(cells[row][col], REJECT_WALK)) {
+                int pos = updateTopLeftReachableDFS(row, col);
+                if (pos < minimum) minimum = pos;
+            }
+        }
+        
+        return minimum;
+    }
     
 }

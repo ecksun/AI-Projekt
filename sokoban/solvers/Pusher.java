@@ -75,6 +75,8 @@ public class Pusher implements Solver
             board.playerRow = playerStartPosition.row;
             path.add(dir);
             board.move(dir);
+            
+            board.updateTopLeftReachable();
         }
     }
 
