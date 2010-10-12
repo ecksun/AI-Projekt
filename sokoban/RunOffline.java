@@ -10,15 +10,15 @@ public class RunOffline {
 
     public static void main(String[] args)
     {
-        if (args.length < 2) {
-            System.err.println("You need to supply the solver name and the board number as arguments!\n");
+        if (args.length < 3) {
+            System.err.println("Usage: java sokoban.RunOffline  solver  level_file  level_number\n");
             System.exit(2);
         }
         
-        int boardNumber = Integer.parseInt(args[1]);
+        int boardNumber = Integer.parseInt(args[2]);
         Solver solver = SolverFactory.loadSolver(args[0]);
         
-        File slc = new File("custom.slc");
+        File slc = new File(args[1]);
         List<String> boards = BoardParser.getBoardStrings(slc);
         
         Board board = BoardParser.parse(boards.get(boardNumber-1).getBytes());
