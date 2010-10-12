@@ -18,6 +18,8 @@ import sokoban.Board.Direction;
  */
 public class Pusher implements Solver
 {
+    public static int generatedNodes = 0;
+    
     /**
      * Small little container class for a searchnode
      * Each searchnode contains the path to it, the board its handling and the
@@ -50,6 +52,7 @@ public class Pusher implements Solver
             this.path = path;
             this.board = (Board) board.clone();
             this.parent = parent;
+            Pusher.generatedNodes++;
         }
 
         /**
@@ -74,8 +77,7 @@ public class Pusher implements Solver
 
     public int getIterationsCount()
     {
-        // TODO Auto-generated method stub
-        return 0;
+        return generatedNodes;
     }
 
     public String solve(Board board)
@@ -142,7 +144,6 @@ public class Pusher implements Solver
                     tmp
                             .add(new SearchNode(path, Direction.RIGHT, player,
                                     node));
-
                 }
             }
             if (!Board.is(node.board.cells[box.row][box.column - 1],
