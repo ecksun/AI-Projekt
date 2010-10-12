@@ -727,7 +727,6 @@ public class Board implements Cloneable
             // We do not move any boxes while going this path.
             if (contains(newPosition)
                     && !visited.contains(newPosition)
-                    && !isBoxAhead(start, dir)
                     && !is(cells[newPosition.row][newPosition.column],
                             (byte) (WALL | BOX))) {
 
