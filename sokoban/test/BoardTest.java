@@ -1,12 +1,19 @@
 package sokoban.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import sokoban.Board;
+import sokoban.Position;
+import sokoban.Board.Direction;
 
 public class BoardTest
 {
@@ -89,24 +96,22 @@ public class BoardTest
     @Test
     public void cloneBoard()
     {
-        System.out.println(b1);
-        
-        Board b2 = (Board) b1.clone();
+        Board clone = (Board) b1.clone();
 
         for (int row = 0; row < b1.height; ++row) {
             for (int col = 0; col < b1.width; ++col) {
                 assertEquals("Value at row index " + row + " and col index "
                         + col + " in clone and original equals.",
-                        b1.cells[row][col], b2.cells[row][col]);
+                        b1.cells[row][col], clone.cells[row][col]);
             }
         }
 
         b1.cells[3][1] = Board.GOAL;
         b1.cells[2][1] = Board.BOX;
         
-        b2.cells[3][1] = Board.WALL;
+        clone.cells[3][1] = Board.WALL;
         
-        assertEquals("", b2.cells[3][1], Board.BOX);
+        assertNotSame("Changing clone does not change original.", Board.WALL, b1.cells[3][1]);
         
     }
     
@@ -158,4 +163,24 @@ public class BoardTest
         assertEquals(1, b2.getRemainingBoxes());
     }
 
+    @Test
+    public void findPath()
+    {
+        Deque<Direction> path = b1.findPath(new Position(3, 2));
+           
+        Deque<Direction> onlyPossiblePath = new LinkedList<Direction>();
+        onlyPossiblePath.add(Direction.DOWN);
+        onlyPossiblePath.add(Direction.DOWN);
+        onlyPossiblePath.add(Direction.RIGHT);
+        
+        Iterator<Direction> pathIterator = path.iterator();
+        Iterator<Direction> realPathIterator = onlyPossiblePath.iterator();
+        
+        while (pathIterator.hasNext()) {
+            assertEquals("Real path has more elements while found path has it.", true, realPathIterator.hasNext());
+            assertEquals("Path element (directions) equals.", pathIterator.next(), realPathIterator.next());
+        }
+        
+    }
+    
 }

@@ -94,7 +94,7 @@ public class Pusher implements Solver
         Collection<SearchNode> tmp = new LinkedList<SearchNode>();
         for (Position box : node.board.getBoxes()) {
             // if (accessible(node.board, box)
-
+            
             // This might be a problem with array index out of bounds if the box
             // is right next to the end of the board
             if (!Board.is(node.board.cells[box.row + 1][box.column],

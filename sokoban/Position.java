@@ -60,5 +60,11 @@ public class Position
 
         return this.row == pos.row && this.column == pos.column;
     }
+    
+    @Override
+    public String toString() 
+    {
+        return "[" + row + "][" + column + "]";
+    }
 
 }

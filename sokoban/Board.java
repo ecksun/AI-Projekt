@@ -1,11 +1,9 @@
 package sokoban;
 
-
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 
 /**
  *
@@ -16,29 +14,29 @@ public class Board implements Cloneable
     /**
      * Value for a WALL on the board
      */
-    public final static byte WALL         = 0x01;
+    public final static byte WALL = 0x01;
     /**
      * Value for a BOX on the board
      */
-    public final static byte BOX          = 0x02;
+    public final static byte BOX = 0x02;
     /**
      * Value for a GOAL position on the board
      */
-    public final static byte GOAL         = 0x04;
+    public final static byte GOAL = 0x04;
 
     // Generated values
     /**
      * Boxes will get stuck in this square
      */
-    public final static byte BOX_TRAP     = 0x08;
+    public final static byte BOX_TRAP = 0x08;
     /**
      * The player has already passed this cell the since last move
      */
-    public final static byte VISITED      = 0x10;
+    public final static byte VISITED = 0x10;
     /**
      * Starting position of a box
      */
-    public final static byte BOX_START    = 0x20;
+    public final static byte BOX_START = 0x20;
     /**
      * Starting position of the player
      */
@@ -49,12 +47,12 @@ public class Board implements Cloneable
      * A bitmask that says that a cell can't be walked into when
      * pushing, but not pulling, is allowed.
      */
-    public final static byte REJECT_WALK  = WALL | VISITED;
+    public final static byte REJECT_WALK = WALL | VISITED;
     /**
      * A bitmask that says that a cell can't be walked into when
      * pulling, but not pushing, is allowed.
      */
-    public final static byte REJECT_PULL  = WALL | VISITED | BOX;
+    public final static byte REJECT_PULL = WALL | VISITED | BOX;
     /**
      * A bitmask that says that a box can't be moved into the cell, for one or
      * more of the following reasons:
@@ -66,18 +64,17 @@ public class Board implements Cloneable
      * </ul>
      */
     public final static byte REJECT_BOX = WALL | BOX | BOX_TRAP;
-    
+
     /**
      * Don't move boxes here at any time!
      */
     public final static byte WALL_OR_TRAP = WALL | BOX_TRAP;
 
-
     /**
      * All four allowed moves: { row, column }
      */
-    private static final int moves[][]    = { { -1, 0 }, { 1, 0 }, { 0, -1 },
-            { 0, 1 }                     };
+    private static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
+            { 0, 1 } };
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT,
@@ -111,7 +108,6 @@ public class Board implements Cloneable
     public int playerRow;
     private int remainingBoxes;
     private int boxesInStart;
-
 
     /**
      * Initialize a new board
@@ -248,14 +244,14 @@ public class Board implements Cloneable
     public char cellToChar(int row, int col)
     {
         byte cell = cells[row][col];
-        
+
         // Check for some errors first
         if (is(cell, BOX_TRAP) && is(cell, GOAL))
             return 'E'; // Goal on trap = error!
-        
+
         if (is(cell, BOX_TRAP) && is(cell, BOX))
             return 'e'; // Box in trap = error!
-        
+
         // No errors detected in this cell
         if (playerRow == row && playerCol == col) {
             return is(cell, Board.GOAL) ? '+' : '@';
@@ -289,74 +285,83 @@ public class Board implements Cloneable
     private void markNonBoxSquares()
     {
         // Mark corners
-        for (int row = 1; row < height-1; row++) {
-            for (int col = 1; col < width-1; col++) {
+        for (int row = 1; row < height - 1; row++) {
+            for (int col = 1; col < width - 1; col++) {
                 // Goal squares usually aren't traps
                 // (if the right block is placed there)
-                if (is(cells[row][col], GOAL)) continue;
-                
-                boolean horizontalBlocked = is(cells[row-1][col], WALL) ||
-                    is(cells[row+1][col], WALL);
-                boolean verticalBlocked = is(cells[row][col-1], WALL) ||
-                    is(cells[row][col+1], WALL);
-                
+                if (is(cells[row][col], GOAL))
+                    continue;
+
+                boolean horizontalBlocked = is(cells[row - 1][col], WALL)
+                        || is(cells[row + 1][col], WALL);
+                boolean verticalBlocked = is(cells[row][col - 1], WALL)
+                        || is(cells[row][col + 1], WALL);
+
                 // This is a corner
                 if (horizontalBlocked && verticalBlocked)
                     cells[row][col] |= BOX_TRAP;
             }
         }
 
-        // Find dead lines between dead squares 
+        // Find dead lines between dead squares
         boolean changed;
         do {
             changed = false;
-            for (int row = 1; row < height-1; row++) {
-                for (int col = 1; col < width-1; col++) {
+            for (int row = 1; row < height - 1; row++) {
+                for (int col = 1; col < width - 1; col++) {
                     // Always start at a box trap
-                    if (!is(cells[row][col], BOX_TRAP)) continue;
-                    
+                    if (!is(cells[row][col], BOX_TRAP))
+                        continue;
+
                     // Look to the right
-                    for (int right = col+1; right < width-1; right++) {
+                    for (int right = col + 1; right < width - 1; right++) {
                         // Stop at goals
-                        if (is(cells[row][right], GOAL)) break;
-                        
-                        // Stop and mark cells if there's either wall or a trap cell
+                        if (is(cells[row][right], GOAL))
+                            break;
+
+                        // Stop and mark cells if there's either wall or a trap
+                        // cell
                         if (is(cells[row][right], WALL_OR_TRAP)) {
                             // Mark cells
-                            for (int i = col+1; i < right; i++) {
+                            for (int i = col + 1; i < right; i++) {
                                 cells[row][i] |= BOX_TRAP;
                                 changed = true;
                             }
                             break;
                         }
-                        
+
                         // Check if there's a way to move out the block
-                        if (!is(cells[row-1][right], WALL) &&
-                            !is(cells[row+1][right], WALL)) break;
+                        if (!is(cells[row - 1][right], WALL)
+                                && !is(cells[row + 1][right], WALL))
+                            break;
                     }
-                    
+
                     // Look below
-                    for (int down = row+1; down < height-1; down++) {
+                    for (int down = row + 1; down < height - 1; down++) {
                         // Stop at goals
-                        if (is(cells[down][col], GOAL)) break;
-                        
-                        // Stop and mark cells if there's either wall or a trap cell
+                        if (is(cells[down][col], GOAL))
+                            break;
+
+                        // Stop and mark cells if there's either wall or a trap
+                        // cell
                         if (is(cells[down][col], WALL_OR_TRAP)) {
                             // Mark cells
-                            for (int i = row+1; i < down; i++) {
+                            for (int i = row + 1; i < down; i++) {
                                 cells[i][col] |= BOX_TRAP;
                                 changed = true;
                             }
                             break;
                         }
-                        
+
                         // Check if there's a way to move out the block
-                        if (!is(cells[down][col-1], WALL) &&
-                            !is(cells[down][col+1], WALL)) break;
+                        if (!is(cells[down][col - 1], WALL)
+                                && !is(cells[down][col + 1], WALL))
+                            break;
                     }
                 }
             }
-        } while (changed);
+        }
+        while (changed);
     }
 
     /**
@@ -384,7 +389,8 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns true if the player can move in the given direction
+     * Returns true if the player can move in the given direction, including
+     * moves that results in box pushes.
      * 
      * @param dir The given direction
      * @return True if it is possible for the player to move in the direction
@@ -507,6 +513,7 @@ public class Board implements Cloneable
      * This works by XOR:ing the box spacing when the cells are laid
      * out on a line. To use the bits better in the hash, we rotate
      * the position we XOR with.
+     * 
      * @return The hash
      */
     public long getBoxesHash()
@@ -538,6 +545,7 @@ public class Board implements Cloneable
 
     /**
      * Returns a hash of the boxes and player position.
+     * 
      * @return The hash
      */
     public long getPlayerBoxesHash()
@@ -553,43 +561,84 @@ public class Board implements Cloneable
     @Override
     public boolean equals(Object other)
     {
-        if (!(other instanceof Board)) return false;
-        
+        if (!(other instanceof Board))
+            return false;
+
         Board o = (Board) other;
-        
+
         if (playerRow != o.playerRow || playerCol != o.playerCol)
             return false;
-        
+
         // The outer rows/columns are always walls (or not reachable)
-        for (int y = 1; y < height-1; y++) {
-            for (int x = 1; x < width-1; x++) {
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
                 int cell1 = cells[y][x] & BOX;
                 int cell2 = o.cells[y][x] & BOX;
-                if (cell1 != cell2) return false;
+                if (cell1 != cell2)
+                    return false;
             }
         }
-        
+
         return true;
     }
-    
+
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         long h = getPlayerBoxesHash();
         return (int) (h ^ (h >> 32));
     }
-    
+
     /**
      * Returns true if there's a box ahead of the player, in the direction dir.
+     * 
      * @param dir The direction in which to check
      * @return True if there is a box ahead of the player
      */
     public boolean isBoxAhead(Direction dir)
     {
+        return isBoxAhead(new Position(playerRow, playerCol), dir);
+    }
+
+    /**
+     * Returns whether or not the given position is contained in this board.
+     * 
+     * @param pos The position.
+     * @return True if this board contains the position, otherwise false.
+     */
+    public boolean contains(Position pos)
+    {
+        return contains(pos.row, pos.column);
+    }
+
+    /**
+     * Returns whether or not the position specified by the given row and column
+     * exists on this board.
+     * 
+     * @param row The row index.
+     * @param col The column index.
+     * @return True if it exists, otherwise false.
+     */
+    public boolean contains(int row, int col)
+    {
+        return row >= 0 && row < height && col >= 0 && col < width;
+    }
+
+    /**
+     * Checks if there is a box ahead of the given position in the given
+     * direction.
+     * 
+     * @param pos The position to check for boxes ahead of.
+     * @param dir The direction in which to check for boxes.
+     * @return True if there is a box ahead of the player, otherwise false.
+     */
+    public boolean isBoxAhead(Position pos, Direction dir)
+    {
         int move[] = moves[dir.ordinal()];
 
         // The cell that the player moves to
-        int row = playerRow + move[0];
-        int col = playerCol + move[1];
+        int row = pos.row + move[0];
+        int col = pos.column + move[1];
 
         return is(cells[row][col], BOX);
     }
@@ -628,7 +677,7 @@ public class Board implements Cloneable
      *            The position of the cell that we want to find a path to.
      * @return A collection
      */
-    public List<Direction> findPath(Position goal)
+    public Deque<Direction> findPath(Position goal)
     {
         HashSet<Position> visited = new HashSet<Position>();
 
@@ -647,7 +696,7 @@ public class Board implements Cloneable
      *            in examining.
      * @return A list of directions to go from start to goal.
      */
-    public List<Direction> findPath(Position start, Position goal,
+    public Deque<Direction> findPath(Position start, Position goal,
             HashSet<Position> visited)
     {
         // TODO: might want to skip .equals() in favour for performance
@@ -660,11 +709,14 @@ public class Board implements Cloneable
         for (Direction dir : Direction.values()) {
             Position newPosition = new Position(start, moves[dir.ordinal()]);
 
-            if (!visited.contains(newPosition) && canMove(dir)) {
-                List<Direction> solution = findPath(newPosition, goal, visited);
+            // We do not move any boxes while going this path.
+            if (contains(newPosition) && !visited.contains(newPosition)
+                    && !isBoxAhead(start, dir) && canMove(dir)) {
+
+                Deque<Direction> solution = findPath(newPosition, goal, visited);
 
                 if (solution != null) {
-                    solution.add(dir);
+                    solution.addFirst(dir);
                     return solution;
                 }
             }
@@ -672,5 +724,4 @@ public class Board implements Cloneable
 
         return null;
     }
-
 }
