@@ -21,23 +21,88 @@ public class IDS implements Solver
     private Set<Board> visitedBoards;
     
     /**
+     * Boards that just lead to deadlocks or already visited boards. It
+     * doesn't make sense to visit these in later iterations.
+     */ 
+    private Set<Board> failedBoards;
+    
+    
+    enum SearchStatus
+    {
+        /**
+         * The search reached the maximum depth, and no solution was found,
+         * so it's inconclusive (a solution could follow, but we don't know).
+         */
+        Inconclusive,
+        
+        /**
+         * This search resulted in a solution.
+         */
+        Solution,
+        
+        /**
+         * This search failed without reached the maximum depth, so there's
+         * no point in trying it again with a greater search depth.
+         */
+        Failed,
+    };
+    
+    /**
+     * Contains information about a search, whether it is failed, reached a
+     * solution or is inconclusive.
+     */
+    final static class SearchInfo
+    {
+        final SearchStatus status;
+        final LinkedList<Board.Direction> solution;
+        
+        static SearchInfo Inconclusive = new SearchInfo(SearchStatus.Inconclusive);
+        static SearchInfo Failed = new SearchInfo(SearchStatus.Inconclusive);
+        
+        public SearchInfo(SearchStatus status)
+        {
+            this.status = status;
+            this.solution = null;
+        }
+        
+        private SearchInfo()
+        {
+            this.status = SearchStatus.Solution;
+            this.solution = new LinkedList<Board.Direction>();
+        }
+        
+        public static SearchInfo emptySolution()
+        {
+            return new SearchInfo();
+        }
+    }
+    
+    /**
      * Recursive Depth-First algorithm
      * 
      * @param maxDepth The maximum depth.
      * @return
      */
-    private LinkedList<Board.Direction> dfs(Board board, int maxDepth)
+    private SearchInfo dfs(Board board, int maxDepth)
     {
         iterationsCount++;
         
         if (board.getRemainingBoxes() == 0) {
             // Found a solution
-            return new LinkedList<Board.Direction>();
+            return SearchInfo.emptySolution();
         }
 
         if (maxDepth <= 0)
-            return null;
+            return SearchInfo.Inconclusive;
 
+        // True if at least one successor tree was inconclusive.
+        boolean inconclusive = false;
+        
+        // Keep track of failed successors. If all successors fail we can
+        // fail ourselves (reduces the search tree). 
+        Board[] failed = new Board[4];
+        int numFailed = 0;
+        
         for (Board.Direction dir : Board.Direction.values()) {
             // Check that the move is possible
             if (!board.canMove(dir))
@@ -49,6 +114,13 @@ public class IDS implements Solver
             Board successor = (Board) board.clone();
             successor.move(dir);
             
+            // Skip boards that are known to not have solutions in their subtree
+            if (failedBoards.contains(successor)) {
+                // Keep the failed board for now
+                failed[numFailed++] = successor;
+                continue;
+            }
+            
             // Penalty (in moves): Used for "soft" duplicate avoiding and heuristics 
             int penalty = 1;
             
@@ -58,21 +130,42 @@ public class IDS implements Solver
                 
                 // Check for identical state with cells and player
                 if (visitedBoards.contains(successor)) {
-                    return null;
+                    continue;
                 } else {
                     visitedBoards.add(successor);
                 }
             }
 
             // Recurse
-            LinkedList<Board.Direction> sol = dfs(successor, maxDepth - penalty);
-            if (sol != null) {
-                sol.addFirst(dir);
-                return sol;
+            SearchInfo result = dfs(successor, maxDepth - penalty);
+            
+            switch (result.status) {
+                case Solution:
+                    // Found a solution. Return it now!
+                    result.solution.addFirst(dir);
+                    return result;
+                case Inconclusive:
+                    // Make the parent inconclusive too
+                    inconclusive = true;
+                    continue;
+                case Failed:
+                    // Keep the failed board for now
+                    failed[numFailed++] = successor;
+                    continue;
             }
         }
-
-        return null;
+        
+        if (inconclusive) {
+            // Add all successors that failed to the failed set
+            for (int i = 0; i < numFailed; i++) {
+                failedBoards.add(failed[i]);
+            }
+            return SearchInfo.Inconclusive;
+        } else {
+            // All successors failed. Return failure and the parent
+            // node will handle the failure.
+            return SearchInfo.Failed;
+        }
     }
 
     /**
@@ -99,6 +192,7 @@ public class IDS implements Solver
     public String solve(Board board)
     {
         final Board startBoard = board;
+        failedBoards = new HashSet<Board>();
         
         System.out.println("IDS depth limit (progress): ");
         for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
@@ -106,14 +200,17 @@ public class IDS implements Solver
             
             visitedBoards = new HashSet<Board>();
             
-            LinkedList<Board.Direction> solution = dfs(startBoard, maxDepth);
-            if (solution != null) {
+            SearchInfo result = dfs(startBoard, maxDepth);
+            if (result.solution != null) {
                 System.out.println();
-                return Board.solutionToString(solution);
+                return Board.solutionToString(result.solution);
+            } else if (result.status == SearchStatus.Failed) {
+                System.out.println("no solution!");
+                return null;
             }
         }
 
-        System.out.println("no solution!");
+        System.out.println("maximum depth reached!");
         return null;
     }
 
