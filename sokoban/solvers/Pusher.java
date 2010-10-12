@@ -14,6 +14,7 @@ import java.util.Set;
 import sokoban.Board;
 import sokoban.Position;
 import sokoban.Board.Direction;
+import sokoban.ReachableBox;
 
 /**
  * A solver that pushes boxes around.
@@ -128,46 +129,24 @@ public class Pusher implements Solver
      */
     private Collection<SearchNode> getAllSuccessorStates(SearchNode node)
     {
-        Collection<SearchNode> tmp = new LinkedList<SearchNode>();
-        for (Position box : node.board.getBoxes()) {
+        Collection<SearchNode> successors = new LinkedList<SearchNode>();
+        byte[][] cells = node.board.cells;
+        
+        for (ReachableBox reachable : node.board.findReachableBoxSquares()) {
+            for (Direction dir : Board.Direction.values()) {
+                Position from = new Position(reachable.position, Board.moves[dir.ordinal()]);
+                Position to = new Position(from, Board.moves[dir.ordinal()]);
+                if (Board.is(cells[from.row][from.column], Board.BOX) &&
+                    !Board.is(cells[to.row][to.column], Board.REJECT_BOX)) {
+                    
+                    Deque<Direction> playerPath = new LinkedList<Direction>(reachable.path);
+                    //playerPath.addLast(dir);
 
-            Deque<Direction> path;
-            Position player;
-            // This might be a problem with array index out of bounds if the box
-            // is right next to the end of the board
-            if (!Board.is(node.board.cells[box.row + 1][box.column],
-                    Board.REJECT_BOX)) {
-                player = new Position(box.row - 1, box.column);
-                if ((path = node.board.findPath(player)) != null) {
-                    tmp.add(new SearchNode(path, Direction.DOWN, player, node));
+                    successors.add(new SearchNode(playerPath, dir, reachable.position, node));
                 }
             }
-            if (!Board.is(node.board.cells[box.row - 1][box.column],
-                    Board.REJECT_BOX)) {
-                player = new Position(box.row + 1, box.column);
-                if ((path = node.board.findPath(player)) != null) {
-                    tmp.add(new SearchNode(path, Direction.UP, player, node));
-                }
-            }
-            if (!Board.is(node.board.cells[box.row][box.column + 1],
-                    Board.REJECT_BOX)) {
-                player = new Position(box.row, box.column - 1);
-                if ((path = node.board.findPath(player)) != null) {
-                    tmp
-                            .add(new SearchNode(path, Direction.RIGHT, player,
-                                    node));
-                }
-            }
-            if (!Board.is(node.board.cells[box.row][box.column - 1],
-                    Board.REJECT_BOX)) {
-                player = new Position(box.row, box.column + 1);
-                if ((path = node.board.findPath(player)) != null) {
-                    tmp.add(new SearchNode(path, Direction.LEFT, player, node));
-
-                }
-            }
-
         }
-        return tmp;
+        
+        return successors;
     }
 }

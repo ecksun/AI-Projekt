@@ -1,9 +1,12 @@
 package sokoban;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
+
+import sokoban.ReachableBox;
 
 /**
  *
@@ -691,9 +694,6 @@ public class Board implements Cloneable
      * denote the direction in which we should go from that square to get back
      * to the player.
      * 
-     * TODO: We might want to get a list of goal positions here, so that we in
-     * just one search can find the path to multiple goals.
-     * 
      * @param goal
      *            The position of the cell that we want to find a path to.
      * @return A collection
@@ -742,4 +742,54 @@ public class Board implements Cloneable
 
         return null;
     }
+    
+    /**
+     * Finds all boxes that can be reached by the player.
+     * 
+     * @return A collection of ReachableBox objects
+     */
+    public Collection<ReachableBox> findReachableBoxSquares()
+    {
+        clearVisited();
+        ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(20);
+        findReachableWithDFS(reachable, playerRow, playerCol,
+            new LinkedList<Direction>());     
+        return reachable;
+    }
+    
+    /**
+     * Finds all boxes that can be reached by the player.
+     * 
+     * @return A collection of ReachableBox objects
+     */
+    public void findReachableWithDFS(
+        ArrayList<ReachableBox> reachable, int startRow, int startCol,
+        LinkedList<Direction> path)
+    {
+        cells[startRow][startCol] |= VISITED;
+        
+        boolean boxNearby = false;
+        for (Direction dir : Direction.values()) {
+            int row = startRow + moves[dir.ordinal()][0];
+            int col = startCol + moves[dir.ordinal()][1];
+            
+            if (is(cells[row][col], BOX)) {
+                boxNearby = true;
+                continue;
+            }
+            
+            if (!is(cells[row][col], REJECT_WALK)) {
+                path.addLast(dir);
+                findReachableWithDFS(reachable, row, col, path);
+                path.removeLast();
+            }
+        }
+        
+        if (boxNearby) {
+            reachable.add(new ReachableBox(new Position(startRow, startCol),
+                new LinkedList<Direction>(path)));
+        }
+    }
+    
+    
 }
