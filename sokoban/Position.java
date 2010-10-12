@@ -55,6 +55,18 @@ public class Position
         return this.row == pos.row && this.column == pos.column;
     }
 
+    /**
+     * Calculate the hashCode by bitshifting the row by 16 bits and oring in the
+     * column.
+     * 
+     * @note Collisions ARE POSSIBLE if row and/or column are larger than 16
+     *       bits (>65536)
+     */
+    public int hashCode()
+    {
+        return (row << 16) | column;
+    }
+
     @Override
     public String toString()
     {
