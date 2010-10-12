@@ -7,6 +7,7 @@ import sokoban.Board;
 import sokoban.BoardParser;
 import sokoban.solvers.IDS;
 import sokoban.solvers.Solver;
+import sokoban.solvers.SolverFactory;
 
 /**
  * Benchmarker uses a Sokoban solver to solve different boards several times
@@ -15,22 +16,22 @@ import sokoban.solvers.Solver;
 public class Benchmarker
 {
 
-    public static final String     levelsFilename = "custom.slc";
+    public static final String levelsFilename = "custom.slc";
 
     /**
      * The number of times to run tests on a board.
      */
-    public static final int        TEST_RUNS      = 10;
+    public static final int TEST_RUNS = 10;
 
     /**
      * The solver to be benchmarked.
      */
-    private Solver                 solver;
+    private Solver solver;
 
     /**
      * Boards to test.
      */
-    private ArrayList<Board>       boards;
+    private ArrayList<Board> boards;
 
     /**
      * A list of results for each solved board.
@@ -80,7 +81,9 @@ public class Benchmarker
                 solver.solve(board);
                 runTime = System.currentTimeMillis() - startTime;
 
-                results.add(new TestResult(runTime, solver.getIterationsCount()));
+                results
+                        .add(new TestResult(runTime, solver
+                                .getIterationsCount()));
 
             }
 
@@ -117,7 +120,8 @@ public class Benchmarker
     public static void main(String[] args)
     {
 
-        Benchmarker benchmarker = new Benchmarker(new IDS());
+        Benchmarker benchmarker = new Benchmarker(SolverFactory
+                .loadSolver(args[0]));
 
         benchmarker.setup();
         benchmarker.runTests();
