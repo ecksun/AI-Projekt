@@ -116,8 +116,6 @@ public class IDS implements Solver
             
             // Skip boards that are known to not have solutions in their subtree
             if (failedBoards.contains(successor)) {
-                // Keep the failed board for now
-                failed[numFailed++] = successor;
                 continue;
             }
             
