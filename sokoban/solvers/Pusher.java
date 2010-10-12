@@ -22,7 +22,7 @@ import sokoban.ReachableBox;
 public class Pusher implements Solver
 {
     public static int generatedNodes = 0;
-    
+
     /**
      * Small little container class for a searchnode
      * Each searchnode contains the path to it, the board its handling and the
@@ -75,7 +75,7 @@ public class Pusher implements Solver
             board.playerRow = playerStartPosition.row;
             path.add(dir);
             board.move(dir);
-            
+
             board.updateTopLeftReachable();
         }
     }
@@ -96,22 +96,24 @@ public class Pusher implements Solver
             if ((node = queue.poll()) == null) {
                 return null;
             }
-            
+
             if (visitedBoards.contains(node.board)) {
                 continue; // This node has been visited so skip it
-            } else {
+            }
+            else {
                 visitedBoards.add(node.board);
             }
-            
+
             // TODO we could check that we only add unvisited nodes
             queue.addAll(getAllSuccessorStates(node));
         }
         while (node.board.getRemainingBoxes() != 0);
-        
+
+        // Go through the path and print it
         SearchNode tmp = node;
         Deque<Direction> path = new LinkedList<Direction>();
-        Iterator<Direction> descIt; 
-        
+        Iterator<Direction> descIt;
+
         while (tmp != null) {
             descIt = tmp.path.descendingIterator();
             while (descIt.hasNext()) {
@@ -133,22 +135,26 @@ public class Pusher implements Solver
     {
         Collection<SearchNode> successors = new LinkedList<SearchNode>();
         byte[][] cells = node.board.cells;
-        
+
         for (ReachableBox reachable : node.board.findReachableBoxSquares()) {
             for (Direction dir : Board.Direction.values()) {
-                Position from = new Position(reachable.position, Board.moves[dir.ordinal()]);
+                Position from = new Position(reachable.position,
+                        Board.moves[dir.ordinal()]);
                 Position to = new Position(from, Board.moves[dir.ordinal()]);
-                if (Board.is(cells[from.row][from.column], Board.BOX) &&
-                    !Board.is(cells[to.row][to.column], Board.REJECT_BOX)) {
-                    
-                    Deque<Direction> playerPath = new LinkedList<Direction>(reachable.path);
-                    //playerPath.addLast(dir);
+                if (Board.is(cells[from.row][from.column], Board.BOX)
+                        && !Board
+                                .is(cells[to.row][to.column], Board.REJECT_BOX)) {
 
-                    successors.add(new SearchNode(playerPath, dir, reachable.position, node));
+                    Deque<Direction> playerPath = new LinkedList<Direction>(
+                            reachable.path);
+                    // playerPath.addLast(dir);
+
+                    successors.add(new SearchNode(playerPath, dir,
+                            reachable.position, node));
                 }
             }
         }
-        
+
         return successors;
     }
 }
