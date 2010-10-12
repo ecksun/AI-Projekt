@@ -5,6 +5,7 @@ package sokoban.solvers;
 
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -46,7 +47,6 @@ public class Pusher implements Solver
          */
         public SearchNode(Deque<Direction> path, Board board, SearchNode parent)
         {
-            System.out.println("Generating new node");
             this.path = path;
             this.board = (Board) board.clone();
             this.parent = parent;
@@ -64,10 +64,9 @@ public class Pusher implements Solver
                 Position playerStartPosition, SearchNode parent)
         {
             // TODO it is possible to generate the path from parent when needed.
-            this(new LinkedList<Direction>(), parent.board, parent);
+            this(newPath, parent.board, parent);
             board.playerCol = playerStartPosition.column;
             board.playerRow = playerStartPosition.row;
-            path.addAll(newPath);
             path.add(dir);
             board.move(dir);
         }
@@ -91,8 +90,19 @@ public class Pusher implements Solver
             queue.addAll(getAllSuccessorStates(node));
         }
         while (node.board.getRemainingBoxes() != 0);
-        System.out.println(Board.solutionToString(node.path));
-        return Board.solutionToString(node.path);
+        
+        SearchNode tmp = node;
+        Deque<Direction> path = new LinkedList<Direction>();
+        Iterator<Direction> descIt; 
+        
+        while (tmp != null) {
+            descIt = tmp.path.descendingIterator();
+            while (descIt.hasNext()) {
+                path.addFirst(descIt.next());
+            }
+            tmp = tmp.parent;
+        }
+        return Board.solutionToString(path);
     }
 
     /**
@@ -105,10 +115,7 @@ public class Pusher implements Solver
     private Collection<SearchNode> getAllSuccessorStates(SearchNode node)
     {
         Collection<SearchNode> tmp = new LinkedList<SearchNode>();
-        System.out.println("node:" + node);
-        System.out.println("node.board:\n" + node.board);
         for (Position box : node.board.getBoxes()) {
-            // if (accessible(node.board, box)
 
             Deque<Direction> path;
             Position player;
@@ -116,19 +123,15 @@ public class Pusher implements Solver
             // is right next to the end of the board
             if (!Board.is(node.board.cells[box.row + 1][box.column],
                     Board.REJECT_BOX)) {
-                System.out.println("Board.is down");
                 player = new Position(box.row - 1, box.column);
                 if ((path = node.board.findPath(player)) != null) {
-                    System.out.println("Baord.is down foudn path");
                     tmp.add(new SearchNode(path, Direction.DOWN, player, node));
                 }
             }
             if (!Board.is(node.board.cells[box.row - 1][box.column],
                     Board.REJECT_BOX)) {
-                System.out.println("board is up");
                 player = new Position(box.row + 1, box.column);
                 if ((path = node.board.findPath(player)) != null) {
-                    System.out.println("board is up found path");
                     tmp.add(new SearchNode(path, Direction.UP, player, node));
                 }
             }
