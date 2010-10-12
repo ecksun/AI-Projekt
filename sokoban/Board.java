@@ -457,10 +457,18 @@ public class Board implements Cloneable
             // System.out.println("remaining boxes: "+remainingBoxes);
 
             // Clear "visited" marks
-            for (int r = 0; r < height; r++) {
-                for (int c = 0; c < width; c++) {
-                    cells[r][c] &= ~VISITED;
-                }
+            clearVisited();
+        }
+    }
+    
+    /**
+     * Removes the VISITED flag from all squares. The VISITED flag is typically
+     * used temporarily by algorithms to find shortest paths and avoid loops.
+     */
+    public void clearVisited() {
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                cells[r][c] &= ~VISITED;
             }
         }
     }
@@ -692,9 +700,8 @@ public class Board implements Cloneable
      */
     public Deque<Direction> findPath(Position goal)
     {
-        HashSet<Position> visited = new HashSet<Position>();
-
-        return findPath(new Position(playerRow, playerCol), goal, visited);
+        clearVisited();
+        return findPath(new Position(playerRow, playerCol), goal);
     }
 
     /**
@@ -704,21 +711,16 @@ public class Board implements Cloneable
      *            Starting position.
      * @param goal
      *            Goal position.
-     * @param visited
-     *            A set of already visited positions that we are not interested
-     *            in examining.
      * @return A list of directions to go from start to goal.
      */
-    public Deque<Direction> findPath(Position start, Position goal,
-            HashSet<Position> visited)
+    public Deque<Direction> findPath(Position start, Position goal)
     {
         // TODO: might want to skip .equals() in favour for performance
         if (start.equals(goal)) {
             return new LinkedList<Direction>();
         }
 
-        if (!visited.add(start))
-            return null;
+        cells[start.row][start.column] |= VISITED;
 
         for (Direction dir : Direction.values()) {
             Position newPosition = new Position(start, moves[dir.ordinal()]);
@@ -726,11 +728,10 @@ public class Board implements Cloneable
             
             // We do not move any boxes while going this path.
             if (contains(newPosition)
-                    && !visited.contains(newPosition)
                     && !is(cells[newPosition.row][newPosition.column],
-                            (byte) (WALL | BOX))) {
+                            (byte) (WALL | BOX | VISITED))) {
 
-                Deque<Direction> solution = findPath(newPosition, goal, visited);
+                Deque<Direction> solution = findPath(newPosition, goal);
 
                 if (solution != null) {
                     solution.addFirst(dir);
