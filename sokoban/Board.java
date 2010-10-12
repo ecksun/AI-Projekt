@@ -599,6 +599,18 @@ public class Board implements Cloneable
     {
         return isBoxAhead(new Position(playerRow, playerCol), dir);
     }
+    
+    /**
+     * Returns true if there's a box in any of the four squares surrounding
+     * the player.
+     */
+    public boolean isBoxNearby()
+    {
+        for (Direction dir : Direction.values()) {
+            if (isBoxAhead(dir)) return true;
+        }
+        return false;
+    }
 
     /**
      * Returns whether or not the given position is contained in this board.

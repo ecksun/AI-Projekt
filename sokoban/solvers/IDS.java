@@ -123,9 +123,9 @@ public class IDS implements Solver
             int penalty = 1;
             
             // Avoid identical box-player setups
-            if (board.isBoxAhead(dir)) {
-                // We just moved a box
-                
+            // (duplicate player moves are avoided by marking cells as
+            // visited in Board.move)
+            if (successor.isBoxNearby()) {
                 // Check for identical state with cells and player
                 if (visitedBoards.contains(successor)) {
                     continue;
