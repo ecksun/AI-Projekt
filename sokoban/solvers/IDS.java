@@ -164,8 +164,8 @@ public class IDS implements Solver
             }
             return SearchInfo.Inconclusive;
         } else {
-            // All successors failed. Return failure and the parent
-            // node will handle the failure.
+            // All successors failed, so this node is failed
+            failedBoards.add(board);
             return SearchInfo.Failed;
         }
     }
