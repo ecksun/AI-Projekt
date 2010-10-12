@@ -23,11 +23,13 @@ public class Main
     public static void main(String[] args)
     {
         if (args.length < 2) {
-            System.err.println("You need to supply solver and board number as argument");
+            System.err
+                    .println("You need to supply solver and board number as argument");
             return;
         }
         try {
             byte[] boardbytes = new byte[1024];
+            Solver solver = loadSolver(args[0]);
             int boardNumber = Integer.parseInt(args[1]);
 
             Socket socket = new Socket("cvap103.nada.kth.se", 5555);
@@ -43,25 +45,9 @@ public class Main
             long parseTime = System.currentTimeMillis() - beforeParse;
             System.out.println(board);
             System.out.println("Parse time (ms): " + parseTime);
-            
+
             long beforeSolve = System.currentTimeMillis();
-            
-            ClassLoader classLoader = Main.class.getClassLoader();
-            Solver solver;
-            try {
-                solver = (Solver) classLoader.
-                    loadClass("sokoban.solvers." + args[0]).newInstance();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-                return;
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-                return;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
-            
+
             String solution = solver.solve(board);
             long solveTime = System.currentTimeMillis() - beforeSolve;
 
@@ -79,5 +65,33 @@ public class Main
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Returns a solver instance that corresponds to the given solver name.
+     * 
+     * @param solverName A string containing the name of the solver class.
+     * @return A solver instance.
+     */
+    public static Solver loadSolver(String solverName)
+    {
+        ClassLoader classLoader = Main.class.getClassLoader();
+        Solver solver = null;
+        
+        try {
+            solver = (Solver) classLoader.loadClass(
+                    "sokoban.solvers." + solverName).newInstance();
+        }
+        catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+        catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        return solver; 
     }
 }
