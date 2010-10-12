@@ -179,6 +179,7 @@ public class Board implements Cloneable
     {
         countBoxes();
         markNonBoxSquares();
+        updateTopLeftReachable();
     }
 
     /**
