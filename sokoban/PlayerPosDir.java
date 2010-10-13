@@ -1,5 +1,7 @@
 package sokoban;
 
+import sokoban.Board;
+
 /**
  * PlayerPosDir represents a player position together with its relative position
  * to a box.
@@ -31,4 +33,10 @@ public class PlayerPosDir extends Position
         this.boxRow = boxRow;
         this.boxColumn = boxColumn;
     }
+    
+    public PlayerPosDir(int row, int column, Board.Direction dir)
+    {
+        this(row, column, Board.moves[dir.ordinal()][0], Board.moves[dir.ordinal()][1]);
+    }
 }
+
