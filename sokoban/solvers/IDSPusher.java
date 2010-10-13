@@ -33,7 +33,7 @@ public class IDSPusher implements Solver
      * Set of visited boards, including the player position
      * TODO change to long when we implement Zorbit
      */
-    private HashSet<Integer> visitedBoards;
+    private HashSet<Long> visitedBoards;
 
     /**
      * Boards that just lead to deadlocks or already visited boards. It
@@ -110,11 +110,11 @@ public class IDSPusher implements Solver
             return SearchInfo.Inconclusive;
         }
 
-        if (visitedBoards.contains(board)) {
+        if (visitedBoards.contains(board.getZobristKey())) {
             // Duplicate state
             return SearchInfo.Failed;
         }
-        visitedBoards.add(board.hashCode());
+        visitedBoards.add(board.getZobristKey());
 
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
@@ -138,7 +138,7 @@ public class IDSPusher implements Solver
                         && !Board
                                 .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
                     // The move is possible
-
+                    
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
@@ -201,7 +201,7 @@ public class IDSPusher implements Solver
         for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
 
-            visitedBoards = new HashSet<Integer>();
+            visitedBoards = new HashSet<Long>();
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
 

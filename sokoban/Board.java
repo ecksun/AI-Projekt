@@ -121,7 +121,9 @@ public class Board implements Cloneable
      */
     public int topLeftReachable;
 
-    public long zobristKey;
+    private long zobristKey;
+
+
 
     /**
      * Initialize a new board
@@ -510,12 +512,12 @@ public class Board implements Cloneable
         playerCol = to.column;
 
         // Add player on to position
-        Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
-        Zobrist.add(zobristKey, Zobrist.PLAYER, to.row, to.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.PLAYER, to.row, to.column);
 
         // Remove player from previous position and add empty
-        Zobrist.remove(zobristKey, Zobrist.PLAYER, from.row, from.column);
-        Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.PLAYER, from.row, from.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
     }
     
     /**
@@ -525,12 +527,12 @@ public class Board implements Cloneable
     public void moveBox(Position from, Position to)
     {
         // Remove box from previous position
-        Zobrist.remove(zobristKey, Zobrist.BOX, from.row, from.column);
-        Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, from.row, from.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
 
         // Move box to new position
-        Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
-        Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
 
         cells[from.row][from.column] &= ~BOX;
         cells[to.row][to.column] |= BOX;
@@ -584,11 +586,17 @@ public class Board implements Cloneable
         return true;
     }
 
-    @Override
-    public int hashCode()
+    public long getZobristKey()
     {
-        return (int) (zobristKey ^ (zobristKey >> 32));
+        return zobristKey;
     }
+    
+    // XXX: Remove later?
+//    @Override
+//    public int hashCode()
+//    {
+//        return (int) (zobristKey ^ (zobristKey >> 32));
+//    }
 
     /**
      * Returns whether or not the given position is contained in this board.
