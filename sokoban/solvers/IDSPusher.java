@@ -118,10 +118,6 @@ public class IDSPusher implements Solver
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
-        // Keep track of failed successors. If all successors fail we can
-        // fail ourselves (reduces the search tree).
-        int numFailed = 0;
-
         final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
         remainingDepth--;
 
@@ -165,9 +161,8 @@ public class IDSPusher implements Solver
                             inconclusive = true;
                             continue;
                         case Failed:
-                            // Keep the failed board for now
-                            // failed[numFailed++] = successor;
-                            numFailed++;
+                            // Mark this node as failed
+                            failedBoards.add(board.getZobristKey());
                             continue;
                     }
                 }
@@ -178,13 +173,11 @@ public class IDSPusher implements Solver
 
         if (inconclusive) {
             // Add all successors that failed to the failed set
-            // TODO add failed nodes? (is this needed?)
             return SearchInfo.Inconclusive;
         }
         else {
             // All successors failed, so this node is failed
-            // TODO
-            // failedBoards.add(board.);
+            failedBoards.add(board.getZobristKey());
             return SearchInfo.Failed;
         }
     }
@@ -200,7 +193,7 @@ public class IDSPusher implements Solver
         for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
 
-            visitedBoards = new HashSet<Long>();
+            visitedBoards = new HashSet<Long>(failedBoards);
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
 
