@@ -31,8 +31,9 @@ public class IDSPusher implements Solver
 
     /**
      * Set of visited boards, including the player position
+     * TODO change to long when we implement Zorbit
      */
-    private HashSet<Long> visitedBoards;
+    private HashSet<Integer> visitedBoards;
 
     /**
      * Boards that just lead to deadlocks or already visited boards. It
@@ -108,6 +109,12 @@ public class IDSPusher implements Solver
         if (remainingDepth <= 0) {
             return SearchInfo.Inconclusive;
         }
+
+        if (visitedBoards.contains(board)) {
+            // Duplicate state
+            return SearchInfo.Inconclusive; // TODO is this the right flag?
+        }
+        visitedBoards.add(board.hashCode());
 
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
@@ -191,10 +198,10 @@ public class IDSPusher implements Solver
     {
         failedBoards = new HashSet<Long>();
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = 10; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
 
-            visitedBoards = new HashSet<Long>();
+            visitedBoards = new HashSet<Integer>();
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
 
