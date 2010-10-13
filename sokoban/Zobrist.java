@@ -13,7 +13,6 @@ public final class Zobrist
 {
     public final static byte EMPTY = 0;
     public final static byte BOX = 1;
-    public final static byte PLAYER = 2;
 
     /**
      * TODO document the different indices here
@@ -28,7 +27,7 @@ public final class Zobrist
         rand = new Random(0);
 
         // TODO might be faster to change the indexes here
-        hash = new long[3][board.height][board.width];
+        hash = new long[2][board.height][board.width];
 
         // Fill them with random stuff
         for (int i = 0; i < hash.length; ++i) {
@@ -42,10 +41,7 @@ public final class Zobrist
 
         for (int row = 0; row < board.height; ++row) {
             for (int col = 0; col < board.width; ++col) {
-                if (board.getPlayerCol() == col && board.getPlayerRow() == row) {
-                    key ^= hash[PLAYER][row][col];
-                }
-                else if (board.cells[row][col] == Board.BOX) {
+                if (board.cells[row][col] == Board.BOX) {
                     key ^= hash[BOX][row][col];
                 }
                 else {
@@ -71,18 +67,20 @@ public final class Zobrist
     {
         return key ^= hash[entity][row][col];
     }
-    
+
     /**
      * Alias for update().
      */
-    public static long add(long key, byte entity, int row, int col) {
+    public static long add(long key, byte entity, int row, int col)
+    {
         return update(key, entity, row, col);
     }
 
     /**
      * Alias for update().
      */
-    public static long remove(long key, byte entity, int row, int col) {
+    public static long remove(long key, byte entity, int row, int col)
+    {
         return update(key, entity, row, col);
     }
 

@@ -510,14 +510,6 @@ public class Board implements Cloneable
     {
         playerRow = to.row;
         playerCol = to.column;
-
-        // Add player on to position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.PLAYER, to.row, to.column);
-
-        // Remove player from previous position and add empty
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.PLAYER, from.row, from.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
     }
     
     /**
@@ -541,6 +533,8 @@ public class Board implements Cloneable
             remainingBoxes++;
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
+        
+        updateTopLeftReachable();
     }
 
     /**
@@ -588,7 +582,7 @@ public class Board implements Cloneable
 
     public long getZobristKey()
     {
-        return zobristKey;
+        return zobristKey ^ topLeftReachable;
     }
     
     // XXX: Remove later?
