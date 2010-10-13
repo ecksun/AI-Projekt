@@ -36,13 +36,9 @@ public class Board implements Cloneable
      */
     public final static byte VISITED = 0x10;
     /**
-     * Starting position of a box
+     * The player can reach this square.
      */
-    public final static byte BOX_START = 0x20;
-    /**
-     * Starting position of the player
-     */
-    public final static byte PLAYER_START = 0x40;
+    public final static byte REACHABLE = 0x20;
 
     // Bitmasks
     /**
@@ -179,21 +175,19 @@ public class Board implements Cloneable
                     cells[row][col] = Board.WALL;
                     break;
                 case '$':
-                    cells[row][col] = Board.BOX | Board.BOX_START;
+                    cells[row][col] = Board.BOX;
                     break;
                 case '+':
                     cells[row][col] = Board.GOAL;
                     break;
                 case '*':
-                    cells[row][col] = Board.BOX | Board.GOAL | Board.BOX_START;
+                    cells[row][col] = Board.BOX | Board.GOAL;
                     break;
                 case '.':
                     cells[row][col] = Board.GOAL;
                     break;
             }
         }
-
-        cells[boardPlayerRow][boardPlayerCol] |= Board.PLAYER_START;
         
         this.width = boardWidth;
         this.height = boardHeight;
@@ -496,7 +490,7 @@ public class Board implements Cloneable
             // System.out.println("remaining boxes: "+remainingBoxes);
 
             // Clear "visited" marks
-            clearVisited();
+            clearFlag(VISITED);
         }
     }
 
@@ -538,14 +532,13 @@ public class Board implements Cloneable
     }
 
     /**
-     * Removes the VISITED flag from all squares. The VISITED flag is typically
-     * used temporarily by algorithms to find shortest paths and avoid loops.
+     * Removes a certain flag from all the squares.
      */
-    public void clearVisited()
+    public void clearFlag(byte flag)
     {
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
-                cells[r][c] &= ~VISITED;
+                cells[r][c] &= ~flag;
             }
         }
     }
@@ -649,7 +642,7 @@ public class Board implements Cloneable
      */
     public Deque<Direction> findPath(Position goal)
     {
-        clearVisited();
+        clearFlag(VISITED);
         return findPath(new Position(playerRow, playerCol), goal);
     }
 
@@ -698,7 +691,7 @@ public class Board implements Cloneable
      */
     public Collection<ReachableBox> findReachableBoxSquares()
     {
-        clearVisited();
+        clearFlag(VISITED);
         ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(20);
         findReachableWithDFS(reachable, playerRow, playerCol,
                 new LinkedList<Direction>());
@@ -725,7 +718,7 @@ public class Board implements Cloneable
                 continue;
             }
 
-            if (!is(cells[row][col], REJECT_WALK)) {
+            if (!is(cells[row][col], (byte) (WALL | BOX | VISITED))) {
                 path.addLast(dir);
                 findReachableWithDFS(reachable, row, col, path);
                 path.removeLast();
@@ -744,7 +737,7 @@ public class Board implements Cloneable
      */
     public void updateTopLeftReachable()
     {
-        clearVisited();
+        clearFlag(REACHABLE);
         // TODO: Should this be local?
         topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
     }
@@ -754,14 +747,14 @@ public class Board implements Cloneable
      */
     public int updateTopLeftReachableDFS(int startRow, int startCol)
     {
-        cells[startRow][startCol] |= VISITED;
+        cells[startRow][startCol] |= REACHABLE;
 
         int minimum = (startRow * width) + startCol;
         for (Direction dir : Direction.values()) {
             int row = startRow + moves[dir.ordinal()][0];
             int col = startCol + moves[dir.ordinal()][1];
             
-            if (!is(cells[row][col], (byte) (WALL | VISITED | BOX))) {
+            if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
                 int pos = updateTopLeftReachableDFS(row, col);
                 if (pos < minimum)
                     minimum = pos;
