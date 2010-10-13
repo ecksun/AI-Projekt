@@ -433,7 +433,7 @@ public class Board implements Cloneable
     public void moveBox(Position from, Position to)
     {
         cells[from.row][from.column] &= ~BOX;
-        cells[from.row][from.column] |= BOX;
+        cells[to.row][to.column] |= BOX;
         
         if (is(cells[from.row][from.column], GOAL))
             remainingBoxes++;
