@@ -291,7 +291,6 @@ public class IDSPusher implements Solver
      * @param to The new position
      * @return True if there is a freeze deadlock
      */
-<<<<<<< HEAD
     private final static byte DEADLOCK_BOTH = 0;
     private final static byte DEADLOCK_HORIZONTAL = 1;
     private final static byte DEADLOCK_VERTICAL = 2;
@@ -401,62 +400,6 @@ public class IDSPusher implements Solver
             }
             return false;
         }
-=======
-    private boolean freezeDeadlock(Position from, Position to)
-    {
-        boolean blocked = false;
-        // Horisontal
-        if (Board.is(board.cells[to.row][to.column], Board.WALL))
-            blocked = true;
-        
-//        byte WALL_OR_BOX = Board.BOX | Board.WALL;
-//        
-//        if (Board.is(board.cells[to.row+1][to.column], Board.BOX) && !(from.row == to.row+1 && from.column == to.column)) {
-//            // If the box is above
-//            if (Board.is(board.cells[to.row][to.column+1], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column+1], WALL_OR_BOX)) {
-//                // If there is a wall to the right of them
-//                return true;
-//            }
-//            if (Board.is(board.cells[to.row][to.column-1], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column-1], WALL_OR_BOX)) {
-//                // If there is a wall to the left of them
-//                return true;
-//            }
-//        }
-//        if (Board.is(board.cells[to.row-1][to.column], Board.BOX) && !(from.row == to.row-11 && from.column == to.column)) {
-//            // If the box is below
-//            if (Board.is(board.cells[to.row][to.column+1], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column+1], WALL_OR_BOX)) {
-//                // If there is a wall to the right of them
-//                return true;
-//            }
-//            if (Board.is(board.cells[to.row][to.column-1], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column-1], WALL_OR_BOX)) {
-//                // If there is a wall to the left of them
-//                return true;
-//            }
-//        }
-//        if (Board.is(board.cells[to.row][to.column+1], Board.BOX)) {
-//            // If the box is to the right
-//            if (Board.is(board.cells[to.row+1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column+1], WALL_OR_BOX)) {
-//                // If there is a wall above
-//                return true;
-//            }
-//            if (Board.is(board.cells[to.row-1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column+1], WALL_OR_BOX)) {
-//                // If there is a wall belove
-//                return true;
-//            }
-//        }
-//        if (Board.is(board.cells[to.row][to.column-1], Board.BOX)) {
-//            // If the box is to the left
-//            if (Board.is(board.cells[to.row+1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column-1], WALL_OR_BOX)) {
-//                // If there is a wall above
-//                return true;
-//            }
-//            if (Board.is(board.cells[to.row-1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column-1], WALL_OR_BOX)) {
-//                // If there is a wall to below
-//                return true;
-//            }
-//        }
-        
->>>>>>> Two attempts to find freezedeadlocks
         return false;
     }
 }
