@@ -17,6 +17,9 @@ import sokoban.Board.Direction;
 public class IDSPusher implements Solver
 {
     private final int DEPTH_LIMIT = 1000;
+    /**
+     * The number of generated nodes
+     */
     public static int generatedNodes = 0;
     private static int remainingDepth;
     private static Board board;
@@ -208,39 +211,5 @@ public class IDSPusher implements Solver
 
         System.out.println("maximum depth reached!");
         return null;
-    }
-
-    /**
-     * Finds all subsequent moves, expands and returns them for a specific
-     * search node.
-     * 
-     * @param board The board
-     * @return A list of new SearchNodes
-     * 
-     * @note This function will return impossible
-     */
-    private Collection<PlayerPosDir> getAllSuccessorStates()
-    {
-        final Collection<PlayerPosDir> successors = new LinkedList<PlayerPosDir>();
-        final byte[][] cells = board.cells;
-
-        for (final ReachableBox reachable : board.findReachableBoxSquares()) {
-            // TODO optimization: get PlayerPosDirs instead of ReachableBoxes
-            // from Board
-            for (final Board.Direction dir : Board.Direction.values()) {
-                final Position from = new Position(reachable.position,
-                        Board.moves[dir.ordinal()]);
-                final Position to = new Position(from, Board.moves[dir
-                        .ordinal()]);
-                if (Board.is(cells[from.row][from.column], Board.BOX)
-                        && !Board
-                                .is(cells[to.row][to.column], Board.REJECT_BOX)) {
-                    successors.add(new PlayerPosDir(reachable.position.row,
-                            reachable.position.column, dir));
-                }
-            }
-        }
-
-        return successors;
     }
 }
