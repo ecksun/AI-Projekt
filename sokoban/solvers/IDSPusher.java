@@ -112,7 +112,7 @@ public class IDSPusher implements Solver
 
         if (visitedBoards.contains(board)) {
             // Duplicate state
-            return SearchInfo.Inconclusive; // TODO is this the right flag?
+            return SearchInfo.Failed;
         }
         visitedBoards.add(board.hashCode());
 
