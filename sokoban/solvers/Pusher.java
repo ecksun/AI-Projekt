@@ -24,31 +24,31 @@ public class Pusher implements Solver
     public static int generatedNodes = 0;
 
     /**
-     * Small little container class for a searchnode
-     * Each searchnode contains the path to it, the board its handling and the
+     * Small little container class for a search node
+     * Each search node contains the path to it, the board its handling and the
      * parent.
      */
     private class SearchNode
     {
         /**
-         * The path to this searchnode
+         * The path to this search node
          */
         public final Deque<Direction> path;
         /**
-         * The board at this searchnode
+         * The board at this search node
          */
         public final Board board;
         /**
-         * The parent searchnode
+         * The parent search node
          */
         public final SearchNode parent;
 
         /**
-         * Initialize a searchnode
+         * Initialize a search node
          * 
-         * @param path The path to this searchnode
-         * @param board The board at this searchnode
-         * @param parent The parent searchnode
+         * @param path The path to this search node
+         * @param board The board at this search node
+         * @param parent The parent search node
          */
         public SearchNode(Deque<Direction> path, Board board, SearchNode parent)
         {
