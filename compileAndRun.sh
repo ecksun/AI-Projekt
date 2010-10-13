@@ -3,7 +3,7 @@
 if [ -n "$1" ]; then
     SOLVER=$1
 else
-    SOLVER="Pusher"
+    SOLVER="IDSPusher"
 fi
 
 if [ -n "$2" ]; then
