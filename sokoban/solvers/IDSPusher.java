@@ -110,11 +110,10 @@ public class IDSPusher implements Solver
             return SearchInfo.Inconclusive;
         }
 
-        if (visitedBoards.contains(board.getZobristKey())) {
+        if (!visitedBoards.add(board.getZobristKey())) {
             // Duplicate state
             return SearchInfo.Failed;
         }
-        visitedBoards.add(board.getZobristKey());
 
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
