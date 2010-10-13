@@ -71,8 +71,7 @@ public class Pusher implements Solver
         {
             // TODO it is possible to generate the path from parent when needed.
             this(newPath, parent.board, parent);
-            board.playerCol = playerStartPosition.column;
-            board.playerRow = playerStartPosition.row;
+            board.movePlayer(null, playerStartPosition);
             path.add(dir);
             board.move(dir);
 

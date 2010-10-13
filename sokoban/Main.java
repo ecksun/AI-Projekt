@@ -27,7 +27,7 @@ public class Main
             return;
         }
         try {
-            byte[] boardbytes = new byte[1024];
+            byte[] boardBytes = new byte[1024];
             Solver solver = SolverFactory.loadSolver(args[0]);
             int boardNumber = Integer.parseInt(args[1]);
 
@@ -38,9 +38,9 @@ public class Main
 
             out.println(boardNumber);
 
-            inRaw.read(boardbytes);
+            inRaw.read(boardBytes);
             long beforeParse = System.currentTimeMillis();
-            Board board = BoardParser.parse(boardbytes);
+            Board board = new Board(boardBytes);
             long parseTime = System.currentTimeMillis() - beforeParse;
             System.out.println(board);
             System.out.println("Parse time (ms): " + parseTime);

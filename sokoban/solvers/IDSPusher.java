@@ -123,34 +123,32 @@ public class IDSPusher implements Solver
         // fail ourselves (reduces the search tree).
         int numFailed = 0;
 
-        final Position source = new Position(board.playerRow, board.playerCol);
+        final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
         remainingDepth--;
 
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
         for (final ReachableBox reachable : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position from = new Position(reachable.position,
+                final Position boxFrom = new Position(reachable.position,
                         Board.moves[dir.ordinal()]);
-                final Position to = new Position(from, Board.moves[dir
+                final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
-                if (Board.is(cells[from.row][from.column], Board.BOX)
+                if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board
-                                .is(cells[to.row][to.column], Board.REJECT_BOX)) {
+                                .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
                     // The move is possible
 
                     // Move the player and push the box
-                    board.moveBox(from, to);
-                    board.playerRow = from.row;
-                    board.playerCol = from.column;
+                    board.moveBox(boxFrom, boxTo);
+                    board.movePlayer(source, boxFrom);
 
                     // Process successor states
                     final SearchInfo result = dfs();
 
                     // Restore changes
-                    board.moveBox(to, from);
-                    board.playerRow = source.row;
-                    board.playerCol = source.column;
+                    board.moveBox(boxTo, boxFrom);
+                    board.movePlayer(boxFrom, source);
 
                     // Evaluate result
                     switch (result.status) {

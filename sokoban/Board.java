@@ -3,7 +3,6 @@ package sokoban;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 import sokoban.ReachableBox;
@@ -104,20 +103,25 @@ public class Board implements Cloneable
     /**
      * The column at which the player resides
      */
-    public int playerCol;
+    private int playerCol;
+
+
     /**
      * The row at which the player resides
      */
-    public int playerRow;
+    private int playerRow;
+    
     private int remainingBoxes;
     private int boxesInStart;
-    
+
     /**
      * The topmost, leftmost square the player can reach. Please update with
      * updateTopLeftReachable() after the board has changed and before it's
      * hashed.
      */
     public int topLeftReachable;
+
+    public long zobristKey;
 
     /**
      * Initialize a new board
@@ -131,13 +135,91 @@ public class Board implements Cloneable
      * @param playerCol
      *            The X position of the player
      */
-    public Board(int width, int height, int playerRow, int playerCol)
+    // public Board(int width, int height, int playerRow, int playerCol)
+    public Board(byte[] boardBytes)
     {
-        cells = new byte[height][width];
-        this.width = width;
-        this.height = height;
-        this.playerCol = playerCol;
-        this.playerRow = playerRow;
+        int boardWidth = 0;
+        int boardHeight = 1; // board input string doesn't end with '\n'
+        int boardPlayerCol = 0;
+        int boardPlayerRow = 0;
+        int rowLength = 0;
+        for (int i = 0; i < boardBytes.length; ++i) {
+            rowLength++;
+            switch (boardBytes[i]) {
+                case '\n':
+                    if (rowLength > boardWidth) {
+                        boardWidth = rowLength - 1; // '\n' not part of board
+                    }
+                    rowLength = 0;
+                    ++boardHeight;
+                    break;
+                case '@':
+                case '+':
+                    // Player position is 0-indexed.
+                    boardPlayerCol = rowLength - 1;
+                    boardPlayerRow = boardHeight - 1;
+                    break;
+            }
+        }
+
+        cells = new byte[boardHeight][boardWidth];
+
+        int row = 0;
+        int col = 0;
+        for (int i = 0; i < boardBytes.length; ++i, ++col) {
+            switch (boardBytes[i]) {
+                case '\n':
+                    // col is incremented before first char on every row
+                    col = -1;
+                    ++row;
+                    break;
+                case '#':
+                    cells[row][col] = Board.WALL;
+                    break;
+                case '$':
+                    cells[row][col] = Board.BOX | Board.BOX_START;
+                    break;
+                case '+':
+                    cells[row][col] = Board.GOAL;
+                    break;
+                case '*':
+                    cells[row][col] = Board.BOX | Board.GOAL | Board.BOX_START;
+                    break;
+                case '.':
+                    cells[row][col] = Board.GOAL;
+                    break;
+            }
+        }
+
+        cells[boardPlayerRow][boardPlayerCol] |= Board.PLAYER_START;
+        
+        this.width = boardWidth;
+        this.height = boardHeight;
+        this.playerCol = boardPlayerCol;
+        this.playerRow = boardPlayerRow;
+        this.zobristKey = Zobrist.calculateHashTable(this);
+        
+        countBoxes();
+        markNonBoxSquares();
+        updateTopLeftReachable();
+    }
+    
+    /**
+     * Getter for playerCol.
+     * @return Column index for the player position
+     */
+    public int getPlayerCol()
+    {
+        return playerCol;
+    }
+
+    /**
+     * Getter for playerRow.
+     * @return Row index for the player position
+     */
+    public int getPlayerRow()
+    {
+        return playerRow;
     }
 
     /**
@@ -160,16 +242,6 @@ public class Board implements Cloneable
     public static boolean is(byte square, byte mask)
     {
         return (square & mask) != 0;
-    }
-
-    /**
-     * Updates some variables after a board has been loaded.
-     */
-    public void refresh()
-    {
-        countBoxes();
-        markNonBoxSquares();
-        updateTopLeftReachable();
     }
 
     /**
@@ -425,27 +497,56 @@ public class Board implements Cloneable
             clearVisited();
         }
     }
+
+    /**
+     * Move the player on the position from to the position to and update hash.
+     * 
+     * @param from
+     * @param to
+     */
+    public void movePlayer(Position from, Position to)
+    {
+        playerRow = to.row;
+        playerCol = to.column;
+
+        // Add player on to position
+        Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
+        Zobrist.add(zobristKey, Zobrist.PLAYER, to.row, to.column);
+
+        // Remove player from previous position and add empty
+        Zobrist.remove(zobristKey, Zobrist.PLAYER, from.row, from.column);
+        Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
+    }
     
     /**
      * Moves a box and updates remainingBoxes. This method ignores the
-     * player position.
+     * player position. Updates Zobrist hash.
      */
     public void moveBox(Position from, Position to)
     {
+        // Remove box from previous position
+        Zobrist.remove(zobristKey, Zobrist.BOX, from.row, from.column);
+        Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
+
+        // Move box to new position
+        Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
+        Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
+
         cells[from.row][from.column] &= ~BOX;
         cells[to.row][to.column] |= BOX;
-        
+
         if (is(cells[from.row][from.column], GOAL))
             remainingBoxes++;
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
     }
-    
+
     /**
      * Removes the VISITED flag from all squares. The VISITED flag is typically
      * used temporarily by algorithms to find shortest paths and avoid loops.
      */
-    public void clearVisited() {
+    public void clearVisited()
+    {
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 cells[r][c] &= ~VISITED;
@@ -505,7 +606,7 @@ public class Board implements Cloneable
 
     /**
      * Compares two boards for equality.
-     *
+     * 
      * @note The topmost, leftmost reachable position is compared instead of
      *       the actual player position.
      */
@@ -533,11 +634,17 @@ public class Board implements Cloneable
         return true;
     }
 
+    // @Override
+    // public int hashCode()
+    // {
+    // long h = getPlayerBoxesHash();
+    // return (int) (h ^ (h >> 32));
+    // }
+
     @Override
     public int hashCode()
     {
-        long h = getPlayerBoxesHash();
-        return (int) (h ^ (h >> 32));
+        return (int) (zobristKey ^ (zobristKey >> 32));
     }
 
     /**
@@ -622,7 +729,6 @@ public class Board implements Cloneable
         for (Direction dir : Direction.values()) {
             Position newPosition = new Position(start, moves[dir.ordinal()]);
 
-            
             // We do not move any boxes while going this path.
             if (contains(newPosition)
                     && !is(cells[newPosition.row][newPosition.column],
@@ -639,7 +745,7 @@ public class Board implements Cloneable
 
         return null;
     }
-    
+
     /**
      * Finds all boxes that can be reached by the player.
      * 
@@ -650,44 +756,43 @@ public class Board implements Cloneable
         clearVisited();
         ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(20);
         findReachableWithDFS(reachable, playerRow, playerCol,
-            new LinkedList<Direction>());     
+                new LinkedList<Direction>());
         return reachable;
     }
-    
+
     /**
      * Finds all boxes that can be reached by the player.
      * 
      * @return A collection of ReachableBox objects
      */
-    public void findReachableWithDFS(
-        ArrayList<ReachableBox> reachable, int startRow, int startCol,
-        LinkedList<Direction> path)
+    public void findReachableWithDFS(ArrayList<ReachableBox> reachable,
+            int startRow, int startCol, LinkedList<Direction> path)
     {
         cells[startRow][startCol] |= VISITED;
-        
+
         boolean boxNearby = false;
         for (Direction dir : Direction.values()) {
             int row = startRow + moves[dir.ordinal()][0];
             int col = startCol + moves[dir.ordinal()][1];
-            
+
             if (is(cells[row][col], BOX)) {
                 boxNearby = true;
                 continue;
             }
-            
+
             if (!is(cells[row][col], REJECT_WALK)) {
                 path.addLast(dir);
                 findReachableWithDFS(reachable, row, col, path);
                 path.removeLast();
             }
         }
-        
+
         if (boxNearby) {
             reachable.add(new ReachableBox(new Position(startRow, startCol),
-                new LinkedList<Direction>(path)));
+                    new LinkedList<Direction>(path)));
         }
     }
-    
+
     /**
      * Updates the minimum top left position that the player can move to,
      * defined as (row*width)+col. This is used for duplicate detection.
@@ -695,28 +800,30 @@ public class Board implements Cloneable
     public void updateTopLeftReachable()
     {
         clearVisited();
-        int topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
+        // TODO: Should this be local?
+        topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
     }
-    
+
     /**
      * Recursive part of updateTopLeftReachable
      */
     public int updateTopLeftReachableDFS(int startRow, int startCol)
     {
         cells[startRow][startCol] |= VISITED;
-        
-        int minimum = (startRow*width) + startCol;
+
+        int minimum = (startRow * width) + startCol;
         for (Direction dir : Direction.values()) {
             int row = startRow + moves[dir.ordinal()][0];
             int col = startCol + moves[dir.ordinal()][1];
             
             if (!is(cells[row][col], (byte) (WALL | VISITED | BOX))) {
                 int pos = updateTopLeftReachableDFS(row, col);
-                if (pos < minimum) minimum = pos;
+                if (pos < minimum)
+                    minimum = pos;
             }
         }
-        
+
         return minimum;
     }
-    
+
 }

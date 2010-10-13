@@ -42,7 +42,7 @@ public final class Zobrist
 
         for (int row = 0; row < board.height; ++row) {
             for (int col = 0; col < board.width; ++col) {
-                if (board.playerCol == col && board.playerRow == row) {
+                if (board.getPlayerCol() == col && board.getPlayerRow() == row) {
                     key ^= hash[PLAYER][row][col];
                 }
                 else if (board.cells[row][col] == Board.BOX) {
