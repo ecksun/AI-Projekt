@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import sokoban.Board;
 import sokoban.BoardParser;
-import sokoban.solvers.IDS;
+import sokoban.solvers.Pusher;
 import sokoban.solvers.Solver;
 
 public class SolverTest
@@ -32,7 +32,7 @@ public class SolverTest
     {
         byte[] bytes = levels.get(0).getBytes();
         Board board1 = BoardParser.parse(bytes);
-        Solver ids = new IDS();
+        Solver ids = new Pusher();
         String solution = ids.solve(board1);
         
         // TODO perform the moves and make sure it looks good

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import sokoban.Board;
 import sokoban.BoardParser;
-import sokoban.solvers.IDS;
 import sokoban.solvers.Solver;
 import sokoban.solvers.SolverFactory;
 

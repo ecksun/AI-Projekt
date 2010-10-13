@@ -151,16 +151,6 @@ public class Board implements Cloneable
     }
 
     /**
-     * Gets the number of boxes that are in their starting positions.
-     * 
-     * @return The number of boxes in their start position
-     */
-    public int getBoxesInStart()
-    {
-        return boxesInStart;
-    }
-
-    /**
      * Returns true if the square has any of the bits in the mask.
      * 
      * @param square The square at which to check for the bitmask
@@ -196,8 +186,6 @@ public class Board implements Cloneable
             }
         }
         remainingBoxes = remaining;
-        boxesInStart = 0; // TODO check how many boxes are in the start
-        // positions
     }
 
     /**
@@ -400,40 +388,6 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns true if the player can move in the given direction, including
-     * moves that results in box pushes.
-     * 
-     * @param dir The given direction
-     * @return True if it is possible for the player to move in the direction
-     */
-    public boolean canMove(Direction dir)
-    {
-        int move[] = moves[dir.ordinal()];
-
-        // The cell that the player moves to
-        int row = playerRow + move[0];
-        int col = playerCol + move[1];
-
-        // The cell that the box (if any) moves to
-        int row2 = playerRow + 2 * move[0];
-        int col2 = playerCol + 2 * move[1];
-
-        // System.out.println("("+playerRow+","+playerCol+") --> ("+row+","+col+"):  "+cells[row][col]);
-
-        // Reject move if the player can't move there
-        if (is(cells[row][col], REJECT_WALK))
-            return false;
-
-        // Reject move if there's a box and it can't move
-        // in the desired direction
-        if (is(cells[row][col], BOX) && is(cells[row2][col2], REJECT_BOX))
-            return false;
-
-        // The move is possible
-        return true;
-    }
-
-    /**
      * Move the player in the specified direction
      * 
      * @param dir The direction to move the player in
@@ -497,47 +451,6 @@ public class Board implements Cloneable
                 cells[r][c] &= ~VISITED;
             }
         }
-    }
-
-    /**
-     * Pulls a box.
-     * 
-     * @param column
-     *            Players x position
-     * @param row
-     *            Players y position
-     * @param boxColumn
-     *            Relative x position of box
-     * @param boxRow
-     *            Relative y position of box
-     */
-    public void pull(int row, int column, int boxRow, int boxColumn)
-    {
-        cells[row][column] |= Board.BOX;
-        cells[row + boxRow][column + boxColumn] &= ~Board.BOX;
-
-        if (is(cells[row + boxRow][column + boxColumn], BOX_START))
-            boxesInStart--;
-        if (is(cells[row][column], BOX_START))
-            boxesInStart++;
-    }
-
-    /**
-     * Swaps boxes with goals.
-     */
-    public void reverse()
-    {
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                cells[row][col] &= ~BOX;
-                if (is(cells[row][col], GOAL)) {
-                    cells[row][col] |= BOX;
-                }
-            }
-        }
-        int temp = remainingBoxes;
-        remainingBoxes = boxesInStart;
-        boxesInStart = temp;
     }
 
     /**
@@ -628,30 +541,6 @@ public class Board implements Cloneable
     }
 
     /**
-     * Returns true if there's a box ahead of the player, in the direction dir.
-     * 
-     * @param dir The direction in which to check
-     * @return True if there is a box ahead of the player
-     */
-    public boolean isBoxAhead(Direction dir)
-    {
-        return isBoxAhead(new Position(playerRow, playerCol), dir);
-    }
-
-    /**
-     * Returns true if there's a box in any of the four squares surrounding
-     * the player.
-     */
-    public boolean isBoxNearby()
-    {
-        for (Direction dir : Direction.values()) {
-            if (isBoxAhead(dir))
-                return true;
-        }
-        return false;
-    }
-
-    /**
      * Returns whether or not the given position is contained in this board.
      * 
      * @param pos The position.
@@ -673,25 +562,6 @@ public class Board implements Cloneable
     public boolean contains(int row, int col)
     {
         return row >= 0 && row < height && col >= 0 && col < width;
-    }
-
-    /**
-     * Checks if there is a box ahead of the given position in the given
-     * direction.
-     * 
-     * @param pos The position to check for boxes ahead of.
-     * @param dir The direction in which to check for boxes.
-     * @return True if there is a box ahead of the player, otherwise false.
-     */
-    public boolean isBoxAhead(Position pos, Direction dir)
-    {
-        int move[] = moves[dir.ordinal()];
-
-        // The cell that the player moves to
-        int row = pos.row + move[0];
-        int col = pos.column + move[1];
-
-        return is(cells[row][col], BOX);
     }
 
     /**
