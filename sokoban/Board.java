@@ -473,6 +473,21 @@ public class Board implements Cloneable
     }
     
     /**
+     * Moves a box and updates remainingBoxes. This method ignores the
+     * player position.
+     */
+    public void moveBox(Position from, Position to)
+    {
+        cells[from.row][from.column] &= ~BOX;
+        cells[from.row][from.column] |= BOX;
+        
+        if (is(cells[from.row][from.column], GOAL))
+            remainingBoxes++;
+        if (is(cells[to.row][to.column], GOAL))
+            remainingBoxes--;
+    }
+    
+    /**
      * Removes the VISITED flag from all squares. The VISITED flag is typically
      * used temporarily by algorithms to find shortest paths and avoid loops.
      */
