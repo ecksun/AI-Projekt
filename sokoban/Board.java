@@ -3,7 +3,9 @@ package sokoban;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 import sokoban.ReachableBox;
 
@@ -75,7 +77,12 @@ public class Board implements Cloneable
             { 0, 1 } };
 
     public enum Direction {
-        UP, DOWN, LEFT, RIGHT,
+        UP, DOWN, LEFT, RIGHT;
+        
+        private static final Direction[] reverse = { DOWN, UP, RIGHT, LEFT };
+        public Direction reverse() {
+            return reverse[this.ordinal()];
+        } 
     }
 
     /**
@@ -109,6 +116,7 @@ public class Board implements Cloneable
     
     private int remainingBoxes;
     private int boxesInStart;
+    public int boxCount;
 
     /**
      * The topmost, leftmost square the player can reach. Please update with
@@ -116,6 +124,8 @@ public class Board implements Cloneable
      * hashed.
      */
     public int topLeftReachable;
+    public int reachableBoxCount;
+    public final Position[] reachableBoxes;
 
     private long zobristKey;
 
@@ -196,8 +206,15 @@ public class Board implements Cloneable
         this.zobristKey = Zobrist.calculateHashTable(this);
         
         countBoxes();
+        
+        // Pre-allocate some stuff
+        reachableBoxes = new Position[boxCount];
+//        for (int i = 0; i < boxCount; i++) {
+//            reachableBoxes[i] = new Position(-1, -1);
+//        }
+        
         markNonBoxSquares();
-        updateTopLeftReachable();
+        updateReachable();
     }
     
     /**
@@ -245,14 +262,16 @@ public class Board implements Cloneable
      */
     private void countBoxes()
     {
-        int remaining = 0;
+        int count = 0, remaining = 0;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                if ((cells[row][col] & (BOX | GOAL)) == BOX) {
-                    remaining++;
+                if (is(cells[row][col], BOX)) {
+                    count++;
+                    if (!is(cells[row][col], GOAL)) remaining++;
                 }
             }
         }
+        boxCount = count;
         remainingBoxes = remaining;
     }
 
@@ -528,7 +547,7 @@ public class Board implements Cloneable
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
         
-        updateTopLeftReachable();
+        updateReachable();
     }
 
     /**
@@ -735,17 +754,18 @@ public class Board implements Cloneable
      * Updates the minimum top left position that the player can move to,
      * defined as (row*width)+col. This is used for duplicate detection.
      */
-    public void updateTopLeftReachable()
+    public void updateReachable()
     {
         clearFlag(REACHABLE);
+        reachableBoxCount = 0;
         // TODO: Should this be local?
-        topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
+        topLeftReachable = updateReachableDFS(playerRow, playerCol);
     }
 
     /**
-     * Recursive part of updateTopLeftReachable
+     * Recursive part of updateReachable
      */
-    public int updateTopLeftReachableDFS(int startRow, int startCol)
+    private int updateReachableDFS(int startRow, int startCol)
     {
         cells[startRow][startCol] |= REACHABLE;
 
@@ -754,8 +774,16 @@ public class Board implements Cloneable
             int row = startRow + moves[dir.ordinal()][0];
             int col = startCol + moves[dir.ordinal()][1];
             
-            if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
-                int pos = updateTopLeftReachableDFS(row, col);
+            if ((cells[row][col] & (BOX | REACHABLE)) == BOX) {
+                // A new box  (a box that's not yet marked as reachable)
+                cells[row][col] |= REACHABLE;
+                reachableBoxes[reachableBoxCount] = new Position(row, col);
+//                reachableBoxes[reachableBoxCount].row = row;
+//                reachableBoxes[reachableBoxCount].column = col;
+                reachableBoxCount++;
+            }
+            else if (!is(cells[row][col], (byte) (WALL | REACHABLE))) {
+                int pos = updateReachableDFS(row, col);
                 if (pos < minimum)
                     minimum = pos;
             }

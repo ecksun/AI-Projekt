@@ -21,7 +21,7 @@ public class IDSPusher implements Solver
      * The number of generated nodes
      */
     public static int generatedNodes = 0;
-    private static int remainingDepth;
+    private static int maxDepth, remainingDepth;
     private static Board board;
 
     public int getIterationsCount()
@@ -66,7 +66,7 @@ public class IDSPusher implements Solver
     final static class SearchInfo
     {
         final SearchStatus status;
-        final LinkedList<Board.Direction> solution;
+        final LinkedList<Direction> solution;
 
         static SearchInfo Inconclusive = new SearchInfo(
                 SearchStatus.Inconclusive);
@@ -122,37 +122,41 @@ public class IDSPusher implements Solver
 
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
-        for (final ReachableBox reachable : board.findReachableBoxSquares()) {
+        for (int i = 0; i < board.reachableBoxCount; i++) {
+            final Position boxFrom = board.reachableBoxes[i];
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(reachable.position,
-                        Board.moves[dir.ordinal()]);
-                final Position boxTo = new Position(boxFrom, Board.moves[dir
-                        .ordinal()]);
-                if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
+                final Position player = new Position(boxFrom, dir.reverse());
+                final Position boxTo = new Position(boxFrom, dir);
+                if (Board.is(cells[player.row][player.column], Board.REACHABLE)
+                        && Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board
                                 .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
                     // The move is possible
                     
                     // Move the player and push the box
-                    board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
+                    board.moveBox(boxFrom, boxTo);
 
                     // Process successor states
                     final SearchInfo result = dfs();
+                    if (result.status == SearchStatus.Solution) System.out.println(board);
 
                     // Restore changes
-                    board.moveBox(boxTo, boxFrom);
                     board.movePlayer(boxFrom, source);
+                    board.moveBox(boxTo, boxFrom);
 
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
                             // Found a solution. Return it now!
-
-                            // Add the last movement first
+                            
+                            board.clearFlag(Board.VISITED);
+//                            System.out.println(board);
+//                            System.out.println(source+"--->"+player);
                             result.solution.addFirst(dir);
-                            // So we can put the rest in front of it
-                            result.solution.addAll(0, reachable.path);
+                            if (remainingDepth == maxDepth-1 && !source.equals(player)) {
+                                result.solution.addAll(0, board.findPath(source, player));
+                            }
 
                             return result;
                         case Inconclusive:
@@ -187,7 +191,7 @@ public class IDSPusher implements Solver
         final int lowerBound = lowerBound(startBoard);
         System.out.println("lowerBound(): " + lowerBound);
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
