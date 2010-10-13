@@ -555,56 +555,6 @@ public class Board implements Cloneable
     }
 
     /**
-     * Gets a hash value of all of the boxes. This does not include
-     * the player position.
-     * 
-     * This works by XOR:ing the box spacing when the cells are laid
-     * out on a line. To use the bits better in the hash, we rotate
-     * the position we XOR with.
-     * 
-     * @return The hash
-     */
-    public long getBoxesHash()
-    {
-        long hash = 0; // 64 bits
-        final int STEP = 7; // Just some relative prime to 64 so it
-        // doesn't wrap around to 0 and overwrite
-        // too many previous values boards with
-        // only a few boxes.
-
-        int bits = 0;
-        int spacing = 0;
-
-        for (int y = 1; y < height - 1; y++) {
-            for (int x = 1; x < width - 1; x++) {
-                if (is(cells[y][x], BOX)) {
-                    hash ^= (spacing << bits) ^ (spacing >> (64 - bits));
-                    bits = (bits + STEP) % 64;
-                    spacing = 0;
-                }
-                else {
-                    spacing++;
-                }
-            }
-        }
-
-        return hash;
-    }
-
-    /**
-     * Returns a hash of the boxes and the topmost, leftmost reachable
-     * player position.
-     * 
-     * @return The hash
-     */
-    public long getPlayerBoxesHash()
-    {
-        // Add the topmost, leftmost reachable position
-        // to the last 16 bytes of the hash
-        return getBoxesHash() ^ (topLeftReachable << 48);
-    }
-
-    /**
      * Compares two boards for equality.
      * 
      * @note The topmost, leftmost reachable position is compared instead of
@@ -633,13 +583,6 @@ public class Board implements Cloneable
 
         return true;
     }
-
-    // @Override
-    // public int hashCode()
-    // {
-    // long h = getPlayerBoxesHash();
-    // return (int) (h ^ (h >> 32));
-    // }
 
     @Override
     public int hashCode()
