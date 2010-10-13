@@ -281,9 +281,41 @@ public class IDSPusher implements Solver
     {
         boolean blocked = false;
         // Horisontal
-        if (Board.is(board.cells[to.row][to.column], Board.WALL))
+
+        // #  If there is a wall on the left or on the right side of the box then the box is blocked along this axis 
+        if (Board.is(board.cells[to.row][to.column+1], Board.WALL) || Board.is(board.cells[to.row][to.column-1], Board.WALL))
             blocked = true;
+        // #  If there is a simple deadlock square on both sides (left and right) of the box the box is blocked along this axis 
+        else if (Board.is(board.cells[to.row][to.column+1], Board.BOX_TRAP) && Board.is(board.cells[to.row][to.column-1], Board.BOX_TRAP))
+            blocked = true;
+        // #  If there is a box one the left or right side then this box is blocked if the other box is blocked. 
+        else {
+            // If there is a box on the right
+            if (Board.is(board.cells[to.row][to.column+1], Board.BOX)) {
+                // check if that box is blocked
+            }
+            if (Board.is(board.cells[to.row][to.column-1], Board.BOX)) {
+                // check if that box is blocked
+            }
+        }
         
+        // #  If there is a wall on the left or on the right side of the box then the box is blocked along this axis 
+        if (Board.is(board.cells[to.row+1][to.column], Board.WALL) || Board.is(board.cells[to.row-1][to.column], Board.WALL))
+            if (blocked) return true;
+        // #  If there is a simple deadlock square on both sides (left and right) of the box the box is blocked along this axis 
+        else if (Board.is(board.cells[to.row+1][to.column], Board.BOX_TRAP) && Board.is(board.cells[to.row-1][to.column], Board.BOX_TRAP))
+            if (blocked) return true;
+        // #  If there is a box one the left or right side then this box is blocked if the other box is blocked. 
+        else {
+            // If there is a box on the right
+            if (Board.is(board.cells[to.row+1][to.column], Board.BOX)) {
+                // check if that box is blocked
+            }
+            if (Board.is(board.cells[to.row-1][to.column], Board.BOX)) {
+                // check if that box is blocked
+            }
+        }
+        return false;
 //        byte WALL_OR_BOX = Board.BOX | Board.WALL;
 //        
 //        if (Board.is(board.cells[to.row+1][to.column], Board.BOX) && !(from.row == to.row+1 && from.column == to.column)) {
@@ -330,7 +362,7 @@ public class IDSPusher implements Solver
 //                return true;
 //            }
 //        }
-        
-        return false;
+//        
+//        return false;
     }
 }
