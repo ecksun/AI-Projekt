@@ -31,7 +31,6 @@ public class IDSPusher implements Solver
 
     /**
      * Set of visited boards, including the player position
-     * TODO change to long when we implement Zorbit
      */
     private HashSet<Long> visitedBoards;
 
@@ -181,8 +180,6 @@ public class IDSPusher implements Solver
             return SearchInfo.Failed;
         }
     }
-
-    // TODO make the hashCode() function in Board use Ze.... hashes?
 
     public String solve(final Board startBoard)
     {
