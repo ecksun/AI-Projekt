@@ -113,8 +113,11 @@ public class Board implements Cloneable
      * The topmost, leftmost square the player can reach. Please update with
      * updateTopLeftReachable() after the board has changed and before it's
      * hashed.
+     *
+     * Use getTopLeftReachable instead of accessing this variable.
      */
-    public int topLeftReachable;
+    private int topLeftReachable;
+    private boolean topLeftNeedsUpdate;
 
     private long zobristKey;
 
@@ -535,7 +538,7 @@ public class Board implements Cloneable
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
 
-        updateTopLeftReachable();
+        topLeftNeedsUpdate = true;
     }
 
     /**
@@ -564,7 +567,7 @@ public class Board implements Cloneable
 
         Board o = (Board) other;
 
-        if (topLeftReachable != o.topLeftReachable)
+        if (getTopLeftReachable() != o.getTopLeftReachable())
             return false;
 
         // The outer rows/columns are always walls (or not reachable)
@@ -582,7 +585,7 @@ public class Board implements Cloneable
 
     public long getZobristKey()
     {
-        return zobristKey ^ topLeftReachable;
+        return zobristKey ^ getTopLeftReachable();
     }
 
     // XXX: Remove later?
@@ -739,6 +742,17 @@ public class Board implements Cloneable
     }
 
     /**
+     * Gets the current topLeftReachable value, and updates it if needed.
+     */
+    public int getTopLeftReachable() {
+        if (topLeftNeedsUpdate) {
+            updateTopLeftReachable();
+        }
+        
+        return topLeftReachable;
+    }
+
+    /**
      * Updates the minimum top left position that the player can move to,
      * defined as (row*width)+col. This is used for duplicate detection.
      */
@@ -747,12 +761,13 @@ public class Board implements Cloneable
         clearFlag(REACHABLE);
         // TODO: Should this be local?
         topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
+        topLeftNeedsUpdate = false;
     }
 
     /**
      * Recursive part of updateTopLeftReachable
      */
-    public int updateTopLeftReachableDFS(int startRow, int startCol)
+    private int updateTopLeftReachableDFS(int startRow, int startCol)
     {
         cells[startRow][startCol] |= REACHABLE;
 
