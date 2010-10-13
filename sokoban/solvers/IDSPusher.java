@@ -123,22 +123,17 @@ public class IDSPusher implements Solver
         final byte[][] cells = board.cells;
         for (ReachableBox reachable : board.findReachableBoxSquares()) {
             for (Direction dir : Board.Direction.values()) {
-                Position from = new Position(reachable.position,
-                        Board.moves[dir.ordinal()]);
+                Position from = new Position(reachable.position, Board.moves[dir.ordinal()]);
                 Position to = new Position(from, Board.moves[dir.ordinal()]);
                 if (Board.is(cells[from.row][from.column], Board.BOX) &&
                         !Board.is(cells[to.row][to.column], Board.REJECT_BOX)) {
                     // The move is possible
                     
-                    System.out.println(board);
                     
                     // Move the player and push the box
                     board.moveBox(from, to);
                     board.playerRow = from.row;
                     board.playerCol = from.column;
-                    
-                                        System.out.println(board);
-                                        if (0 == 0) return SearchInfo.Inconclusive;
                     
                     // Process successor states
                     SearchInfo result = dfs();
@@ -148,13 +143,12 @@ public class IDSPusher implements Solver
                     board.playerRow = source.row;
                     board.playerCol = source.column;
                     
-                    System.out.println(board);
-                    
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
                             // Found a solution. Return it now!
                             result.solution.addFirst(dir);
+                            result.solution.addAll(0, reachable.path);
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -190,7 +184,7 @@ public class IDSPusher implements Solver
     {
         failedBoards = new HashSet<Long>();
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = 1; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        for (int maxDepth = 10; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
             
             visitedBoards = new HashSet<Long>();
@@ -235,7 +229,7 @@ public class IDSPusher implements Solver
                         && !Board
                                 .is(cells[to.row][to.column], Board.REJECT_BOX)) {
                     successors.add(new PlayerPosDir(reachable.position.row,
-                        reachable.position.column, dir));
+                            reachable.position.column, dir));
                 }
             }
         }
