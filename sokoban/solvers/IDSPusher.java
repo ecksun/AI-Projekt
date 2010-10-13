@@ -137,6 +137,11 @@ public class IDSPusher implements Solver
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
 
+                    // Check if we got a freeze deadlock
+                    if (freezeDeadlock(from, to)) {
+                        return SearchInfo.Failed;
+                    }
+
                     // Process successor states
                     final SearchInfo result = dfs();
 
@@ -184,8 +189,10 @@ public class IDSPusher implements Solver
     public String solve(final Board startBoard)
     {
         failedBoards = new HashSet<Long>();
+        long startTime = System.currentTimeMillis();
         final int lowerBound = lowerBound(startBoard);
-        System.out.println("lowerBound(): " + lowerBound);
+        System.out.println("lowerBound(): " + lowerBound + " took "
+                + (System.currentTimeMillis() - startTime) + " ms");
         System.out.println("IDS depth limit (progress): ");
         for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
@@ -258,5 +265,72 @@ public class IDSPusher implements Solver
     private static int distance(final Position a, final Position b)
     {
         return Math.abs(a.column - b.column) + Math.abs(a.row - b.row);
+    }
+
+    /**
+     * Check if the move resulted in a freeze deadlock
+     * (two boxes between each other next to a wall)
+     * 
+     * This method assumes the move is valid.
+     * 
+     * @param from The previous position
+     * @param to The new position
+     * @return True if there is a freeze deadlock
+     */
+    private boolean freezeDeadlock(Position from, Position to)
+    {
+        boolean blocked = false;
+        // Horisontal
+        if (Board.is(board.cells[to.row][to.column], Board.WALL))
+            blocked = true;
+        
+//        byte WALL_OR_BOX = Board.BOX | Board.WALL;
+//        
+//        if (Board.is(board.cells[to.row+1][to.column], Board.BOX) && !(from.row == to.row+1 && from.column == to.column)) {
+//            // If the box is above
+//            if (Board.is(board.cells[to.row][to.column+1], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column+1], WALL_OR_BOX)) {
+//                // If there is a wall to the right of them
+//                return true;
+//            }
+//            if (Board.is(board.cells[to.row][to.column-1], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column-1], WALL_OR_BOX)) {
+//                // If there is a wall to the left of them
+//                return true;
+//            }
+//        }
+//        if (Board.is(board.cells[to.row-1][to.column], Board.BOX) && !(from.row == to.row-11 && from.column == to.column)) {
+//            // If the box is below
+//            if (Board.is(board.cells[to.row][to.column+1], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column+1], WALL_OR_BOX)) {
+//                // If there is a wall to the right of them
+//                return true;
+//            }
+//            if (Board.is(board.cells[to.row][to.column-1], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column-1], WALL_OR_BOX)) {
+//                // If there is a wall to the left of them
+//                return true;
+//            }
+//        }
+//        if (Board.is(board.cells[to.row][to.column+1], Board.BOX)) {
+//            // If the box is to the right
+//            if (Board.is(board.cells[to.row+1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column+1], WALL_OR_BOX)) {
+//                // If there is a wall above
+//                return true;
+//            }
+//            if (Board.is(board.cells[to.row-1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column+1], WALL_OR_BOX)) {
+//                // If there is a wall belove
+//                return true;
+//            }
+//        }
+//        if (Board.is(board.cells[to.row][to.column-1], Board.BOX)) {
+//            // If the box is to the left
+//            if (Board.is(board.cells[to.row+1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row+1][to.column-1], WALL_OR_BOX)) {
+//                // If there is a wall above
+//                return true;
+//            }
+//            if (Board.is(board.cells[to.row-1][to.column], WALL_OR_BOX) && Board.is(board.cells[to.row-1][to.column-1], WALL_OR_BOX)) {
+//                // If there is a wall to below
+//                return true;
+//            }
+//        }
+        
+        return false;
     }
 }
