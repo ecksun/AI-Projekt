@@ -147,8 +147,12 @@ public class IDSPusher implements Solver
                     switch (result.status) {
                         case Solution:
                             // Found a solution. Return it now!
+                            
+                            // Add the last movement first
                             result.solution.addFirst(dir);
+                            // So we can put the rest in front of it
                             result.solution.addAll(0, reachable.path);
+                            
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
