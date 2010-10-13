@@ -101,12 +101,11 @@ public class Board implements Cloneable
      */
     private int playerCol;
 
-
     /**
      * The row at which the player resides
      */
     private int playerRow;
-    
+
     private int remainingBoxes;
     private int boxesInStart;
 
@@ -119,21 +118,24 @@ public class Board implements Cloneable
 
     private long zobristKey;
 
-
+    /**
+     * Constructs a new board from the given string representation.
+     * 
+     * NOTE: Please use the Board(byte[]) constructor if the board is already
+     * available as an byte array.
+     * 
+     * @param boardString A string representation of the board to construct.
+     */
+    public Board(String boardString)
+    {
+        this(boardString.getBytes());
+    }
 
     /**
-     * Initialize a new board
+     * Constructs a new board from the given array of character bytes.
      * 
-     * @param width
-     *            The width of the board
-     * @param height
-     *            The height of the board
-     * @param playerRow
-     *            The Y position of the player
-     * @param playerCol
-     *            The X position of the player
+     * @param boardBytes An array of character bytes that describes the board.
      */
-    // public Board(int width, int height, int playerRow, int playerCol)
     public Board(byte[] boardBytes)
     {
         int boardWidth = 0;
@@ -188,20 +190,21 @@ public class Board implements Cloneable
                     break;
             }
         }
-        
+
         this.width = boardWidth;
         this.height = boardHeight;
         this.playerCol = boardPlayerCol;
         this.playerRow = boardPlayerRow;
         this.zobristKey = Zobrist.calculateHashTable(this);
-        
+
         countBoxes();
         markNonBoxSquares();
         updateTopLeftReachable();
     }
-    
+
     /**
      * Getter for playerCol.
+     * 
      * @return Column index for the player position
      */
     public int getPlayerCol()
@@ -211,6 +214,7 @@ public class Board implements Cloneable
 
     /**
      * Getter for playerRow.
+     * 
      * @return Row index for the player position
      */
     public int getPlayerRow()
@@ -505,7 +509,7 @@ public class Board implements Cloneable
         playerRow = to.row;
         playerCol = to.column;
     }
-    
+
     /**
      * Moves a box and updates remainingBoxes. This method ignores the
      * player position. Updates Zobrist hash.
@@ -513,11 +517,14 @@ public class Board implements Cloneable
     public void moveBox(Position from, Position to)
     {
         // Remove box from previous position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, from.row, from.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row, from.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, from.row,
+                from.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row,
+                from.column);
 
         // Move box to new position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row, to.column);
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row,
+                to.column);
         zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
 
         cells[from.row][from.column] &= ~BOX;
@@ -527,7 +534,7 @@ public class Board implements Cloneable
             remainingBoxes++;
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
-        
+
         updateTopLeftReachable();
     }
 
@@ -577,13 +584,13 @@ public class Board implements Cloneable
     {
         return zobristKey ^ topLeftReachable;
     }
-    
+
     // XXX: Remove later?
-//    @Override
-//    public int hashCode()
-//    {
-//        return (int) (zobristKey ^ (zobristKey >> 32));
-//    }
+    // @Override
+    // public int hashCode()
+    // {
+    // return (int) (zobristKey ^ (zobristKey >> 32));
+    // }
 
     /**
      * Returns whether or not the given position is contained in this board.

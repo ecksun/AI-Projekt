@@ -6,8 +6,8 @@ package sokoban;
 import java.util.Random;
 
 /**
- * Our application of the Zobrist hash algorithm considers empty cells, boxes
- * and the player.
+ * Our application of the Zobrist hash algorithm considers empty cells and
+ * boxes.
  */
 public final class Zobrist
 {

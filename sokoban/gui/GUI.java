@@ -44,7 +44,8 @@ public class GUI
 
     public GUI()
     {
-        board = new Board(12, 12, 1, 1);
+        board = new Board("#####" + "\n" + "#@  #" + "\n" + "# $ #" + "\n"
+                + "#  .#" + "\n" + "#####");
         keepRunning = true;
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {

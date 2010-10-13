@@ -1,10 +1,6 @@
 package sokoban.test;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.junit.BeforeClass;
@@ -12,10 +8,10 @@ import org.junit.Test;
 
 import sokoban.Board;
 import sokoban.BoardParser;
-import sokoban.solvers.Pusher;
+import sokoban.solvers.IDSPusher;
 import sokoban.solvers.Solver;
 
-public class SolverTest
+public class IDSPusherTest
 {
     static File levelsFile;
     static ArrayList<String> levels;
@@ -31,8 +27,8 @@ public class SolverTest
     public void level1()
     {
         byte[] bytes = levels.get(0).getBytes();
-        Board board1 = BoardParser.parse(bytes);
-        Solver ids = new Pusher();
+        Board board1 = new Board(bytes);
+        Solver ids = new IDSPusher();
         String solution = ids.solve(board1);
         
         // TODO perform the moves and make sure it looks good
