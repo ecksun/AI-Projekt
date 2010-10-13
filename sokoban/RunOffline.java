@@ -21,7 +21,8 @@ public class RunOffline {
         File slc = new File(args[1]);
         List<String> boards = BoardParser.getBoardStrings(slc);
         
-        Board board = BoardParser.parse(boards.get(boardNumber-1).getBytes());
+        Board board = new Board(boards.get(boardNumber-1).getBytes());
+        
         
         System.out.println(board);
         
