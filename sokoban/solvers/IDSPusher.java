@@ -131,28 +131,24 @@ public class IDSPusher implements Solver
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board
                                 .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
-                    // The move is possible
-                    
-                    System.out.println("\n\nLast board:\n" + board);
-                    // Check if we got a freeze deadlock
-                    if (freezeDeadlock(boxTo, DEADLOCK_BOTH)) {
-                        System.out.println("DEADLOCK FOUND");
-                        return SearchInfo.Failed;
-                    }
                     
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
-                    
+                   
+
+
                     System.out.println("\n\nLast board:\n" + board);
+
+                    SearchInfo result;
                     // Check if we got a freeze deadlock
                     if (freezeDeadlock(boxTo, DEADLOCK_BOTH)) {
                         System.out.println("DEADLOCK FOUND");
-                        return SearchInfo.Failed;
+                        result = SearchInfo.Failed;
+                    } else {
+                        // Process successor states
+                        result = dfs();
                     }
-
-                    // Process successor states
-                    final SearchInfo result = dfs();
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
@@ -296,105 +292,133 @@ public class IDSPusher implements Solver
             boolean blockedVertical = false;
             boolean blockedHorizontal = false;
             
-            System.out.println("Looking at position: " + box);
+            System.out.println("Looking for deadlock at position: " + box);
             
             // If there is a wall to the left or right
             if (Board.is(board.cells[box.row][box.column+1], Board.WALL) || Board.is(board.cells[box.row][box.column-1], Board.WALL)) {
                 blockedHorizontal = true;
-                System.out.println("wall left or right");
+                System.out.println(" - Wall to the left or right");
             }
             
             // If there is a wall to the top or bottom
             if (Board.is(board.cells[box.row+1][box.column], Board.WALL) || Board.is(board.cells[box.row-1][box.column], Board.WALL)) {
                 blockedVertical = true;
-                System.out.println("wall top or bottom");
+                System.out.println(" - Wall above or below");
             }
             
             // If there is a box_trap (simple deadlock check) to the left and right
             if (Board.is(board.cells[box.row][box.column+1], Board.BOX_TRAP) && Board.is(board.cells[box.row][box.column-1], Board.BOX_TRAP)) {
                 blockedHorizontal = true;
-                System.out.println("box trap left and right");
+                System.out.println(" - Box trap to the left and right");
             }
             
             // If there is a box_trap (simple deadlock check) to the top and bottom
             if (Board.is(board.cells[box.row+1][box.column], Board.BOX_TRAP) && Board.is(board.cells[box.row-1][box.column], Board.BOX_TRAP)) {
                 blockedVertical = true;
-                System.out.println("box trap top and bottom");
+                System.out.println(" - Box trap above and below");
             }
             
             // If we are both blocked horizontal and vertical, return deadlock
             if (blockedVertical && blockedHorizontal) {
-                System.out.println("Both top/bottom and left/right are blocked");
+                System.out.println(" - Both top/bottom and left/right are blocked");
                 return true;
             // Only horizontal
             } else if (!blockedVertical && blockedHorizontal) {
-                System.out.println("Only horizontal (left/right) is blocked.");
+                System.out.println(" - Only horizontal (left/right) is blocked.");
                 if (Board.is(board.cells[box.row+1][box.column], Board.BOX)) {
-                    System.out.println("Box below, check it");
+                    System.out.println("  - Box below, check it");
                     return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL);
                 }
                 
                 if (Board.is(board.cells[box.row-1][box.column], Board.BOX)) {
-                    System.out.println("Box above, check it");
+                    System.out.println("  - Box above, check it");
                     return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL);
                 }
             // Only vertical
             } else if (!blockedHorizontal && blockedVertical) {
-                System.out.println("Only vertical (top/bottom) is blocked.");
+                System.out.println(" - Only vertical (top/bottom) is blocked.");
                 if (Board.is(board.cells[box.row][box.column+1], Board.BOX)) {
-                    System.out.println("Box to the right");
+                    System.out.println("  - Box to the right, check it");
                     return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL);
                 }
                 
                 if (Board.is(board.cells[box.row][box.column-1], Board.BOX)) {
-                    System.out.println("Box to the left");
+                    System.out.println("  - Box to the left, check it");
                     return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL);
                 }
             // No deadlock
             } else {
+                System.out.println(" - No deadlock found");
                 return false;
             }
         // HORIZONTAL CHECK
         } else if (type == DEADLOCK_HORIZONTAL) {
+            System.out.println("   - Check horizontal");
+            
+            // Check goal
+            if (Board.is(board.cells[box.row][box.columns], (byte) (Board.GOAL & Board.BOX)) {
+                System.out.println("    - Box in goal, no deadlock");
+                return false;
+            }
+
             // If there is a wall to the left or right
             if (Board.is(board.cells[box.row][box.column+1], Board.WALL) || Board.is(board.cells[box.row][box.column-1], Board.WALL)) {
+                System.out.println("    - Wall to the left or right, deadlock");
                 return true;
             }
             
             // If there is a box_trap (simple deadlock check) to the left and right
             if (Board.is(board.cells[box.row][box.column+1], Board.BOX_TRAP) && Board.is(board.cells[box.row][box.column-1], Board.BOX_TRAP)) {
+                System.out.println("    - Box trap to the left and right, deadlock");
                 return true;
             }
             
             if (Board.is(board.cells[box.row][box.column+1], Board.BOX)) {
+                System.out.println("    - Box to the right, check it");
                 return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL);
             }
             
             if (Board.is(board.cells[box.row][box.column-1], Board.BOX)) {
+                System.out.println("    - Box to the left, check it");
                 return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL);
             }
+            System.out.println("   - No deadlock"); 
             return false;
         // VERTICAL CHECK
         } else if (type == DEADLOCK_VERTICAL) {
+            System.out.println("   - Check vertical");
+
+            // Check goal
+            if (Board.is(board.cells[box.row][box.columns], (byte) (Board.GOAL & Board.BOX)) {
+                System.out.println("    - Box in goal, no deadlock");
+                return false;
+            }
+
             // If there is a wall to the top or bottom
             if (Board.is(board.cells[box.row+1][box.column], Board.WALL) || Board.is(board.cells[box.row-1][box.column], Board.WALL)) {
+                System.out.println("    - Wall above or below, deadlock");
                 return true;
             }
             
             // If there is a box_trap (simple deadlock check) to the top and bottom
             if (Board.is(board.cells[box.row+1][box.column], Board.BOX_TRAP) && Board.is(board.cells[box.row-1][box.column], Board.BOX_TRAP)) {
+                System.out.println("    - Box above or below, deadlock");
                 return true;
             }
             
             if (Board.is(board.cells[box.row+1][box.column], Board.BOX)) {
+                System.out.println("    - Box below, check it");
                 return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL);
             }
             
             if (Board.is(board.cells[box.row-1][box.column], Board.BOX)) {
+                System.out.println("    - Box above, check it");
                 return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL);
             }
+            System.out.println("   - No deadlock"); 
             return false;
         }
+        System.out.println("UNREACHABLE");
         return false;
     }
 }
