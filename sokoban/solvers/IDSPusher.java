@@ -70,7 +70,7 @@ public class IDSPusher implements Solver
 
         static SearchInfo Inconclusive = new SearchInfo(
                 SearchStatus.Inconclusive);
-        static SearchInfo Failed = new SearchInfo(SearchStatus.Inconclusive);
+        static SearchInfo Failed = new SearchInfo(SearchStatus.Failed);
 
         public SearchInfo(final SearchStatus status)
         {
@@ -135,7 +135,7 @@ public class IDSPusher implements Solver
                     board.movePlayer(source, boxFrom);
 
                     // Process successor states
-                    SearchInfo result = null;
+                    SearchInfo result = SearchInfo.Failed;
                     if (visitedBoards.add(board.getZobristKey())) {
                         // This state hasn't been visited before
                         result = dfs();
@@ -146,23 +146,21 @@ public class IDSPusher implements Solver
                     board.movePlayer(boxFrom, source);
 
                     // Evaluate result
-                    if (result != null) {
-                        switch (result.status) {
-                            case Solution:
-                                // We have found a solution. Find the path of
-                                // the move and add it to the solution.
-                                board.clearFlag(Board.VISITED);
-                                result.solution.addFirst(dir);
-                                result.solution.addAll(0, board.findPath(source, player));
-                                return result;
-                            case Inconclusive:
-                                // Make the parent inconclusive too
-                                inconclusive = true;
-                                continue;
-                            case Failed:
-                                // Mark this node as failed
-                                continue;
-                        }
+                    switch (result.status) {
+                        case Solution:
+                            // We have found a solution. Find the path of
+                            // the move and add it to the solution.
+                            board.clearFlag(Board.VISITED);
+                            result.solution.addFirst(dir);
+                            result.solution.addAll(0, board.findPath(source, player));
+                            return result;
+                        case Inconclusive:
+                            // Make the parent inconclusive too
+                            inconclusive = true;
+                            continue;
+                        case Failed:
+                            // Mark this node as failed
+                            continue;
                     }
                 }
             }
