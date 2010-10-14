@@ -109,14 +109,11 @@ public class IDSPusher implements Solver
             return SearchInfo.Inconclusive;
         }
 
-        if (!visitedBoards.add(board.getZobristKey())) {
-            // Duplicate state
-            return SearchInfo.Failed;
-        }
-
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
+        long hash = board.getZobristKey();
+        
         final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
         remainingDepth--;
 
@@ -138,29 +135,34 @@ public class IDSPusher implements Solver
                     board.movePlayer(source, boxFrom);
 
                     // Process successor states
-                    final SearchInfo result = dfs();
+                    SearchInfo result = null;
+                    if (visitedBoards.add(board.getZobristKey())) {
+                        // This state hasn't been visited before
+                        result = dfs();
+                    }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
                     board.movePlayer(boxFrom, source);
 
                     // Evaluate result
-                    switch (result.status) {
-                        case Solution:
-                            // We have found a solution. Find the path of
-                            // the move and add it to the solution.
-                            board.clearFlag(Board.VISITED);
-                            result.solution.addFirst(dir);
-                            result.solution.addAll(0, board.findPath(source, player));
-                            return result;
-                        case Inconclusive:
-                            // Make the parent inconclusive too
-                            inconclusive = true;
-                            continue;
-                        case Failed:
-                            // Mark this node as failed
-                            failedBoards.add(board.getZobristKey());
-                            continue;
+                    if (result != null) {
+                        switch (result.status) {
+                            case Solution:
+                                // We have found a solution. Find the path of
+                                // the move and add it to the solution.
+                                board.clearFlag(Board.VISITED);
+                                result.solution.addFirst(dir);
+                                result.solution.addAll(0, board.findPath(source, player));
+                                return result;
+                            case Inconclusive:
+                                // Make the parent inconclusive too
+                                inconclusive = true;
+                                continue;
+                            case Failed:
+                                // Mark this node as failed
+                                continue;
+                        }
                     }
                 }
             }
@@ -174,7 +176,7 @@ public class IDSPusher implements Solver
         }
         else {
             // All successors failed, so this node is failed
-            failedBoards.add(board.getZobristKey());
+            failedBoards.add(hash);
             return SearchInfo.Failed;
         }
     }
@@ -191,6 +193,7 @@ public class IDSPusher implements Solver
             visitedBoards = new HashSet<Long>(failedBoards);
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
+            visitedBoards.add(board.getZobristKey());
 
             final SearchInfo result = dfs();
             if (result.solution != null) {
