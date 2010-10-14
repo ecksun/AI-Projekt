@@ -30,8 +30,9 @@ public class RunOffline {
         String solution = solver.solve(board);
         long solveTime = System.currentTimeMillis() - beforeSolve;
 
-        System.out.println(solution);
         System.out.println("Solve time (ms): " + solveTime);
+        System.out.println("Expanded nodes: " + solver.getIterationsCount());
+        System.out.println("Solution: " + solution);
 
     }
     
