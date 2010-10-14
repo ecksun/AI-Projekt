@@ -135,7 +135,6 @@ public class IDSPusher implements Solver
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
-                   
 
 
                     System.out.println("\n\nLast board:\n" + board);
@@ -418,7 +417,7 @@ public class IDSPusher implements Solver
             System.out.println("   - No deadlock"); 
             return false;
         }
-        System.out.println("UNREACHABLE");
+        System.out.println("No deadlock");
         return false;
     }
 }
