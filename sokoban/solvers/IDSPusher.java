@@ -143,14 +143,18 @@ public class IDSPusher implements Solver
 //                    }
                     
                     while (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
+                        //if(0==0)break;
+                        //System.out.print("Tunnell");
                         boxTo.row += move[0];
                         boxTo.column += move[1];
                         reachable.path.add(dir);
                     }
+                    
+                    Position playerTo = new Position(boxTo, Board.moves[dir.reverse().ordinal()]);
 
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
-                    board.movePlayer(source, new Position(boxTo, Board.moves[dir.reverse().ordinal()]));
+                    board.movePlayer(source, playerTo);
                     
 //                    if (wasTunnel) System.out.println(board);
 
@@ -202,7 +206,7 @@ public class IDSPusher implements Solver
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
 //                    board.moveBox(tunnelBoxFrom, boxFrom);
-                    board.movePlayer(boxFrom, source);
+                    board.movePlayer(playerTo, source);
 
                     // Evaluate result
                     switch (result.status) {
