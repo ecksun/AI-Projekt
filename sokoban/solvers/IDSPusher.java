@@ -132,10 +132,16 @@ public class IDSPusher implements Solver
                         && !Board
                                 .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
                     
+                    System.out.println("\n\nLast board:\n" + board);
+                    // Check if we got a freeze deadlock
+                    if (freezeDeadlock(boxTo, DEADLOCK_BOTH)) {
+                        System.out.println("DEADLOCK FOUND");
+                        return SearchInfo.Failed;
+                    }
+                    
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, boxFrom);
-                   
 
                     System.out.println("\n\nLast board:\n" + board);
                     SearchInfo result;
