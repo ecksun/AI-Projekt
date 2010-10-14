@@ -152,7 +152,7 @@ public class IDSPusher implements Solver
                     }
 
                     // Check if we got a freeze deadlock
-                    if (freezeDeadlock(from, to)) {
+                    if (freezeDeadlock(boxFrom, boxTo)) {
                         return SearchInfo.Failed;
                     }
 
