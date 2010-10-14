@@ -75,7 +75,14 @@ public class Board implements Cloneable
             { 0, 1 } };
 
     public enum Direction {
-        UP, DOWN, LEFT, RIGHT,
+        UP, DOWN, LEFT, RIGHT;
+
+        private static final Direction[] reverse = { DOWN, UP, RIGHT, LEFT };
+
+        public Direction reverse()
+        {
+            return reverse[this.ordinal()];
+        }
     }
 
     /**
@@ -503,7 +510,8 @@ public class Board implements Cloneable
 
     /**
      * Move the player on the position from to the position to.
-     * 
+     *
+     * TODO remove unused parameters
      * @param from
      * @param to
      */
