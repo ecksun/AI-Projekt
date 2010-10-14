@@ -57,7 +57,7 @@ public class Benchmarker
                 .getBoardStrings(levelsFile);
 
         for (String boardString : boardStrings) {
-            Board board = BoardParser.parse(boardString);
+            Board board = new Board(boardString);
             boards.add(board);
         }
     }
