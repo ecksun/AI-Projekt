@@ -106,6 +106,7 @@ public class Board implements Cloneable
      */
     private int playerRow;
 
+    private int boxCount;
     private int remainingBoxes;
 
     /**
@@ -251,15 +252,17 @@ public class Board implements Cloneable
      */
     private void countBoxes()
     {
-        int remaining = 0;
+        boxCount = 0;
+        remainingBoxes = 0;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                if ((cells[row][col] & (BOX | GOAL)) == BOX) {
-                    remaining++;
+                if (is(cells[row][col], BOX)) {
+                    boxCount++;
+                    if (!is(cells[row][col], GOAL))
+                        remainingBoxes++;
                 }
             }
         }
-        remainingBoxes = remaining;
     }
 
     /**
