@@ -52,6 +52,7 @@ public class Main
 
             out.println(solution);
             System.out.println("Solve time (ms): " + solveTime);
+            System.out.println("Expanded nodes: " + solver.getIterationsCount());
             System.out.println("Solution: " + solution);
 
             String result = in.readLine();
