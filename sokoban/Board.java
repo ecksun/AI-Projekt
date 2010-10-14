@@ -502,7 +502,7 @@ public class Board implements Cloneable
     }
 
     /**
-     * Move the player on the position from to the position to and update hash.
+     * Move the player on the position from to the position to.
      * 
      * @param from
      * @param to
