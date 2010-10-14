@@ -107,7 +107,6 @@ public class Board implements Cloneable
     private int playerRow;
 
     private int remainingBoxes;
-    private int boxesInStart;
 
     /**
      * The topmost, leftmost square the player can reach. Please update with
