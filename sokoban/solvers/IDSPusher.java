@@ -288,6 +288,9 @@ public class IDSPusher implements Solver
 
         visited.add(box);
 
+        if (Board.is(board.cells[box.row][box.column], Board.GOAL))
+            return false;
+        // TODO: Do not move the box before checking freeze deadlock, creates deadlock with it self.
         if (type == DEADLOCK_BOTH) {
             boolean blockedVertical = false;
             boolean blockedHorizontal = false;
