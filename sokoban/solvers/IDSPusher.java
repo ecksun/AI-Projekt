@@ -138,7 +138,7 @@ public class IDSPusher implements Solver
                     board.movePlayer(source, boxFrom);
 
                     // Check if we got a freeze deadlock
-                    if (freezeDeadlock(from, to)) {
+                    if (freezeDeadlock(boxFrom, boxTo)) {
                         return SearchInfo.Failed;
                     }
 
