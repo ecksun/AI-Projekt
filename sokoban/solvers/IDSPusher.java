@@ -122,9 +122,9 @@ public class IDSPusher implements Solver
 
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
-        for (final ReachableBox reachable : board.findReachableBoxSquares()) {
+        for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(reachable.position,
+                final Position boxFrom = new Position(player,
                         Board.moves[dir.ordinal()]);
                 final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
@@ -147,13 +147,11 @@ public class IDSPusher implements Solver
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
-                            // Found a solution. Return it now!
-
-                            // Add the last movement first
+                            // We have found a solution. Find the path of
+                            // the move and add it to the solution.
+                            board.clearFlag(Board.VISITED);
                             result.solution.addFirst(dir);
-                            // So we can put the rest in front of it
-                            result.solution.addAll(0, reachable.path);
-
+                            result.solution.addAll(0, board.findPath(source, player));
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
