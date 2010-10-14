@@ -247,38 +247,42 @@ public class IDSPusher implements Solver
 
     private boolean inTunnel(final Direction dir, final Position box)
     {
-        // #$#
+        // 1 or 2 must be a wall
+        
+        // #@#
         if (isWall(box.row, box.column + 1) && isWall(box.row, box.column - 1)) {
+            // 1 2
             // #$#
-            // #^#
-            if (dir == Direction.UP && isWall(box.row + 1, box.column + 1)
-                    && isWall(box.row + 1, box.column - 1)) {
+            //  ^ 
+            if (dir == Direction.UP && isWall(box.row - 1, box.column + 1)
+                    || isWall(box.row - 1, box.column - 1)) {
                 return true;
             }
-            // #v#
+            //  v
             // #$#
-            if (dir == Direction.DOWN && isWall(box.row - 1, box.column + 1)
-                    && isWall(box.row - 1, box.column - 1)) {
+            // 1 2
+            if (dir == Direction.DOWN && isWall(box.row + 1, box.column + 1)
+                    || isWall(box.row + 1, box.column - 1)) {
                 return true;
             }
         }
         // #
-        // $
+        // @
         // #
         if (isWall(box.row + 1, box.column) && isWall(box.row - 1, box.column)) {
-            // ##
-            // $<
-            // ##
-            if (dir == Direction.LEFT && isWall(box.row - 1, box.column + 1)
-                    && isWall(box.row + 1, box.column + 1)) {
+            // 1#
+            //  $<
+            // 2#
+            if (dir == Direction.LEFT && isWall(box.row - 1, box.column - 1)
+                    || isWall(box.row + 1, box.column - 1)) {
                 return true;
             }
 
-            // ##
-            // >$
-            // ##
-            if (dir == Direction.RIGHT && isWall(box.row - 1, box.column - 1)
-                    && isWall(box.row + 1, box.column - 1)) {
+            //  #1
+            // >$ 
+            //  #2
+            if (dir == Direction.RIGHT && isWall(box.row - 1, box.column + 1)
+                    || isWall(box.row + 1, box.column + 1)) {
                 return true;
             }
 
