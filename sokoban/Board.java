@@ -772,10 +772,10 @@ public class Board implements Cloneable
         cells[startRow][startCol] |= REACHABLE;
 
         int minimum = (startRow * width) + startCol;
-        for (Direction dir : Direction.values()) {
-            int row = startRow + moves[dir.ordinal()][0];
-            int col = startCol + moves[dir.ordinal()][1];
-            
+        for (int dir = 0; dir < 4; ++dir) {
+            int row = startRow + moves[dir][0];
+            int col = startCol + moves[dir][1];
+
             if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
                 int pos = updateTopLeftReachableDFS(row, col);
                 if (pos < minimum)
