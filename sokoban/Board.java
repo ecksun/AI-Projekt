@@ -272,11 +272,13 @@ public class Board implements Cloneable
     public String toString()
     {
         StringBuilder sb = new StringBuilder(width * height + height);
-        for (int i = 0; i < height; ++i) {
+        for (int i = 0; i < height-1; ++i) {
             for (int j = 0; j < width; ++j) {
                 sb.append(cellToChar(i, j));
             }
-            sb.append("\n");
+            if (i != height-1) {
+                sb.append("\n");
+            }
         }
         return sb.toString();
     }
