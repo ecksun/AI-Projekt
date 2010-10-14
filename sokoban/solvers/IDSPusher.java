@@ -12,7 +12,7 @@ import sokoban.Board.Direction;
 
 /**
  * A solver that pushes boxes around with iterative deepening and
- * a bloom filter to avoid duplicate states.
+ * hashing to avoid duplicate states.
  */
 public class IDSPusher implements Solver
 {
