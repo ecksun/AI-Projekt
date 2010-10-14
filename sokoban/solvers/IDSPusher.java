@@ -151,11 +151,6 @@ public class IDSPusher implements Solver
                         return SearchInfo.Failed;
                     }
 
-                    // Check if we got a freeze deadlock
-                    if (freezeDeadlock(boxFrom, boxTo)) {
-                        return SearchInfo.Failed;
-                    }
-
                     // Process successor states
                     final SearchInfo result = dfs();
 
