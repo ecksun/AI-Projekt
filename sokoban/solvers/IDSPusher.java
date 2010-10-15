@@ -14,9 +14,15 @@ import sokoban.Board.Direction;
  */
 public class IDSPusher extends IDSCommon implements Solver
 {
-
+    
     private static int remainingDepth;
 
+    public IDSPusher(HashSet<Long> failedBoards)
+    {
+        super(failedBoards);
+    }
+   
+    
     /**
      * Recursive Depth-First algorithm
      * 

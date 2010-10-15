@@ -18,8 +18,7 @@ public class IDSCommon implements Solver
     public static int generatedNodes = 0;
 
     protected static Board board;
-    
-   
+
     @Override
     public int getIterationsCount()
     {
@@ -37,6 +36,17 @@ public class IDSCommon implements Solver
      */
     protected HashSet<Long> failedBoards;
 
+
+    /**
+     * Constructs a new IDSPuller that will be using the given failedBoards
+     * set.
+     * 
+     * @param failedBoards The set of failed boards to use.
+     */
+    public IDSCommon(HashSet<Long> failedBoards)
+    {
+        this.failedBoards = failedBoards;
+    }
     
     @Override
     public String solve(Board board)
