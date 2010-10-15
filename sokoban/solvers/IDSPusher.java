@@ -1,6 +1,5 @@
 package sokoban.solvers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -8,7 +7,6 @@ import java.util.Queue;
 
 import sokoban.Board;
 import sokoban.Position;
-import sokoban.ReachableBox;
 import sokoban.Board.Direction;
 
 /**
@@ -113,13 +111,11 @@ public class IDSPusher implements Solver
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
-        long hash = board.getZobristKey();
+        final long hash = board.getZobristKey();
 
         final Position source = new Position(board.getPlayerRow(), board
                 .getPlayerCol());
         remainingDepth--;
-
-        // System.out.println("Board before branch:\n" + board);
 
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
@@ -129,20 +125,18 @@ public class IDSPusher implements Solver
                         .ordinal()]);
                 final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
+
                 // Check if the move is possible
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board.is(cells[boxTo.row][boxTo.column],
                                 Board.REJECT_BOX)) {
 
-                    int move[] = Board.moves[dir.ordinal()];
-                    boolean wasTunnel = false;
+                    final int move[] = Board.moves[dir.ordinal()];
                     if (inTunnel(dir, boxTo)
                             && !Board.is(
                                     cells[boxTo.row + move[0]][boxTo.column
                                             + move[1]],
                                     (byte) (Board.REJECT_BOX | Board.GOAL))) {
-//                        System.out.println("Before tunnel\n" + board);
-                        wasTunnel = true;
                     }
 
                     // Tunnel detection:
@@ -160,18 +154,13 @@ public class IDSPusher implements Solver
                         boxTo.row += move[0];
                         boxTo.column += move[1];
                     }
-//                    System.out.println("numberOfTunnelMoves: "
-//                            + numberOfTunnelMoves);
 
-                    Position playerTo = new Position(boxTo, Board.moves[dir
-                            .reverse().ordinal()]);
+                    final Position playerTo = new Position(boxTo,
+                            Board.moves[dir.reverse().ordinal()]);
 
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, playerTo);
-
-//                    if (wasTunnel)
-//                        System.out.println("After tunnel:\n" + board);
 
                     // Process successor states
                     SearchInfo result = SearchInfo.Failed;
@@ -244,80 +233,54 @@ public class IDSPusher implements Solver
      */
     private boolean inTunnel(final Direction dir, final Position box)
     {
-        // 1 or 2 must be a wall
-
         // #v#
         // 1$2
-        if (dir == Direction.DOWN && isWall(box.row-1, box.column-1) && isWall(box.row-1, box.column+1)) {
+        if (dir == Direction.DOWN && isWall(box.row - 1, box.column - 1)
+                && isWall(box.row - 1, box.column + 1)) {
             // 1 or 2 above is a wall (or both)
-            return isWall(box.row, box.column-1) || isWall(box.row, box.column+1);
+            return isWall(box.row, box.column - 1)
+                    || isWall(box.row, box.column + 1);
         }
-        
+
         // 1$2
         // #^#
-        if (dir == Direction.UP && isWall(box.row+1, box.column-1) && isWall(box.row+1, box.column+1)) {
+        if (dir == Direction.UP && isWall(box.row + 1, box.column - 1)
+                && isWall(box.row + 1, box.column + 1)) {
             // 1 or 2 above is a wall (or both)
-            return isWall(box.row, box.column -1) || isWall(box.row, box.column+1);
+            return isWall(box.row, box.column - 1)
+                    || isWall(box.row, box.column + 1);
         }
-        
+
         // #1
         // >$
         // #2
-        if (dir == Direction.RIGHT && isWall(box.row-1, box.column-1) && isWall(box.row+1, box.column-1)) {
+        if (dir == Direction.RIGHT && isWall(box.row - 1, box.column - 1)
+                && isWall(box.row + 1, box.column - 1)) {
             // 1 or 2 above is a wall (or both)
-            return isWall(box.row-1, box.column) || isWall(box.row+1, box.column);
+            return isWall(box.row - 1, box.column)
+                    || isWall(box.row + 1, box.column);
         }
-        
+
         // 1#
         // $<
         // 2#
-        if (dir == Direction.LEFT && isWall(box.row-1, box.column+1) && isWall(box.row+1, box.column+1)) {
+        if (dir == Direction.LEFT && isWall(box.row - 1, box.column + 1)
+                && isWall(box.row + 1, box.column + 1)) {
             // 1 or 2 above is a wall (or both)
-            return isWall(box.row-1, box.column) || isWall(box.row+1, box.column); 
+            return isWall(box.row - 1, box.column)
+                    || isWall(box.row + 1, box.column);
         }
-                
 
-//        // #$#
-//        if (isWall(box.row, box.column + 1) && isWall(box.row, box.column - 1)) {
-//            // 1 2
-//            // #$#
-//            //  ^
-//            if (dir == Direction.UP && (isWall(box.row - 1, box.column + 1)
-//                    || isWall(box.row - 1, box.column - 1))) {
-//                return true;
-//            }
-//            // v
-//            // #$#
-//            // 1 2
-//            if (dir == Direction.DOWN && (isWall(box.row + 1, box.column + 1)
-//                    || isWall(box.row + 1, box.column - 1))) {
-//                return true;
-//            }
-//        }
-//        // #
-//        // @
-//        // #
-//        if (isWall(box.row + 1, box.column) && isWall(box.row - 1, box.column)) {
-//            // 1#
-//            // $<
-//            // 2#
-//            if (dir == Direction.LEFT && (isWall(box.row - 1, box.column - 1)
-//                    || isWall(box.row + 1, box.column - 1))) {
-//                return true;
-//            }
-//
-//            // #1
-//            // >$
-//            // #2
-//            if (dir == Direction.RIGHT && (isWall(box.row - 1, box.column + 1)
-//                    || isWall(box.row + 1, box.column + 1))) {
-//                return true;
-//            }
-//
-//        }
         return false;
     }
 
+    /**
+     * Checks if the position specified by the given row and column is a wall.
+     * 
+     * @param row The row.
+     * @param col The column.
+     * @return True if the given position is a wall, otherwise false.
+     */
     private boolean isWall(final int row, final int col)
     {
         return Board.is(board.cells[row][col], Board.WALL);
