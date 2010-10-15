@@ -114,18 +114,19 @@ public class IDSPusher implements Solver
         boolean inconclusive = false;
 
         long hash = board.getZobristKey();
-        
-        final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
+
+        final Position source = new Position(board.getPlayerRow(), board
+                .getPlayerCol());
         remainingDepth--;
-        
-//        System.out.println("Board before branch:\n" + board);
-        
+
+        // System.out.println("Board before branch:\n" + board);
+
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
         for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(player,
-                        Board.moves[dir.ordinal()]);
+                final Position boxFrom = new Position(player, Board.moves[dir
+                        .ordinal()]);
                 final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
                 // Check if the move is possible
@@ -134,32 +135,43 @@ public class IDSPusher implements Solver
                                 Board.REJECT_BOX)) {
 
                     int move[] = Board.moves[dir.ordinal()];
-//                    boolean wasTunnel = false;
-//                    if (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
-//                        System.out.println("tunnel\n"+board);
-//                        wasTunnel = true;
-//                    }
-                    
+                    boolean wasTunnel = false;
+                    if (inTunnel(dir, boxTo)
+                            && !Board.is(
+                                    cells[boxTo.row + move[0]][boxTo.column
+                                            + move[1]],
+                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
+//                        System.out.println("Before tunnel\n" + board);
+                        wasTunnel = true;
+                    }
+
                     // Tunnel detection:
-                    // If found, push as many steps in same direction as possible.
+                    // If found, push as many steps in same direction as
+                    // possible.
                     int numberOfTunnelMoves = 0;
-                    while (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
-                        //if(0==0)break;
-//                        System.out.print("Tunnel \n");
+                    while (inTunnel(dir, boxTo)
+                            && !Board.is(
+                                    cells[boxTo.row + move[0]][boxTo.column
+                                            + move[1]],
+                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
                         // Count tunnel moves.
                         numberOfTunnelMoves++;
                         // Update boxTo position one step.
                         boxTo.row += move[0];
                         boxTo.column += move[1];
                     }
-                    
-                    Position playerTo = new Position(boxTo, Board.moves[dir.reverse().ordinal()]);
+//                    System.out.println("numberOfTunnelMoves: "
+//                            + numberOfTunnelMoves);
+
+                    Position playerTo = new Position(boxTo, Board.moves[dir
+                            .reverse().ordinal()]);
 
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, playerTo);
-                    
-//                    if (wasTunnel) System.out.println(board);
+
+//                    if (wasTunnel)
+//                        System.out.println("After tunnel:\n" + board);
 
                     // Process successor states
                     SearchInfo result = SearchInfo.Failed;
@@ -181,15 +193,18 @@ public class IDSPusher implements Solver
 
                             // Add tunnel path directions, if any.
                             for (int i = 0; i < numberOfTunnelMoves; i++) {
-                                // We always walk in the same direction in a tunnel.
+                                // We always walk in the same direction in a
+                                // tunnel.
                                 result.solution.addFirst(dir);
                             }
-                            
-                            // Add standard direction for this state. 
+
+                            // Add standard direction for this state.
                             result.solution.addFirst(dir);
- 
-                            // Add path from previous player position to reachable position. 
-                            result.solution.addAll(0, board.findPath(source, player));
+
+                            // Add path from previous player position to
+                            // reachable position.
+                            result.solution.addAll(0, board.findPath(source,
+                                    player));
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -216,48 +231,90 @@ public class IDSPusher implements Solver
         }
     }
 
+    /**
+     * Checks if the given box position is a placement that has no influence on
+     * the board, i.e. if it is inside a tunnel.
+     * 
+     * @param dir The direction in which the box was pushed in order to get
+     *            where it is.
+     * @param box The position of the box after it has been pushed in the given
+     *            direction.
+     * @return True if the box is has gone into a tunnel, which has no influence
+     *         on the board, and can therefore be pushed all the way outside.
+     */
     private boolean inTunnel(final Direction dir, final Position box)
     {
         // 1 or 2 must be a wall
+
+        // #v#
+        // 1$2
+        if (dir == Direction.DOWN && isWall(box.row-1, box.column-1) && isWall(box.row-1, box.column+1)) {
+            // 1 or 2 above is a wall (or both)
+            return isWall(box.row, box.column-1) || isWall(box.row, box.column+1);
+        }
         
-        // #@#
-        if (isWall(box.row, box.column + 1) && isWall(box.row, box.column - 1)) {
-            // 1 2
-            // #$#
-            //  ^ 
-            if (dir == Direction.UP && isWall(box.row - 1, box.column + 1)
-                    || isWall(box.row - 1, box.column - 1)) {
-                return true;
-            }
-            //  v
-            // #$#
-            // 1 2
-            if (dir == Direction.DOWN && isWall(box.row + 1, box.column + 1)
-                    || isWall(box.row + 1, box.column - 1)) {
-                return true;
-            }
+        // 1$2
+        // #^#
+        if (dir == Direction.UP && isWall(box.row+1, box.column-1) && isWall(box.row+1, box.column+1)) {
+            // 1 or 2 above is a wall (or both)
+            return isWall(box.row, box.column -1) || isWall(box.row, box.column+1);
         }
-        // #
-        // @
-        // #
-        if (isWall(box.row + 1, box.column) && isWall(box.row - 1, box.column)) {
-            // 1#
-            //  $<
-            // 2#
-            if (dir == Direction.LEFT && isWall(box.row - 1, box.column - 1)
-                    || isWall(box.row + 1, box.column - 1)) {
-                return true;
-            }
-
-            //  #1
-            // >$ 
-            //  #2
-            if (dir == Direction.RIGHT && isWall(box.row - 1, box.column + 1)
-                    || isWall(box.row + 1, box.column + 1)) {
-                return true;
-            }
-
+        
+        // #1
+        // >$
+        // #2
+        if (dir == Direction.RIGHT && isWall(box.row-1, box.column-1) && isWall(box.row+1, box.column-1)) {
+            // 1 or 2 above is a wall (or both)
+            return isWall(box.row-1, box.column) || isWall(box.row+1, box.column);
         }
+        
+        // 1#
+        // $<
+        // 2#
+        if (dir == Direction.LEFT && isWall(box.row-1, box.column+1) && isWall(box.row+1, box.column+1)) {
+            // 1 or 2 above is a wall (or both)
+            return isWall(box.row-1, box.column) || isWall(box.row+1, box.column); 
+        }
+                
+
+//        // #$#
+//        if (isWall(box.row, box.column + 1) && isWall(box.row, box.column - 1)) {
+//            // 1 2
+//            // #$#
+//            //  ^
+//            if (dir == Direction.UP && (isWall(box.row - 1, box.column + 1)
+//                    || isWall(box.row - 1, box.column - 1))) {
+//                return true;
+//            }
+//            // v
+//            // #$#
+//            // 1 2
+//            if (dir == Direction.DOWN && (isWall(box.row + 1, box.column + 1)
+//                    || isWall(box.row + 1, box.column - 1))) {
+//                return true;
+//            }
+//        }
+//        // #
+//        // @
+//        // #
+//        if (isWall(box.row + 1, box.column) && isWall(box.row - 1, box.column)) {
+//            // 1#
+//            // $<
+//            // 2#
+//            if (dir == Direction.LEFT && (isWall(box.row - 1, box.column - 1)
+//                    || isWall(box.row + 1, box.column - 1))) {
+//                return true;
+//            }
+//
+//            // #1
+//            // >$
+//            // #2
+//            if (dir == Direction.RIGHT && (isWall(box.row - 1, box.column + 1)
+//                    || isWall(box.row + 1, box.column + 1))) {
+//                return true;
+//            }
+//
+//        }
         return false;
     }
 
