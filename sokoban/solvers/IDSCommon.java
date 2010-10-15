@@ -11,7 +11,7 @@ import sokoban.Position;
 public class IDSCommon implements Solver
 {
 
-    protected final int DEPTH_LIMIT = 1000;
+    public static final int DEPTH_LIMIT = 1000;
     /**
      * The number of generated nodes
      */

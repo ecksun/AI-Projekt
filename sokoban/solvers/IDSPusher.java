@@ -23,7 +23,7 @@ public class IDSPusher extends IDSCommon implements Solver
      * @param maxDepth The maximum depth.
      * @return
      */
-    private SearchInfo dfs()
+    SearchInfo dfs()
     {
         generatedNodes++;
 
