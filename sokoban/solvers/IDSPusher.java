@@ -13,7 +13,7 @@ import sokoban.Board.Direction;
 
 /**
  * A solver that pushes boxes around with iterative deepening and
- * a bloom filter to avoid duplicate states.
+ * hashing to avoid duplicate states.
  */
 public class IDSPusher implements Solver
 {
@@ -71,7 +71,7 @@ public class IDSPusher implements Solver
 
         static SearchInfo Inconclusive = new SearchInfo(
                 SearchStatus.Inconclusive);
-        static SearchInfo Failed = new SearchInfo(SearchStatus.Inconclusive);
+        static SearchInfo Failed = new SearchInfo(SearchStatus.Failed);
 
         public SearchInfo(final SearchStatus status)
         {
@@ -110,25 +110,21 @@ public class IDSPusher implements Solver
             return SearchInfo.Inconclusive;
         }
 
-        if (!visitedBoards.add(board.getZobristKey())) {
-            // Duplicate state
-            return SearchInfo.Failed;
-        }
-
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
-        final Position source = new Position(board.getPlayerRow(), board
-                .getPlayerCol());
+        long hash = board.getZobristKey();
+        
+        final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
         remainingDepth--;
         
 //        System.out.println("Board before branch:\n" + board);
         
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
-        for (final ReachableBox reachable : board.findReachableBoxSquares()) {
+        for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(reachable.position,
+                final Position boxFrom = new Position(player,
                         Board.moves[dir.ordinal()]);
                 final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
@@ -163,7 +159,11 @@ public class IDSPusher implements Solver
 //                    if (wasTunnel) System.out.println(board);
 
                     // Process successor states
-                    final SearchInfo result = dfs();
+                    SearchInfo result = SearchInfo.Failed;
+                    if (visitedBoards.add(board.getZobristKey())) {
+                        // This state hasn't been visited before
+                        result = dfs();
+                    }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
@@ -172,13 +172,11 @@ public class IDSPusher implements Solver
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
-                            // Found a solution. Return it now!
-
-                            // Add the last movement first
+                            // We have found a solution. Find the path of
+                            // the move and add it to the solution.
+                            board.clearFlag(Board.VISITED);
                             result.solution.addFirst(dir);
-                            // So we can put the rest in front of it
-                            result.solution.addAll(0, reachable.path);
-
+                            result.solution.addAll(0, board.findPath(source, player));
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -186,7 +184,6 @@ public class IDSPusher implements Solver
                             continue;
                         case Failed:
                             // Mark this node as failed
-                            failedBoards.add(board.getZobristKey());
                             continue;
                     }
                 }
@@ -201,7 +198,7 @@ public class IDSPusher implements Solver
         }
         else {
             // All successors failed, so this node is failed
-            failedBoards.add(board.getZobristKey());
+            failedBoards.add(hash);
             return SearchInfo.Failed;
         }
     }
@@ -268,6 +265,7 @@ public class IDSPusher implements Solver
             visitedBoards = new HashSet<Long>(failedBoards);
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
+            visitedBoards.add(board.getZobristKey());
 
             final SearchInfo result = dfs();
             if (result.solution != null) {

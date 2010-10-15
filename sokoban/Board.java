@@ -113,12 +113,15 @@ public class Board implements Cloneable
      */
     private int playerRow;
 
+    private int boxCount;
     private int remainingBoxes;
-    private int boxesInStart;
+    
+    private Collection<Position> reachableBoxes;
+    private boolean boxesNeedsUpdate;
 
     /**
      * The topmost, leftmost square the player can reach. Please update with
-     * updateTopLeftReachable() after the board has changed and before it's
+     * updateReachability() after the board has changed and before it's
      * hashed.
      *
      * Use getTopLeftReachable instead of accessing this variable.
@@ -207,9 +210,12 @@ public class Board implements Cloneable
         this.playerRow = boardPlayerRow;
         this.zobristKey = Zobrist.calculateHashTable(this);
 
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+
         countBoxes();
         markNonBoxSquares();
-        updateTopLeftReachable();
+        updateReachability(true);
     }
 
     /**
@@ -259,15 +265,17 @@ public class Board implements Cloneable
      */
     private void countBoxes()
     {
-        int remaining = 0;
+        boxCount = 0;
+        remainingBoxes = 0;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                if ((cells[row][col] & (BOX | GOAL)) == BOX) {
-                    remaining++;
+                if (is(cells[row][col], BOX)) {
+                    boxCount++;
+                    if (!is(cells[row][col], GOAL))
+                        remainingBoxes++;
                 }
             }
         }
-        remainingBoxes = remaining;
     }
 
     /**
@@ -279,11 +287,13 @@ public class Board implements Cloneable
     public String toString()
     {
         StringBuilder sb = new StringBuilder(width * height + height);
-        for (int i = 0; i < height; ++i) {
+        for (int i = 0; i < height-1; ++i) {
             for (int j = 0; j < width; ++j) {
                 sb.append(cellToChar(i, j));
             }
-            sb.append("\n");
+            if (i != height-1) {
+                sb.append("\n");
+            }
         }
         return sb.toString();
     }
@@ -546,6 +556,7 @@ public class Board implements Cloneable
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
 
+        boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
 
@@ -701,17 +712,19 @@ public class Board implements Cloneable
 
         return null;
     }
-
+    
     /**
      * Finds all boxes that can be reached by the player.
      * 
      * @return A collection of ReachableBox objects
+     *
+     * @deprecated Use getReachableBoxes instead
      */
-    public Collection<ReachableBox> findReachableBoxSquares()
+    public Collection<ReachableBox> oldFindReachableBoxSquares()
     {
         clearFlag(VISITED);
         ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(20);
-        findReachableWithDFS(reachable, playerRow, playerCol,
+        oldFindReachableWithDFS(reachable, playerRow, playerCol,
                 new LinkedList<Direction>());
         return reachable;
     }
@@ -721,7 +734,7 @@ public class Board implements Cloneable
      * 
      * @return A collection of ReachableBox objects
      */
-    public void findReachableWithDFS(ArrayList<ReachableBox> reachable,
+    private void oldFindReachableWithDFS(ArrayList<ReachableBox> reachable,
             int startRow, int startCol, LinkedList<Direction> path)
     {
         cells[startRow][startCol] |= VISITED;
@@ -738,7 +751,7 @@ public class Board implements Cloneable
 
             if (!is(cells[row][col], (byte) (WALL | BOX | VISITED))) {
                 path.addLast(dir);
-                findReachableWithDFS(reachable, row, col, path);
+                oldFindReachableWithDFS(reachable, row, col, path);
                 path.removeLast();
             }
         }
@@ -750,45 +763,81 @@ public class Board implements Cloneable
     }
 
     /**
+     * Returns all boxes that can be reached by the player.
+     * 
+     * @return A collection of ReachableBox objects
+     */
+    public Collection<Position> findReachableBoxSquares()
+    {
+        if (boxesNeedsUpdate) {
+            updateReachability(true);
+        }
+        
+        return reachableBoxes;
+    }
+
+    /**
      * Gets the current topLeftReachable value, and updates it if needed.
      */
     public int getTopLeftReachable() {
         if (topLeftNeedsUpdate) {
-            updateTopLeftReachable();
+            updateReachability(false);
         }
         
         return topLeftReachable;
     }
 
     /**
-     * Updates the minimum top left position that the player can move to,
-     * defined as (row*width)+col. This is used for duplicate detection.
+     * Updates the reachability information. This includes two things:
+     *
+     * 1) The minimum top left position that the player can move to,
+     *    defined as (row*width)+col. This is used for duplicate detection.
+     *
+     * 2) The list of reachable boxes.
      */
-    public void updateTopLeftReachable()
+    public void updateReachability(boolean updateBoxes)
     {
+        updateBoxes = updateBoxes && boxesNeedsUpdate;
+    
         clearFlag(REACHABLE);
+        if (updateBoxes) {
+            reachableBoxes = new ArrayList<Position>(boxCount);
+            boxesNeedsUpdate = false;
+        }
+        
         // TODO: Should this be local?
-        topLeftReachable = updateTopLeftReachableDFS(playerRow, playerCol);
+        topLeftReachable = updateReachabilityDFS(playerRow, playerCol, updateBoxes);
         topLeftNeedsUpdate = false;
     }
 
     /**
-     * Recursive part of updateTopLeftReachable
+     * Recursive part of updateReachability
      */
-    private int updateTopLeftReachableDFS(int startRow, int startCol)
+    private int updateReachabilityDFS(int startRow, int startCol,
+        boolean updateBoxes)
     {
         cells[startRow][startCol] |= REACHABLE;
 
         int minimum = (startRow * width) + startCol;
-        for (Direction dir : Direction.values()) {
-            int row = startRow + moves[dir.ordinal()][0];
-            int col = startCol + moves[dir.ordinal()][1];
+        boolean boxNearby = false;
+        for (int dir = 0; dir < 4; ++dir) {
+            int row = startRow + moves[dir][0];
+            int col = startCol + moves[dir][1];
+            
+            if ((cells[row][col] & (BOX | REACHABLE)) == BOX) {
+                // Add to reachable list
+                boxNearby = true;
+            }
             
             if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
-                int pos = updateTopLeftReachableDFS(row, col);
+                int pos = updateReachabilityDFS(row, col, updateBoxes);
                 if (pos < minimum)
                     minimum = pos;
             }
+        }
+        
+        if (boxNearby && updateBoxes) {
+            reachableBoxes.add(new Position(startRow, startCol));
         }
 
         return minimum;

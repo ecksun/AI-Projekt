@@ -75,7 +75,7 @@ public class Pusher implements Solver
             path.add(dir);
             board.move(dir);
 
-            board.updateTopLeftReachable();
+            board.updateReachability(false);
         }
     }
 
@@ -135,7 +135,7 @@ public class Pusher implements Solver
         Collection<SearchNode> successors = new LinkedList<SearchNode>();
         byte[][] cells = node.board.cells;
 
-        for (ReachableBox reachable : node.board.findReachableBoxSquares()) {
+        for (ReachableBox reachable : node.board.oldFindReachableBoxSquares()) {
             for (Direction dir : Board.Direction.values()) {
                 Position from = new Position(reachable.position,
                         Board.moves[dir.ordinal()]);
