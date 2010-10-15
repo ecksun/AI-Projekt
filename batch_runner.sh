@@ -2,23 +2,33 @@
 
 run () {
     max_time=$1
-    command=$2
-    solver=$3
-    level=$4
-    perl -e 'alarm shift @ARGV; exec "@ARGV"' $max_time $command $solver $level;
+    command="${2}"
+    level=$3
+    echo $max_time $command $level
+    perl -e 'alarm shift @ARGV; exec "@ARGV"' $max_time $command $level;
 }
 
-COMMAND="java sokoban.Main"
-SOLVER="IDSPusher"
-MAX_TIME=60
+# Default values
+#first=$1
+#last=$2
+COMMAND=$3
+MAX_TIME=$4
 
-run_args="$MAX_TIME $COMMAND $SOLVER"
+if [ -z $3 ]; then
+    COMMAND="java sokoban.Main IDSPusher"
+fi
+
+if [ -z $4]; then
+    MAX_TIME=60
+fi
+
+
 success=0
 failed=0
 
 for i in `seq $1 $2`; do
     echo -n "$i: "
-    elapsed=`(time -p run "${run_args} ${i}" -q) 2>&1`
+    elapsed=`(time -p run $MAX_TIME "${COMMAND}" $i -q) 2>&1`
     if [ $? -ne "0" ]; then
         echo -n "failure"
         failed=`expr $failed + 1`
