@@ -7,6 +7,8 @@ import java.util.Queue;
 
 import sokoban.Board;
 import sokoban.Position;
+import sokoban.SearchInfo;
+import sokoban.SearchStatus;
 import sokoban.Board.Direction;
 
 /**
@@ -38,56 +40,6 @@ public class IDSPusher implements Solver
      * doesn't make sense to visit these in later iterations.
      */
     private HashSet<Long> failedBoards;
-
-    enum SearchStatus {
-        /**
-         * The search reached the maximum depth, and no solution was found,
-         * so it's inconclusive (a solution could follow, but we don't know).
-         */
-        Inconclusive,
-
-        /**
-         * This search resulted in a solution.
-         */
-        Solution,
-
-        /**
-         * This search failed without reached the maximum depth, so there's
-         * no point in trying it again with a greater search depth.
-         */
-        Failed,
-    };
-
-    /**
-     * Contains information about a search, whether it is failed, reached a
-     * solution or is inconclusive.
-     */
-    final static class SearchInfo
-    {
-        final SearchStatus status;
-        final LinkedList<Board.Direction> solution;
-
-        static SearchInfo Inconclusive = new SearchInfo(
-                SearchStatus.Inconclusive);
-        static SearchInfo Failed = new SearchInfo(SearchStatus.Failed);
-
-        public SearchInfo(final SearchStatus status)
-        {
-            this.status = status;
-            solution = null;
-        }
-
-        private SearchInfo()
-        {
-            status = SearchStatus.Solution;
-            solution = new LinkedList<Board.Direction>();
-        }
-
-        public static SearchInfo emptySolution()
-        {
-            return new SearchInfo();
-        }
-    }
 
     /**
      * Recursive Depth-First algorithm
