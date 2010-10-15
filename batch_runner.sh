@@ -4,25 +4,27 @@ run () {
     max_time=$1
     command="${2}"
     level=$3
-    echo $max_time $command $level
     perl -e 'alarm shift @ARGV; exec "@ARGV"' $max_time $command $level;
 }
 
 # Default values
 #first=$1
 #last=$2
-COMMAND=$3
-MAX_TIME=$4
 
-if [ -n "$3" ]; then
+if [ -n "${3}" ]; then
+    COMMAND="${3}"
+else
     COMMAND="java sokoban.Main IDSPusher"
 fi
 
-if [ -z "$4" ]; then
+if [ -n "$4" ]; then
+    MAX_TIME=$4
+else
     MAX_TIME=60
 fi
 
 echo "Running test on levels $1 to $2 with command $COMMAND and max time $MAX_TIME."
+
 
 success=0
 failed=0
