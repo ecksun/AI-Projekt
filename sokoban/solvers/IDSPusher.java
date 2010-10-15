@@ -184,7 +184,7 @@ public class IDSPusher implements Solver
         final int lowerBound = lowerBound(startBoard);
         System.out.println("lowerBound(): " + lowerBound);
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 10) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);

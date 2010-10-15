@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 
 import sokoban.ReachableBox;
 
@@ -116,7 +117,7 @@ public class Board implements Cloneable
     public int boxCount;
     private int remainingBoxes;
 
-    private Collection<Position> reachableBoxes;
+    private Collection<SortPosition> reachableBoxes;
     private boolean boxesNeedsUpdate;
 
     /**
@@ -783,7 +784,7 @@ public class Board implements Cloneable
      * 
      * @return A collection of ReachableBox objects
      */
-    public Collection<Position> findReachableBoxSquares()
+    public Collection<SortPosition> findReachableBoxSquares()
     {
         if (boxesNeedsUpdate) {
             updateReachability(true);
@@ -818,7 +819,7 @@ public class Board implements Cloneable
 
         clearFlag(REACHABLE);
         if (updateBoxes) {
-            reachableBoxes = new ArrayList<Position>(boxCount);
+            reachableBoxes = new PriorityQueue<SortPosition>(boxCount);
             boxesNeedsUpdate = false;
         }
 
@@ -855,7 +856,12 @@ public class Board implements Cloneable
         }
 
         if (boxNearby && updateBoxes) {
-            reachableBoxes.add(new Position(startRow, startCol));
+            int rem = getRemainingBoxes();
+            if (is(cells[startRow][startCol], GOAL)) {
+                rem--;
+            }
+            //reachableBoxes.add(new Position(startRow, startCol));
+            reachableBoxes.add(new SortPosition(startRow, startCol, rem));
         }
 
         return minimum;
