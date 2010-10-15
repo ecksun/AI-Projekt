@@ -218,7 +218,7 @@ public class IDSPuller implements Solver
                     for (Direction dir : Direction.values()) {
                         int spaceRow = row+Board.moves[dir.ordinal()][0];
                         int spaceCol = col+Board.moves[dir.ordinal()][1];
-                        if (spaceRow > 0 && spaceRow < board.width-1
+                        if (spaceRow > 0 && spaceRow < board.height-1
                             && spaceCol > 0 && spaceCol < board.width-1) {
                             boxes.add(new Position(spaceRow, spaceCol));
                         }
