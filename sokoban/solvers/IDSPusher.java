@@ -121,7 +121,9 @@ public class IDSPusher implements Solver
         final Position source = new Position(board.getPlayerRow(), board
                 .getPlayerCol());
         remainingDepth--;
-
+        
+//        System.out.println("Board before branch:\n" + board);
+        
         // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
         for (final ReachableBox reachable : board.findReachableBoxSquares()) {
@@ -130,11 +132,11 @@ public class IDSPusher implements Solver
                         Board.moves[dir.ordinal()]);
                 final Position boxTo = new Position(boxFrom, Board.moves[dir
                         .ordinal()]);
+                // Check if the move is possible
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board.is(cells[boxTo.row][boxTo.column],
                                 Board.REJECT_BOX)) {
-                    // The move is possible
-                    
+
                     int move[] = Board.moves[dir.ordinal()];
 //                    boolean wasTunnel = false;
 //                    if (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
@@ -142,9 +144,11 @@ public class IDSPusher implements Solver
 //                        wasTunnel = true;
 //                    }
                     
+                    // Tunnel detection:
+                    // If found, push as many steps in same direction as possible.
                     while (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
                         //if(0==0)break;
-                        //System.out.print("Tunnell");
+//                        System.out.print("Tunnel \n");
                         boxTo.row += move[0];
                         boxTo.column += move[1];
                         reachable.path.add(dir);
@@ -158,54 +162,11 @@ public class IDSPusher implements Solver
                     
 //                    if (wasTunnel) System.out.println(board);
 
-                    // Tunnel detection:
-                    // If found, push one more step in same direction.
-
-//                    Position tunnelPlayerFrom = boxFrom;
-//                    Position tunnelBoxFrom = boxTo;
-//                    Position tunnelBoxTo = new Position(tunnelBoxFrom,
-//                            Board.moves[dir.ordinal()]);
-//
-////                    System.out.println(board);
-////                    System.out.println("-------------");
-//                    while (inTunnel(dir, tunnelBoxFrom)
-//                            && !Board
-//                                    .is(
-//                                            board.cells[tunnelBoxTo.row][tunnelBoxTo.column],
-//                                            Board.GOAL)
-//                            && !Board
-//                                    .is(
-//                                            board.cells[tunnelBoxTo.row][tunnelBoxTo.column],
-//                                            Board.REJECT_BOX)) {
-//                        if (!visitedBoards.add(board.getZobristKey())) {
-//                            // Duplicate state
-//                            //return SearchInfo.Failed;
-//                        }
-//                        board.moveBox(tunnelBoxFrom, tunnelBoxTo);
-//                        board.movePlayer(tunnelPlayerFrom, tunnelBoxFrom);
-//                        tunnelPlayerFrom = tunnelBoxFrom;
-//                        tunnelBoxFrom = tunnelBoxTo;
-//                        tunnelBoxTo = new Position(tunnelBoxTo, Board.moves[dir
-//                                .ordinal()]);
-//                        reachable.path.add(dir);
-//                        
-////                        System.out.println(board);
-//                    }
-//                    System.out.println("______________________");
-//                    try {
-//                        System.in.read();
-//                    }
-//                    catch (IOException e) {
-//                        // TODO Auto-generated catch block
-//                        e.printStackTrace();
-//                    }
-
                     // Process successor states
                     final SearchInfo result = dfs();
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
-//                    board.moveBox(tunnelBoxFrom, boxFrom);
                     board.movePlayer(playerTo, source);
 
                     // Evaluate result
