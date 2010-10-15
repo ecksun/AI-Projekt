@@ -124,6 +124,7 @@ public class Board implements Cloneable
 
     private Collection<Position> reachableBoxes;
     private boolean boxesNeedsUpdate;
+    private boolean boxesCanBeFastUpdated;
 
     /**
      * The topmost, leftmost square the player can reach. Please update with
@@ -226,6 +227,7 @@ public class Board implements Cloneable
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
 
+        prepareReachabilityAnalysisBits();
         countBoxes();
         markNonBoxSquares();
         updateReachability(true);
@@ -565,6 +567,9 @@ public class Board implements Cloneable
     /**
      * Moves a box and updates remainingBoxes. This method ignores the
      * player position. Updates Zobrist hash.
+     *
+     * @param iter If given, the reachable list will be updated
+     *             through this iterator.
      */
     public void moveBox(Position from, Position to)
     {
@@ -579,16 +584,133 @@ public class Board implements Cloneable
                 to.column);
         zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
 
+        // Remove the box
         cells[from.row][from.column] &= ~BOX;
-        cells[to.row][to.column] |= BOX;
 
         if (is(cells[from.row][from.column], GOAL))
             remainingBoxes++;
         if (is(cells[to.row][to.column], GOAL))
             remainingBoxes--;
-
+        
+        /*
+         * Check if the reachability (the top left reachable position and
+         * the reachable boxes) needs a full update.
+         *
+         * This is done by checking whether the surrounding squares are
+         * definitely reachable or not. If all squares are definitely
+         * reachable in both cells, then we don't update.
+         */
+        boolean reachabilityMayHaveChanged = false;
+        
+        if (mightBlockReachability(from) || mightBlockReachability(to)) {
+            // The reachability information needs a full update
+            topLeftNeedsUpdate = true;
+            boxesCanBeFastUpdated = false;
+        } else {
+            // The From square is now empty and reachable
+            cells[from.row][from.column] |= REACHABLE;
+            boxesCanBeFastUpdated = true;
+        }
+        
         boxesNeedsUpdate = true;
-        topLeftNeedsUpdate = true;
+        
+        // Put the box back
+        cells[to.row][to.column] |= BOX;
+    }
+
+    /**
+     * Row and column positions if we go around a square at (0,0).
+     * Used by mightBlockReachability.
+     */
+    private static final int[] aroundRow = { -1, -1, -1, 0, 1, 1, 1, 0 };
+    private static final int[] aroundCol = { -1, 0, 1, 1, 1, 0, -1, -1 };
+
+    /**
+     * Used by mightBlockReachability.
+     */
+    private static byte[] bitsMightBlockReachability;
+
+    /**
+     * Checks whether a box might block reachability.
+     *
+     * This is done by checking whether the surrounding squares are
+     * definitely reachable or not. If all squares are definitely
+     * reachable in both cells, then we don't update.
+     */
+    public boolean mightBlockReachability(Position box) {
+        int bits = 0;
+        final int row = box.row;
+        final int column = box.column;
+        for (int i = 0; i < aroundRow.length; i++) {
+            if ((cells[row+aroundRow[i]][column+aroundCol[i]] & (BOX | WALL)) != 0) {
+                bits |= (1 << i);
+            }
+        }
+        
+        return (bitsMightBlockReachability[bits] != 0);
+    }
+
+    /**
+     * Initializes bitsMightBlockReachability, used by mightBlockReachability.
+     *
+     * All combinations of surrounding space are tried. Each bit in "bits"
+     * represent a cell, starting from the top left space and then going
+     * around 
+     */
+    public void prepareReachabilityAnalysisBits() {
+        final int TOP = 1;
+        final int RIGHT = 3;
+        final int BOTTOM = 5;
+        final int LEFT = 7;
+
+        bitsMightBlockReachability = new byte[256];
+        for (int bits = 0; bits <= 255; bits++) {
+
+            // Moving something _within_ a tunnel doesn't affect reachability
+            final int VTUNNEL = (LEFT | RIGHT);
+            final int HTUNNEL = (TOP | BOTTOM);
+            if ((bits & VTUNNEL) == VTUNNEL || (bits & HTUNNEL) == HTUNNEL) {
+                continue;
+            }
+
+            // Look for the first wall or box
+            int firstBlock = 7;
+            for (int i = 0; i < aroundRow.length; i++) {
+                if (((bits >> i) & 1) != 0) {
+                    firstBlock = i;
+                    break;
+                }
+            }
+
+            if (firstBlock == 7) {
+                // Just spaces or a single box/wall at the end
+                System.out.print(0);
+                continue;
+            }
+
+            // Look for the end of this block segment
+            int lastBlock = 0;
+            for (int i = firstBlock+1; i < aroundRow.length; i++) {
+                if (((bits >> i) & 1) == 0) {
+                    lastBlock = i-1;
+                    break;
+                }
+            }
+
+            // See if there are non-spaces outside the wall segment
+            for (int i = 0; i < aroundRow.length-1; i++) {
+                if (i < firstBlock || i > lastBlock) {
+                    if (((bits >> i) & 1) != 0) {
+                        // This setup could affect the reachability
+                        bitsMightBlockReachability[bits] = 1;
+                        break;
+                    }
+                }
+            }
+            System.out.print(bitsMightBlockReachability[bits]);
+        }
+        System.out.println();
+        //System.exit(1);
     }
 
     /**
@@ -816,7 +938,12 @@ public class Board implements Cloneable
     public Collection<Position> findReachableBoxSquares()
     {
         if (boxesNeedsUpdate) {
-            updateReachability(true);
+            // TODO it's no faster...
+            /*if (boxesCanBeFastUpdated) {
+                fastUpdateBoxes();
+            } else*/ {
+                updateReachability(true);
+            }
         }
 
         return reachableBoxes;
@@ -832,6 +959,30 @@ public class Board implements Cloneable
         }
 
         return topLeftReachable;
+    }
+    
+    /**
+     * Updates all reachable box squares quickly. The reachability
+     * information must be up-to-date.
+     *
+     * FIXME It's not faster... Delete it or fix it.
+     */
+    private void fastUpdateBoxes() {
+        reachableBoxes = new ArrayList<Position>(boxCount);
+        for (int r = 1; r < height-1; r++) {
+            for (int c = 1; c < width-1; c++) {
+                // Ignore unreachable cells and box cells
+                if ((cells[r][c] & (REACHABLE | BOX)) != REACHABLE) continue;
+                
+                // Check if one of the neighbors is a box 
+                int neighbors = cells[r-1][c] | cells[r+1][c]
+                    | cells[r][c-1] | cells[r][c+1];
+                if ((neighbors & BOX) != 0) {
+                    // This cell is reachable and has boxes around it
+                    reachableBoxes.add(positions[r][c]);
+                }
+            }
+        }
     }
 
     /**
