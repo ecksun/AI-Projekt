@@ -14,14 +14,15 @@ run () {
 COMMAND=$3
 MAX_TIME=$4
 
-if [ -z $3 ]; then
+if [ -n "$3" ]; then
     COMMAND="java sokoban.Main IDSPusher"
 fi
 
-if [ -z $4]; then
+if [ -z "$4" ]; then
     MAX_TIME=60
 fi
 
+echo "Running test on levels $1 to $2 with command $COMMAND and max time $MAX_TIME."
 
 success=0
 failed=0
