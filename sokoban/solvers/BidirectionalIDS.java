@@ -1,5 +1,7 @@
 package sokoban.solvers;
 
+import java.util.HashSet;
+
 import sokoban.Board;
 import sokoban.SearchInfo;
 import sokoban.SearchStatus;
@@ -12,11 +14,17 @@ public class BidirectionalIDS implements Solver
     private IDSPuller puller;
     private IDSPusher pusher;
 
+    private HashSet<Long> failedBoards;
+
     @Override
     public String solve(final Board startBoard)
     {
-        puller = new IDSPuller();
-        pusher = new IDSPusher();
+        failedBoards = new HashSet<Long>();
+
+        puller = new IDSPuller(failedBoards);
+        pusher = new IDSPusher(failedBoards);
+
+        boolean runPuller = true;
 
         // IDS loop
         for (int maxDepth = IDSCommon.lowerBound(startBoard); maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth++) {
@@ -28,10 +36,11 @@ public class BidirectionalIDS implements Solver
             // method of each one?
 
             // TODO: Give maxDepth to the two dfs()'s.
-            
+
             // Puller
-            if (true) {
+            if (runPuller) {
                 result = puller.dfs();
+                runPuller = !runPuller;
             }
             // Pusher
             else {
@@ -46,6 +55,9 @@ public class BidirectionalIDS implements Solver
                 System.out.println("no solution!");
                 return null;
             }
+            // else if (result.status == SearchStatus.Collision) {
+            // Backtrack the solution.
+            // }
 
         }
 
