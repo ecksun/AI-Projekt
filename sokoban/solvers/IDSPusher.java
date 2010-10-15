@@ -113,16 +113,16 @@ public class IDSPusher implements Solver
 
         final long hash = board.getZobristKey();
 
-        final Position source = new Position(board.getPlayerRow(), board
-                .getPlayerCol());
+        final Position source = board.positions[board.getPlayerRow()][board
+                .getPlayerCol()];
         remainingDepth--;
 
         final byte[][] cells = board.cells;
         for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(player, Board.moves[dir
+                final Position boxFrom = board.getPosition(player, Board.moves[dir
                         .ordinal()]);
-                final Position boxTo = new Position(boxFrom, Board.moves[dir
+                Position boxTo = board.getPosition(boxFrom, Board.moves[dir
                         .ordinal()]);
 
                 // Check if the move is possible
@@ -150,11 +150,10 @@ public class IDSPusher implements Solver
                         // Count tunnel moves.
                         numberOfTunnelMoves++;
                         // Update boxTo position one step.
-                        boxTo.row += move[0];
-                        boxTo.column += move[1];
+                        boxTo = board.getPosition(boxTo, move);
                     }
 
-                    final Position playerTo = new Position(boxTo,
+                    final Position playerTo = board.getPosition(boxTo,
                             Board.moves[dir.reverse().ordinal()]);
 
                     // Move the player and push the box
@@ -324,10 +323,10 @@ public class IDSPusher implements Solver
         for (int row = 0; row < board.height; row++) {
             for (int col = 0; col < board.width; col++) {
                 if (Board.is(board.cells[row][col], Board.BOX)) {
-                    boxes.add(new Position(row, col));
+                    boxes.add(board.positions[row][col]);
                 }
                 if (Board.is(board.cells[row][col], Board.GOAL)) {
-                    goals.add(new Position(row, col));
+                    goals.add(board.positions[row][col]);
                 }
             }
         }
@@ -428,40 +427,40 @@ public class IDSPusher implements Solver
 //                System.out.println(" - Only horizontal (left/right) is blocked.");
                 if (Board.is(board.cells[box.row+1][box.column], Board.BOX)) {
 //                    System.out.println("  - Box below, check it");
-                    Position tempPos = new Position(box.row+1, box.column);
+                    Position tempPos = board.positions[box.row+1][box.column];
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL, visited);
                     }
-                    //return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL, visited);
+                    //return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL, visited); // TODO not updated with new positions
                 }
                 
                 if (Board.is(board.cells[box.row-1][box.column], Board.BOX)) {
 //                    System.out.println("  - Box above, check it");
-                    Position tempPos = new Position(box.row-1, box.column);
+                    Position tempPos = board.positions[box.row-1][box.column];
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL, visited);
                     }
-                    //return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL, visited);
+                    //return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL, visited); // TODO not updated with new positions
                 }
             // Only vertical
             } else if (!blockedHorizontal && blockedVertical) {
 //                System.out.println(" - Only vertical (top/bottom) is blocked.");
                 if (Board.is(board.cells[box.row][box.column+1], Board.BOX)) {
 //                    System.out.println("  - Box to the right, check it");
-                    Position tempPos = new Position(box.row, box.column+1);
+                    Position tempPos = board.positions[box.row][box.column+1];
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_VERTICAL, visited);
                     }
-                    //return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL, visited);
+                    //return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL, visited); // TODO not updated with new positions
                 }
                 
                 if (Board.is(board.cells[box.row][box.column-1], Board.BOX)) {
 //                    System.out.println("  - Box to the left, check it");
-                    Position tempPos = new Position(box.row, box.column-1);
+                    Position tempPos = board.positions[box.row][box.column-1];
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_VERTICAL, visited);
                     }
-                    //return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL, visited);
+                    //return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL, visited); // TODO not updated with new positions
                 }
             // No deadlock
             } else {
@@ -492,20 +491,20 @@ public class IDSPusher implements Solver
             
             if (Board.is(board.cells[box.row][box.column+1], Board.BOX)) {
 //                System.out.println("    - Box to the right, check it");
-                Position tempPos = new Position(box.row, box.column+1);
+                Position tempPos = board.positions[box.row][box.column+1];
                 if (!visited.contains(tempPos)) {
                     return freezeDeadlock(tempPos, DEADLOCK_VERTICAL, visited);
                 }
-                //return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL, visited);
+                //return freezeDeadlock(new Position(box.row, box.column+1), DEADLOCK_VERTICAL, visited); // TODO not updated with new positions
             }
             
             if (Board.is(board.cells[box.row][box.column-1], Board.BOX)) {
 //                System.out.println("    - Box to the left, check it");
-                Position tempPos = new Position(box.row, box.column-1);
+                Position tempPos = board.positions[box.row][box.column-1];
                 if (!visited.contains(tempPos)) {
                     return freezeDeadlock(tempPos, DEADLOCK_VERTICAL, visited);
                 }
-                //return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL, visited);
+                //return freezeDeadlock(new Position(box.row, box.column-1), DEADLOCK_VERTICAL, visited); // TODO not updated with new positions
             }
 //            System.out.println("   - No deadlock"); 
             return false;
@@ -533,20 +532,20 @@ public class IDSPusher implements Solver
             
             if (Board.is(board.cells[box.row+1][box.column], Board.BOX)) {
 //                System.out.println("    - Box below, check it");
-                Position tempPos = new Position(box.row+1, box.column);
+                Position tempPos = board.positions[box.row+1][box.column];
                 if (!visited.contains(tempPos)) {
                     return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL, visited);
                 }
-                //return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL, visited);
+                //return freezeDeadlock(new Position(box.row+1, box.column), DEADLOCK_HORIZONTAL, visited); // TODO not updated with new positions
             }
             
             if (Board.is(board.cells[box.row-1][box.column], Board.BOX)) {
 //                System.out.println("    - Box above, check it");
-                Position tempPos = new Position(box.row-1, box.column);
+                Position tempPos = board.positions[box.row-1][box.column];
                 if (!visited.contains(tempPos)) {
                     return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL, visited);
                 }
-                //return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL, visited);
+                //return freezeDeadlock(new Position(box.row-1, box.column), DEADLOCK_HORIZONTAL, visited); // TODO not updated with new positions
             }
 //            System.out.println("   - No deadlock"); 
             return false;

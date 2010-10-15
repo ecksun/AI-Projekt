@@ -158,7 +158,7 @@ public class BoardTest
         Position player = new Position(b3.getPlayerRow(), b3.getPlayerCol());
 
         for (Direction dir : path) {
-            player = new Position(player, Board.moves[dir.ordinal()]);
+            player = b3.getPosition(player, Board.moves[dir.ordinal()]);
             assertEquals(true, b3.contains(player));
             assertEquals(false, Board.is(b3.cells[player.row][player.column],
                     Board.WALL));

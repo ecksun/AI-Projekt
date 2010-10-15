@@ -109,7 +109,7 @@ public class IDSPuller implements Solver
 
         if (boxesNotInStart == 0) {
             // Found a solution, try to go back to the start
-            Position player = new Position(board.getPlayerRow(), board.getPlayerCol());
+            Position player = board.positions[board.getPlayerRow()][board.getPlayerCol()];
             Deque<Direction> path = board.findPath(playerStart, player);
             if (path != null) {
                 SearchInfo result = SearchInfo.emptySolution();
@@ -127,15 +127,15 @@ public class IDSPuller implements Solver
 
         long hash = board.getZobristKey();
         
-        final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
+        final Position source = board.positions[board.getPlayerRow()][board.getPlayerCol()];
         depth++;
 
         final byte[][] cells = board.cells;
         for (final Position boxTo : findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(boxTo,
+                final Position boxFrom = board.getPosition(boxTo,
                         Board.moves[dir.ordinal()]);
-                final Position playerTo = new Position(boxTo, Board.moves[dir
+                final Position playerTo = board.getPosition(boxTo, Board.moves[dir
                         .reverse().ordinal()]);
                 /*System.out.println(board+"\n\n"+boxesNotInStart+"   "+
                     boxFrom+"("+cells[boxFrom.row][boxFrom.column]+")  "+
@@ -220,7 +220,7 @@ public class IDSPuller implements Solver
                         int spaceCol = col+Board.moves[dir.ordinal()][1];
                         if (spaceRow > 0 && spaceRow < board.width-1
                             && spaceCol > 0 && spaceCol < board.width-1) {
-                            boxes.add(new Position(spaceRow, spaceCol));
+                            boxes.add(board.positions[spaceRow][spaceCol]);
                         }
                     }
                 }
@@ -267,7 +267,7 @@ public class IDSPuller implements Solver
     
     private void reverseBoard(final Board board) {
         // Store starting positions
-        playerStart = new Position(board.getPlayerRow(), board.getPlayerCol());
+        playerStart = board.positions[board.getPlayerRow()][board.getPlayerCol()];
         boxStart = new boolean[board.height][board.width];
         initialBoxesNotInStart = board.boxCount;
         for (int row = 0; row < board.height; row++) {
@@ -301,10 +301,10 @@ public class IDSPuller implements Solver
         for (int row = 0; row < board.height; row++) {
             for (int col = 0; col < board.width; col++) {
                 if (Board.is(board.cells[row][col], Board.BOX)) {
-                    boxes.add(new Position(row, col));
+                    boxes.add(board.positions[row][col]);
                 }
                 if (Board.is(board.cells[row][col], Board.GOAL)) {
-                    goals.add(new Position(row, col));
+                    goals.add(board.positions[row][col]);
                 }
             }
         }

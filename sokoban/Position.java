@@ -10,12 +10,12 @@ public class Position
     /**
      * The (0-indexed) column for this position.
      */
-    public int column;
+    public final int column;
 
     /**
      * The (0-indexed) row index for this position.
      */
-    public int row;
+    public final int row;
 
     /**
      * Constructs a new position.
@@ -28,28 +28,6 @@ public class Position
         this.row = row;
         this.column = column;
     }
-
-    /**
-     * Constructs the position that is placed one step in the given direction
-     * (move) from the given position.
-     * 
-     * @param pos The position to start from.
-     * @param move Should be a 2-length array with move[0]==row and
-     *            move[1]==column.
-     */
-    public Position(Position pos, int[] move)
-    {
-        this.row = pos.row + move[0];
-        this.column = pos.column + move[1];
-    }
-    
-    public Position(Position pos, Direction dir)
-    {
-        int[] move = Board.moves[dir.ordinal()];
-        this.row = pos.row + move[0];
-        this.column = pos.column + move[1];
-    }
-
 
     @Override
     public boolean equals(Object obj)

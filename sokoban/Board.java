@@ -103,6 +103,12 @@ public class Board implements Cloneable
      * The actual board
      */
     public byte cells[][];
+
+    /**
+     * Objects representing all positions on the board
+     */
+    public final Position positions[][];
+
     /**
      * The column at which the player resides
      */
@@ -176,6 +182,13 @@ public class Board implements Cloneable
         }
 
         cells = new byte[boardHeight][boardWidth];
+        positions = new Position[boardHeight][boardWidth];
+
+        for (int row = 0; row < boardHeight; ++row) {
+            for (int col = 0; col < boardWidth; ++col) {
+                positions[row][col] = new Position(row, col);
+            }
+        }
 
         int row = 0;
         int col = 0;
@@ -216,6 +229,23 @@ public class Board implements Cloneable
         countBoxes();
         markNonBoxSquares();
         updateReachability(true);
+    }
+
+    /**
+     * Constructs the position that is placed one step in the given direction
+     * (move) from the given position.
+     * 
+     * @param pos The position to start from.
+     * @param move Should be a 2-length array with move[0]==row and
+     *            move[1]==column.
+     * @return The position corresponding to this position, after the movement
+     */
+    public Position getPosition(Position pos, int[] move)
+    {
+        if (!contains(pos.row + move[0], pos.column + move[1])) {
+            return new Position(pos.row + move[0], pos.column + move[1]);
+        }
+        return positions[pos.row + move[0]][pos.column + move[1]];
     }
 
     /**
@@ -650,7 +680,7 @@ public class Board implements Cloneable
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 if (is(cells[row][col], BOX)) {
-                    tmp.add(new Position(row, col));
+                    tmp.add(positions[row][col]);
                 }
             }
         }
@@ -672,7 +702,7 @@ public class Board implements Cloneable
     public Deque<Direction> findPath(Position goal)
     {
         clearFlag(VISITED);
-        return findPath(new Position(playerRow, playerCol), goal);
+        return findPath(positions[playerRow][playerCol], goal);
     }
 
     /**
@@ -711,11 +741,11 @@ public class Board implements Cloneable
         cells[start.row][start.column] |= VISITED;
 
         for (Direction dir : Direction.values()) {
-            Position newPosition = new Position(start, moves[dir.ordinal()]);
+            Position newPosition = getPosition(start, moves[dir.ordinal()]);
 
             // We do not move any boxes while going this path.
-            if (!is(cells[newPosition.row][newPosition.column],
-                        (byte) (WALL | BOX | VISITED))) {
+            if (!is(cells[newPosition.row][newPosition.column], (byte) (WALL
+                    | BOX | VISITED))) {
 
                 Deque<Direction> solution = findPathRecursive(newPosition, goal);
 
@@ -773,7 +803,7 @@ public class Board implements Cloneable
         }
 
         if (boxNearby) {
-            reachable.add(new ReachableBox(new Position(startRow, startCol),
+            reachable.add(new ReachableBox(positions[startRow][startCol],
                     new LinkedList<Direction>(path)));
         }
     }
@@ -855,16 +885,17 @@ public class Board implements Cloneable
         }
 
         if (boxNearby && updateBoxes) {
-            reachableBoxes.add(new Position(startRow, startCol));
+            reachableBoxes.add(positions[startRow][startCol]);
         }
 
         return minimum;
     }
-    
+
     /**
      * Forces an update of the reachability.
      */
-    public void forceReachabilityUpdate() {
+    public void forceReachabilityUpdate()
+    {
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
         updateReachability(true);
