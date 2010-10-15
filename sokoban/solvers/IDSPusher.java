@@ -142,12 +142,15 @@ public class IDSPusher implements Solver
                     
                     // Tunnel detection:
                     // If found, push as many steps in same direction as possible.
+                    int numberOfTunnelMoves = 0;
                     while (inTunnel(dir, boxTo) && !Board.is(cells[boxTo.row+move[0]][boxTo.column+move[1]], (byte) (Board.REJECT_BOX | Board.GOAL))) {
                         //if(0==0)break;
 //                        System.out.print("Tunnel \n");
+                        // Count tunnel moves.
+                        numberOfTunnelMoves++;
+                        // Update boxTo position one step.
                         boxTo.row += move[0];
                         boxTo.column += move[1];
-                        reachable.path.add(dir);
                     }
                     
                     Position playerTo = new Position(boxTo, Board.moves[dir.reverse().ordinal()]);
@@ -175,7 +178,17 @@ public class IDSPusher implements Solver
                             // We have found a solution. Find the path of
                             // the move and add it to the solution.
                             board.clearFlag(Board.VISITED);
+
+                            // Add tunnel path directions, if any.
+                            for (int i = 0; i < numberOfTunnelMoves; i++) {
+                                // We always walk in the same direction in a tunnel.
+                                result.solution.addFirst(dir);
+                            }
+                            
+                            // Add standard direction for this state. 
                             result.solution.addFirst(dir);
+ 
+                            // Add path from previous player position to reachable position. 
                             result.solution.addAll(0, board.findPath(source, player));
                             return result;
                         case Inconclusive:
