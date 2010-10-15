@@ -90,6 +90,70 @@ public class IDSPusher implements Solver
         }
     }
 
+    /*
+     * A simple A star from
+     * http://www.sokobano.de/wiki/index.php?title=Sokoban_solver_%22scribbles%22_by_Brian_Damgaard_about_the_YASS_solver#Pre-calculated_deadlock_positions 
+     * Its not working, need helep
+     */
+    private PriorityQueue<SearchInfo> Q;
+    private SearchInfo AStar()
+    {
+        // Should it be SearchInfo in this queue?
+        Q = new PriorityQueue<SearchInfo>();
+        while (!Q.isEmpty()) {
+            SearchInfo node = Q.poll();
+
+            // CPRS should it be called like this? I want to send in a depth here, maybe this is IDS thingy?
+            updateReachabilityDFS();
+        }
+    }
+
+    private void expandNode(SearchInfo node, int depth)
+    {
+        // Make sure updateReachabilityDFS been called already, maybe not necassary?
+
+
+        final byte[][] cells = board.cells;
+        for (final Position player : board.findReachableBoxSquares()) {
+            for (final Direction dir : Board.Direction.values()) {
+                final Position boxFrom = new Position(player,
+                        Board.moves[dir.ordinal()]);
+                final Position boxTo = new Position(boxFrom, Board.moves[dir
+                        .ordinal()]);
+                if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
+                        && !Board
+                                .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)) {
+                    // The move is possible
+                    
+                    // Move the player and push the box
+                    board.moveBox(boxFrom, boxTo);
+                    board.movePlayer(source, boxFrom);
+
+
+                    // CPRS should it be called like this? I want to send in a depth here, maybe this is IDS thingy?
+                    // updateReachabilityDFS(depth)
+                    updateReachabilityDFS();
+
+                    // Add move to visited? Like this?
+                    // Process successor states
+                    SearchInfo result = SearchInfo.Failed;
+                    if (visitedBoards.add(board.getZobristKey())) {
+                        // This state hasn't been visited before
+                    
+                        // Check score, if same score, call expandNode
+                        // expandNode(result, depth+1);
+                        // Else add node to Q
+                        Q.add(result);
+                    }
+
+                    // Restore changes
+                    board.moveBox(boxTo, boxFrom);
+                    board.movePlayer(boxFrom, source);
+                }
+            }
+        }
+    }
+
     /**
      * Recursive Depth-First algorithm
      * 
