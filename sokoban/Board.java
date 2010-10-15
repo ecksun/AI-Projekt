@@ -115,7 +115,7 @@ public class Board implements Cloneable
 
     private int boxCount;
     private int remainingBoxes;
-    
+
     private Collection<Position> reachableBoxes;
     private boolean boxesNeedsUpdate;
 
@@ -123,7 +123,7 @@ public class Board implements Cloneable
      * The topmost, leftmost square the player can reach. Please update with
      * updateReachability() after the board has changed and before it's
      * hashed.
-     *
+     * 
      * Use getTopLeftReachable instead of accessing this variable.
      */
     private int topLeftReachable;
@@ -287,11 +287,11 @@ public class Board implements Cloneable
     public String toString()
     {
         StringBuilder sb = new StringBuilder(width * height + height);
-        for (int i = 0; i < height-1; ++i) {
+        for (int i = 0; i < height - 1; ++i) {
             for (int j = 0; j < width; ++j) {
                 sb.append(cellToChar(i, j));
             }
-            if (i != height-1) {
+            if (i != height - 1) {
                 sb.append("\n");
             }
         }
@@ -520,8 +520,9 @@ public class Board implements Cloneable
 
     /**
      * Move the player on the position from to the position to.
-     *
+     * 
      * TODO remove unused parameters
+     * 
      * @param from
      * @param to
      */
@@ -665,8 +666,7 @@ public class Board implements Cloneable
      * denote the direction in which we should go from that square to get back
      * to the player.
      * 
-     * @param goal
-     *            The position of the cell that we want to find a path to.
+     * @param goal The position of the cell that we want to find a path to.
      * @return A collection
      */
     public Deque<Direction> findPath(Position goal)
@@ -678,13 +678,30 @@ public class Board implements Cloneable
     /**
      * Finds a path from the start position to the goal position recursively.
      * 
-     * @param start
-     *            Starting position.
-     * @param goal
-     *            Goal position.
+     * @see sokoban.Board#findPathRecursive findPathRecursive
+     * @param start Starting position.
+     * @param goal Goal position.
      * @return A list of directions to go from start to goal.
      */
     public Deque<Direction> findPath(Position start, Position goal)
+    {
+        clearFlag(VISITED);
+        return findPathRecursive(start, goal);
+    }
+
+    /**
+     * Finds a path from the start position to the goal position recursively.
+     * 
+     * This methods is ONLY to be used in the search and NEEDS the VISITED flag
+     * to be cleared beforehand
+     * 
+     * TODO try bfs
+     * 
+     * @param start Starting position.
+     * @param goal Goal position.
+     * @return A list of directions to go from start to goal.
+     */
+    private Deque<Direction> findPathRecursive(Position start, Position goal)
     {
         // TODO: might want to skip .equals() in favour for performance
         if (start.equals(goal)) {
@@ -697,11 +714,12 @@ public class Board implements Cloneable
             Position newPosition = new Position(start, moves[dir.ordinal()]);
 
             // We do not move any boxes while going this path.
+            // TODO contains might be unnecessary because of walls everywhere
             if (contains(newPosition)
                     && !is(cells[newPosition.row][newPosition.column],
                             (byte) (WALL | BOX | VISITED))) {
 
-                Deque<Direction> solution = findPath(newPosition, goal);
+                Deque<Direction> solution = findPathRecursive(newPosition, goal);
 
                 if (solution != null) {
                     solution.addFirst(dir);
@@ -712,12 +730,12 @@ public class Board implements Cloneable
 
         return null;
     }
-    
+
     /**
      * Finds all boxes that can be reached by the player.
      * 
      * @return A collection of ReachableBox objects
-     *
+     * 
      * @deprecated Use getReachableBoxes instead
      */
     public Collection<ReachableBox> oldFindReachableBoxSquares()
@@ -772,41 +790,43 @@ public class Board implements Cloneable
         if (boxesNeedsUpdate) {
             updateReachability(true);
         }
-        
+
         return reachableBoxes;
     }
 
     /**
      * Gets the current topLeftReachable value, and updates it if needed.
      */
-    public int getTopLeftReachable() {
+    public int getTopLeftReachable()
+    {
         if (topLeftNeedsUpdate) {
             updateReachability(false);
         }
-        
+
         return topLeftReachable;
     }
 
     /**
      * Updates the reachability information. This includes two things:
-     *
+     * 
      * 1) The minimum top left position that the player can move to,
-     *    defined as (row*width)+col. This is used for duplicate detection.
-     *
+     * defined as (row*width)+col. This is used for duplicate detection.
+     * 
      * 2) The list of reachable boxes.
      */
     public void updateReachability(boolean updateBoxes)
     {
         updateBoxes = updateBoxes && boxesNeedsUpdate;
-    
+
         clearFlag(REACHABLE);
         if (updateBoxes) {
             reachableBoxes = new ArrayList<Position>(boxCount);
             boxesNeedsUpdate = false;
         }
-        
+
         // TODO: Should this be local?
-        topLeftReachable = updateReachabilityDFS(playerRow, playerCol, updateBoxes);
+        topLeftReachable = updateReachabilityDFS(playerRow, playerCol,
+                updateBoxes);
         topLeftNeedsUpdate = false;
     }
 
@@ -814,7 +834,7 @@ public class Board implements Cloneable
      * Recursive part of updateReachability
      */
     private int updateReachabilityDFS(int startRow, int startCol,
-        boolean updateBoxes)
+            boolean updateBoxes)
     {
         cells[startRow][startCol] |= REACHABLE;
 
@@ -823,19 +843,19 @@ public class Board implements Cloneable
         for (int dir = 0; dir < 4; ++dir) {
             int row = startRow + moves[dir][0];
             int col = startCol + moves[dir][1];
-            
+
             if ((cells[row][col] & (BOX | REACHABLE)) == BOX) {
                 // Add to reachable list
                 boxNearby = true;
             }
-            
+
             if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
                 int pos = updateReachabilityDFS(row, col, updateBoxes);
                 if (pos < minimum)
                     minimum = pos;
             }
         }
-        
+
         if (boxNearby && updateBoxes) {
             reachableBoxes.add(new Position(startRow, startCol));
         }
