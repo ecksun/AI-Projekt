@@ -1,6 +1,7 @@
 package sokoban.solvers;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -317,8 +318,10 @@ public class IDSPusher implements Solver
         return null;
     }
 
-    private static int lowerBound(final Board board)
+    private static int lowerBound(final Board RealBoard)
     {
+        Board board = (Board) RealBoard.clone();
+        System.out.println(board);
         final ArrayList<Position> boxes = new ArrayList<Position>();
         final Queue<Position> goals = new LinkedList<Position>();
         for (int row = 0; row < board.height; row++) {
@@ -337,18 +340,29 @@ public class IDSPusher implements Solver
             Position minBox = null;
             int min = Integer.MAX_VALUE;
             for (final Position box : boxes) {
-                final int tmp = distance(goal, box);
-                if (tmp < min) {
-                    min = tmp;
-                    minBox = box;
+                Deque<Direction> tmpPath = board.findPath(box, goal);
+                if (tmpPath != null) {
+                    int tmp = tmpPath.size();
+                    if (tmp < min) {
+                        min = tmp;
+                        minBox = box;
+                    }  
                 }
             }
 
-            boxes.remove(minBox);
-            result += min;
+            if (minBox != null) {
+                boxes.remove(minBox);
+                board.cells[minBox.row][minBox.column] &= ~Board.BOX;
+                result += min;
+            }
+            else {
+                // We couldnt find a path, try again later
+                goals.add(goal);
+            }
         }
         return result;
     }
+
 
     /**
      * Approximate the distance between two positions
