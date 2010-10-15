@@ -1,27 +1,35 @@
 package sokoban.solvers;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import sokoban.Board;
 import sokoban.Position;
+import sokoban.ReachableBox;
 import sokoban.Board.Direction;
 
 /**
- * A solver that pushes boxes around with iterative deepening and
- * hashing to avoid duplicate states.
+ * A solver that pulls boxes around (it finds a path from the goal to the
+ * start) with iterative deepening and hashing to avoid duplicate states.
  */
-public class IDSPusher implements Solver
+public class IDSPuller implements Solver
 {
     private final int DEPTH_LIMIT = 1000;
     /**
      * The number of generated nodes
      */
     public static int generatedNodes = 0;
-    private static int remainingDepth;
+    private static int depth, maxDepth;
     private static Board board;
+    
+    // Extra information for the puller
+    private int boxesNotInStart, initialBoxesNotInStart;
+    private boolean[][] boxStart;
+    private Position playerStart;
 
     public int getIterationsCount()
     {
@@ -99,67 +107,54 @@ public class IDSPusher implements Solver
     {
         generatedNodes++;
 
-        if (board.getRemainingBoxes() == 0) {
-            // Found a solution
-            return SearchInfo.emptySolution();
+        if (boxesNotInStart == 0) {
+            // Found a solution, try to go back to the start
+            Position player = new Position(board.getPlayerRow(), board.getPlayerCol());
+            Deque<Direction> path = board.findPath(playerStart, player);
+            if (path != null) {
+                SearchInfo result = SearchInfo.emptySolution();
+                result.solution.addAll(0, path);
+                return result;
+            }
         }
 
-        if (remainingDepth <= 0) {
+        if (depth >= maxDepth) {
             return SearchInfo.Inconclusive;
         }
 
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
-        final long hash = board.getZobristKey();
-
-        final Position source = new Position(board.getPlayerRow(), board
-                .getPlayerCol());
-        remainingDepth--;
+        long hash = board.getZobristKey();
+        
+        final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
+        depth++;
 
         final byte[][] cells = board.cells;
-        for (final Position player : board.findReachableBoxSquares()) {
+        for (final Position boxTo : findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
-                final Position boxFrom = new Position(player, Board.moves[dir
-                        .ordinal()]);
-                final Position boxTo = new Position(boxFrom, Board.moves[dir
-                        .ordinal()]);
-
-                // Check if the move is possible
+                final Position boxFrom = new Position(boxTo,
+                        Board.moves[dir.ordinal()]);
+                final Position playerTo = new Position(boxTo, Board.moves[dir
+                        .reverse().ordinal()]);
+                /*System.out.println(board+"\n\n"+boxesNotInStart+"   "+
+                    boxFrom+"("+cells[boxFrom.row][boxFrom.column]+")  "+
+                    boxTo+"("+cells[boxTo.row][boxTo.column]+")  "+
+                    playerTo+"("+cells[playerTo.row][playerTo.column]+")");*/
+                //System.out.println(remainingDepth+": "+board);
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
-                        && !Board.is(cells[boxTo.row][boxTo.column],
-                                Board.REJECT_BOX)) {
-
-                    final int move[] = Board.moves[dir.ordinal()];
-                    if (inTunnel(dir, boxTo)
-                            && !Board.is(
-                                    cells[boxTo.row + move[0]][boxTo.column
-                                            + move[1]],
-                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
-                    }
-
-                    // Tunnel detection:
-                    // If found, push as many steps in same direction as
-                    // possible.
-                    int numberOfTunnelMoves = 0;
-                    while (inTunnel(dir, boxTo)
-                            && !Board.is(
-                                    cells[boxTo.row + move[0]][boxTo.column
-                                            + move[1]],
-                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
-                        // Count tunnel moves.
-                        numberOfTunnelMoves++;
-                        // Update boxTo position one step.
-                        boxTo.row += move[0];
-                        boxTo.column += move[1];
-                    }
-
-                    final Position playerTo = new Position(boxTo,
-                            Board.moves[dir.reverse().ordinal()]);
-
-                    // Move the player and push the box
+                        && !Board
+                                .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)
+                        && !Board
+                                .is(cells[playerTo.row][playerTo.column], Board.REJECT_PULL)) {
+                    // The move is possible
+                                        
+                    // Move the player and pull the box
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, playerTo);
+                    
+                    if (boxStart[boxFrom.row][boxFrom.column]) boxesNotInStart++;
+                    if (boxStart[boxTo.row][boxTo.column]) boxesNotInStart--;
 
                     // Process successor states
                     SearchInfo result = SearchInfo.Failed;
@@ -172,27 +167,19 @@ public class IDSPusher implements Solver
                     board.moveBox(boxTo, boxFrom);
                     board.movePlayer(playerTo, source);
 
+                    if (boxStart[boxFrom.row][boxFrom.column]) boxesNotInStart--;
+                    if (boxStart[boxTo.row][boxTo.column]) boxesNotInStart++;
+
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
-                            // We have found a solution. Find the path of
-                            // the move and add it to the solution.
-                            board.clearFlag(Board.VISITED);
-
-                            // Add tunnel path directions, if any.
-                            for (int i = 0; i < numberOfTunnelMoves; i++) {
-                                // We always walk in the same direction in a
-                                // tunnel.
-                                result.solution.addFirst(dir);
+                            // We have found a solution. Find the reverse
+                            // path of the move and add it to the solution.
+                            result.solution.addLast(dir);
+                            if (depth > 1) {
+                                result.solution.addAll(board.findPath(boxTo, source));
                             }
-
-                            // Add standard direction for this state.
-                            result.solution.addFirst(dir);
-
-                            // Add path from previous player position to
-                            // reachable position.
-                            result.solution.addAll(0, board.findPath(source,
-                                    player));
+                            depth--;
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -206,7 +193,7 @@ public class IDSPusher implements Solver
             }
         }
 
-        remainingDepth++;
+        depth--;
 
         if (inconclusive) {
             // Add all successors that failed to the failed set
@@ -218,71 +205,30 @@ public class IDSPusher implements Solver
             return SearchInfo.Failed;
         }
     }
-
-    /**
-     * Checks if the given box position is a placement that has no influence on
-     * the board, i.e. if it is inside a tunnel.
-     * 
-     * @param dir The direction in which the box was pushed in order to get
-     *            where it is.
-     * @param box The position of the box after it has been pushed in the given
-     *            direction.
-     * @return True if the box is has gone into a tunnel, which has no influence
-     *         on the board, and can therefore be pushed all the way outside.
-     */
-    private boolean inTunnel(final Direction dir, final Position box)
-    {
-        // #v#
-        // 1$2
-        if (dir == Direction.DOWN && isWall(box.row - 1, box.column - 1)
-                && isWall(box.row - 1, box.column + 1)) {
-            // 1 or 2 above is a wall (or both)
-            return isWall(box.row, box.column - 1)
-                    || isWall(box.row, box.column + 1);
+    
+    private Collection<Position> findReachableBoxSquares() {
+        if (depth == 1) {
+            Collection<Position> boxes = new HashSet(board.boxCount);
+            for (int row = 1; row < board.height-1; row++) {
+                for (int col = 1; col < board.width-1; col++) {
+                    if (!Board.is(board.cells[row][col], Board.BOX)) {
+                        continue;
+                    }
+                    
+                    for (Direction dir : Direction.values()) {
+                        int spaceRow = row+Board.moves[dir.ordinal()][0];
+                        int spaceCol = col+Board.moves[dir.ordinal()][1];
+                        if (spaceRow > 0 && spaceRow < board.width-1
+                            && spaceCol > 0 && spaceCol < board.width-1) {
+                            boxes.add(new Position(spaceRow, spaceCol));
+                        }
+                    }
+                }
+            }
+            return boxes;
+        } else {
+            return board.findReachableBoxSquares();
         }
-
-        // 1$2
-        // #^#
-        if (dir == Direction.UP && isWall(box.row + 1, box.column - 1)
-                && isWall(box.row + 1, box.column + 1)) {
-            // 1 or 2 above is a wall (or both)
-            return isWall(box.row, box.column - 1)
-                    || isWall(box.row, box.column + 1);
-        }
-
-        // #1
-        // >$
-        // #2
-        if (dir == Direction.RIGHT && isWall(box.row - 1, box.column - 1)
-                && isWall(box.row + 1, box.column - 1)) {
-            // 1 or 2 above is a wall (or both)
-            return isWall(box.row - 1, box.column)
-                    || isWall(box.row + 1, box.column);
-        }
-
-        // 1#
-        // $<
-        // 2#
-        if (dir == Direction.LEFT && isWall(box.row - 1, box.column + 1)
-                && isWall(box.row + 1, box.column + 1)) {
-            // 1 or 2 above is a wall (or both)
-            return isWall(box.row - 1, box.column)
-                    || isWall(box.row + 1, box.column);
-        }
-
-        return false;
-    }
-
-    /**
-     * Checks if the position specified by the given row and column is a wall.
-     * 
-     * @param row The row.
-     * @param col The column.
-     * @return True if the given position is a wall, otherwise false.
-     */
-    private boolean isWall(final int row, final int col)
-    {
-        return Board.is(board.cells[row][col], Board.WALL);
     }
 
     public String solve(final Board startBoard)
@@ -291,12 +237,17 @@ public class IDSPusher implements Solver
         final int lowerBound = lowerBound(startBoard);
         System.out.println("lowerBound(): " + lowerBound);
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        
+        reverseBoard(startBoard);
+        
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+//        for (int maxDepth = 40; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
-            remainingDepth = maxDepth;
+            depth = 0;
             board = (Board) startBoard.clone();
+            boxesNotInStart = initialBoxesNotInStart;
             visitedBoards.add(board.getZobristKey());
 
             final SearchInfo result = dfs();
@@ -312,6 +263,35 @@ public class IDSPusher implements Solver
 
         System.out.println("maximum depth reached!");
         return null;
+    }
+    
+    private void reverseBoard(final Board board) {
+        // Store starting positions
+        playerStart = new Position(board.getPlayerRow(), board.getPlayerCol());
+        boxStart = new boolean[board.height][board.width];
+        initialBoxesNotInStart = board.boxCount;
+        for (int row = 0; row < board.height; row++) {
+            for (int column = 0; column < board.width; column++) {
+                if (Board.is(board.cells[row][column], Board.BOX)) {
+                    if (Board.is(board.cells[row][column], Board.GOAL)) {
+                        initialBoxesNotInStart--;
+                    }
+                    board.cells[row][column] &= ~Board.BOX;
+                    boxStart[row][column] = true;
+                }
+            }
+        }
+        
+        // Put the boxes in the goals
+        for (int row = 0; row < board.height; row++) {
+            for (int column = 0; column < board.width; column++) {
+                if (Board.is(board.cells[row][column], Board.GOAL)) {
+                    board.cells[row][column] |= Board.BOX;
+                }
+            }
+        }
+        
+        board.forceReachabilityUpdate();
     }
 
     private static int lowerBound(final Board board)
