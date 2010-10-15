@@ -1,6 +1,7 @@
 package sokoban.solvers;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -109,7 +110,6 @@ public class IDSPuller implements Solver
         if (boxesNotInStart == 0) {
             // Found a solution, try to go back to the start
             Position player = new Position(board.getPlayerRow(), board.getPlayerCol());
-//            System.out.println("SOLUTION??? from "+playerStart+" to "+player);
             Deque<Direction> path = board.findPath(playerStart, player);
             if (path != null) {
                 SearchInfo result = SearchInfo.emptySolution();
@@ -131,7 +131,7 @@ public class IDSPuller implements Solver
         depth++;
 
         final byte[][] cells = board.cells;
-        for (final Position boxTo : board.findReachableBoxSquares()) {
+        for (final Position boxTo : findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
                 final Position boxFrom = new Position(boxTo,
                         Board.moves[dir.ordinal()]);
@@ -153,13 +153,8 @@ public class IDSPuller implements Solver
                     board.moveBox(boxFrom, boxTo);
                     board.movePlayer(source, playerTo);
                     
-//                    System.out.println("BNISP: "+boxesNotInStart);
                     if (boxStart[boxFrom.row][boxFrom.column]) boxesNotInStart++;
                     if (boxStart[boxTo.row][boxTo.column]) boxesNotInStart--;
-                    
-//                    System.out.println("BNISP: "+boxesNotInStart);
-//                    System.out.println(depth+": "+board);
-
 
                     // Process successor states
                     SearchInfo result = SearchInfo.Failed;
@@ -180,10 +175,11 @@ public class IDSPuller implements Solver
                         case Solution:
                             // We have found a solution. Find the reverse
                             // path of the move and add it to the solution.
-                            if (depth > 0) {
-                                result.solution.addLast(dir);
+                            result.solution.addLast(dir);
+                            if (depth > 1) {
                                 result.solution.addAll(board.findPath(boxTo, source));
                             }
+                            depth--;
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -207,6 +203,31 @@ public class IDSPuller implements Solver
             // All successors failed, so this node is failed
             failedBoards.add(hash);
             return SearchInfo.Failed;
+        }
+    }
+    
+    private Collection<Position> findReachableBoxSquares() {
+        if (depth == 1) {
+            Collection<Position> boxes = new HashSet(board.boxCount);
+            for (int row = 1; row < board.height-1; row++) {
+                for (int col = 1; col < board.width-1; col++) {
+                    if (!Board.is(board.cells[row][col], Board.BOX)) {
+                        continue;
+                    }
+                    
+                    for (Direction dir : Direction.values()) {
+                        int spaceRow = row+Board.moves[dir.ordinal()][0];
+                        int spaceCol = col+Board.moves[dir.ordinal()][1];
+                        if (spaceRow > 0 && spaceRow < board.width-1
+                            && spaceCol > 0 && spaceCol < board.width-1) {
+                            boxes.add(new Position(spaceRow, spaceCol));
+                        }
+                    }
+                }
+            }
+            return boxes;
+        } else {
+            return board.findReachableBoxSquares();
         }
     }
 
