@@ -1,7 +1,5 @@
 package sokoban;
 
-import sokoban.Board.Direction;
-
 /**
  * Position represents a (row, column) index in a matrix.
  */
