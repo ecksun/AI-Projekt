@@ -714,10 +714,8 @@ public class Board implements Cloneable
             Position newPosition = new Position(start, moves[dir.ordinal()]);
 
             // We do not move any boxes while going this path.
-            // TODO contains might be unnecessary because of walls everywhere
-            if (contains(newPosition)
-                    && !is(cells[newPosition.row][newPosition.column],
-                            (byte) (WALL | BOX | VISITED))) {
+            if (!is(cells[newPosition.row][newPosition.column],
+                        (byte) (WALL | BOX | VISITED))) {
 
                 Deque<Direction> solution = findPathRecursive(newPosition, goal);
 
