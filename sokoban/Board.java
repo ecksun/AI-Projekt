@@ -50,7 +50,7 @@ public class Board implements Cloneable
      * A bitmask that says that a cell can't be walked into when
      * pulling, but not pushing, is allowed.
      */
-    public final static byte REJECT_PULL = WALL | VISITED | BOX;
+    public final static byte REJECT_PULL = WALL | BOX;
     /**
      * A bitmask that says that a box can't be moved into the cell, for one or
      * more of the following reasons:
@@ -113,7 +113,7 @@ public class Board implements Cloneable
      */
     private int playerRow;
 
-    private int boxCount;
+    public int boxCount;
     private int remainingBoxes;
 
     private Collection<Position> reachableBoxes;
@@ -859,6 +859,15 @@ public class Board implements Cloneable
         }
 
         return minimum;
+    }
+    
+    /**
+     * Forces an update of the reachability.
+     */
+    public void forceReachabilityUpdate() {
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+        updateReachability(true);
     }
 
 }
