@@ -1,67 +1,63 @@
 package sokoban.solvers;
 
-import java.util.HashSet;
-
 import sokoban.Board;
-import sokoban.Position;
+import sokoban.SearchInfo;
+import sokoban.SearchStatus;
 
 /**
  * This solver performs a bidirectional (TODO iterative deepening DFS?) search.
  */
-public class BidirectionalIDS extends IDSCommon implements Solver
+public class BidirectionalIDS implements Solver
 {
-    // Puller specific members.
-    private static Board reversedBoard;
-    private static int depth, maxDepth;
-    private int boxesNotInStart, initialBoxesNotInStart;
-    private boolean[][] boxStart;
-    private Position playerStart;
-    
+    private IDSPuller puller;
+    private IDSPusher pusher;
+
     @Override
     public String solve(final Board startBoard)
     {
-        final Board pullerStartBoard = (Board) startBoard.clone();
-        
-        failedBoards = new HashSet<Long>();
-        final int lowerBound = lowerBound(startBoard);
+        puller = new IDSPuller();
+        pusher = new IDSPusher();
 
-        reverseBoard(pullerStartBoard);
-        
         // IDS loop
+        for (int maxDepth = IDSCommon.lowerBound(startBoard); maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth++) {
 
-        
+            final SearchInfo result;
+
+            // TODO: Interlace visitedBoards in puller and pusher.
+            // Maybe by supplying a common such data structure to the dfs()
+            // method of each one?
+
+            // TODO: Give maxDepth to the two dfs()'s.
+            
+            // Puller
+            if (true) {
+                result = puller.dfs();
+            }
+            // Pusher
+            else {
+                result = pusher.dfs();
+            }
+
+            if (result.solution != null) {
+                System.out.println();
+                return Board.solutionToString(result.solution);
+            }
+            else if (result.status == SearchStatus.Failed) {
+                System.out.println("no solution!");
+                return null;
+            }
+
+        }
+
+        System.out.println("Maximum depth reached!");
         return null;
     }
 
-    
-    private void reverseBoard(final Board board) {
-        // Store starting positions
-        playerStart = board.positions[board.getPlayerRow()][board.getPlayerCol()];
-        boxStart = new boolean[board.height][board.width];
-        initialBoxesNotInStart = board.boxCount;
-        for (int row = 0; row < board.height; row++) {
-            for (int column = 0; column < board.width; column++) {
-                if (Board.is(board.cells[row][column], Board.BOX)) {
-                    if (Board.is(board.cells[row][column], Board.GOAL)) {
-                        initialBoxesNotInStart--;
-                    }
-                    board.cells[row][column] &= ~Board.BOX;
-                    boxStart[row][column] = true;
-                }
-            }
-        }
-        
-        // Put the boxes in the goals
-        for (int row = 0; row < board.height; row++) {
-            for (int column = 0; column < board.width; column++) {
-                if (Board.is(board.cells[row][column], Board.GOAL)) {
-                    board.cells[row][column] |= Board.BOX;
-                }
-            }
-        }
-        
-        board.forceReachabilityUpdate();
+    @Override
+    public int getIterationsCount()
+    {
+        // TODO
+        return 0;
     }
-    
-    
+
 }
