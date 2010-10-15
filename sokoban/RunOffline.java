@@ -15,6 +15,7 @@ public class RunOffline {
             System.exit(2);
         }
         
+        int exitCode = 1;
         int boardNumber = Integer.parseInt(args[2]);
         Solver solver = SolverFactory.loadSolver(args[0]);
         
@@ -30,10 +31,15 @@ public class RunOffline {
         String solution = solver.solve(board);
         long solveTime = System.currentTimeMillis() - beforeSolve;
 
+        if (solution != null) {
+            exitCode = 0;
+        }
+        
         System.out.println("Solve time (ms): " + solveTime);
         System.out.println("Expanded nodes: " + solver.getIterationsCount());
         System.out.println("Solution: " + solution);
 
+        System.exit(exitCode);
     }
     
 }
