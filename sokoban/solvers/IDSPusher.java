@@ -135,7 +135,7 @@ public class IDSPusher implements Solver
 
                     SearchInfo result = SearchInfo.Failed;
                     // Check if we got a freeze deadlock
-                    if (!freezeDeadlock(boxTo, DEADLOCK_BOTH, new HashSet<Position>()) {
+                    if (!freezeDeadlock(boxTo, DEADLOCK_BOTH, new HashSet<Position>())) {
                         if (visitedBoards.add(board.getZobristKey())) {
                             result = dfs();
                         }
