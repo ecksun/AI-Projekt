@@ -26,6 +26,8 @@ public class Main
                     .println("You need to supply solver and board number as argument");
             return;
         }
+        int exitCode = 1;
+        
         try {
             byte[] boardBytes = new byte[1024];
             Solver solver = SolverFactory.loadSolver(args[0]);
@@ -52,18 +54,26 @@ public class Main
 
             out.println(solution);
             System.out.println("Solve time (ms): " + solveTime);
+            System.out.println("Expanded nodes: " + solver.getIterationsCount());
             System.out.println("Solution: " + solution);
 
             String result = in.readLine();
-
             System.out.println(result);
+            
+            if (result.contains("Good solution")) {
+                exitCode = 0;
+            }
+            
             out.close();
             in.close();
-            socket.close();
+            socket.close();            
         }
         catch (Exception e) {
+            exitCode = 1;
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+        
+        System.exit(exitCode);
     }
 }

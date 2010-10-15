@@ -1,5 +1,7 @@
 package sokoban;
 
+import sokoban.Board.Direction;
+
 /**
  * Position represents a (row, column) index in a matrix.
  */
@@ -40,6 +42,14 @@ public class Position
         this.row = pos.row + move[0];
         this.column = pos.column + move[1];
     }
+    
+    public Position(Position pos, Direction dir)
+    {
+        int[] move = Board.moves[dir.ordinal()];
+        this.row = pos.row + move[0];
+        this.column = pos.column + move[1];
+    }
+
 
     @Override
     public boolean equals(Object obj)
