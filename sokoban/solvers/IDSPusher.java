@@ -117,7 +117,6 @@ public class IDSPusher implements Solver
         final Position source = new Position(board.getPlayerRow(), board.getPlayerCol());
         remainingDepth--;
 
-        // TODO optimize: no need for paths here
         final byte[][] cells = board.cells;
         for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
