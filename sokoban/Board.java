@@ -744,6 +744,10 @@ public class Board implements Cloneable
      */
     public Deque<Direction> findPath(Position start, Position goal)
     {
+        if (start.equals(goal)) {
+            return new LinkedList<Direction>();
+        }
+        
         clearFlag(VISITED);
         
         Deque<Direction> solution = new LinkedList<Direction>();
