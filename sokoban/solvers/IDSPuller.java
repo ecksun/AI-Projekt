@@ -39,8 +39,8 @@ public class IDSPuller extends IDSCommon implements Solver
         numLeafNodes = 0;
         lastLeafCount = -1;
 
-        startBoard = (Board) startBoard.clone();
-        reverseBoard(startBoard);
+        this.startBoard = (Board) startBoard.clone();
+        reverseBoard(this.startBoard);
     }
 
     /**
@@ -54,7 +54,6 @@ public class IDSPuller extends IDSCommon implements Solver
     {
         depth = 0;
         this.maxDepth = maxDepth;
-        boxesNotInStart = initialBoxesNotInStart;
         failedGoalTests = 0;
         numLeafNodes = 0;
         forceDirection = false;
@@ -63,6 +62,7 @@ public class IDSPuller extends IDSCommon implements Solver
         visitedBoards = new HashSet<Long>(failedBoards);
         visitedBoards.add(board.getZobristKey());
         board = (Board) startBoard.clone();
+        boxesNotInStart = initialBoxesNotInStart;
         
         return dfs();
     }
@@ -268,7 +268,7 @@ public class IDSPuller extends IDSCommon implements Solver
     public int nextDepth(int lowerBound) {
         //System.out.println("fGT "+failedGoalTests+"   nLN "+numLeafNodes+" ("+lastLeafCount+")  boxC "+board.boxCount+"  lB "+lowerBound);
         // If we have many boxes in the goals we can take a larger step
-        int nonGoalPerNode = failedGoalTests / Math.max(1, numLeafNodes);
+        int nonGoalPerNode = failedGoalTests / numLeafNodes;
         //System.out.println("nonGoalPerNode: "+nonGoalPerNode);
         int goalStep = lowerBound / Math.max(board.boxCount - nonGoalPerNode + 1, 1);
         

@@ -49,7 +49,7 @@ public class IDSPusher extends IDSCommon implements Solver
         remainingDepth = maxDepth;
         failedGoalTests = 0;
         numLeafNodes = 0;
-        this.maxDepth = maxDepth; 
+        this.maxDepth = maxDepth;
         
         board = (Board) startBoard.clone();
         visitedBoards = new HashSet<Long>(failedBoards);
@@ -142,9 +142,9 @@ public class IDSPusher extends IDSCommon implements Solver
                             new HashSet<Position>())) {
                         if (visitedBoards.add(board.getZobristKey())) {
 
-                            ourStatesMap.put(board.getZobristKey(),
+                            /*ourStatesMap.put(board.getZobristKey(),
                                     new BoxPosDir(dir, boxFrom, source)
-                            );
+                            );*/
                             
                             result = dfs();
                         }
