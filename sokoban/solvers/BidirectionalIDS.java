@@ -54,7 +54,6 @@ public class BidirectionalIDS implements Solver
             else if (result.status == SearchStatus.Failed) {
                 if (runPuller) pullerFailed = true;
                 if (!runPuller) pusherFailed = true;
-                System.out.println("\nSolver failed: "+(runPuller ? "Puller" : "Pusher"));
             }
 
             if (pullerFailed && pusherFailed) {
@@ -62,8 +61,19 @@ public class BidirectionalIDS implements Solver
                 return null;
             }
 
-            // TODO: implement collision check in pusher and activate this line
-            runPuller = !runPuller;
+            // Run the other solver if only one of them failed
+            // in case it failed because of a bug or hash collision
+            if (pullerFailed) {
+                runPuller = false;
+            }
+            else if (pusherFailed) {
+                runPuller = true;
+            }
+            else
+            {
+                // TODO choose the solver with the least leaf nodes?
+                runPuller = !runPuller;
+            }
         }
 
         System.out.println("Maximum depth reached!");
