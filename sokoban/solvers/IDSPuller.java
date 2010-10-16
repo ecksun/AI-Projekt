@@ -67,7 +67,6 @@ public class IDSPuller extends IDSCommon implements Solver
         board = (Board) startBoard.clone();
         visitedBoards = new HashSet<Long>(failedBoards);
         visitedBoards.add(board.getZobristKey());
-        board = (Board) startBoard.clone();
         boxesNotInStart = initialBoxesNotInStart;
         
         return dfs();
