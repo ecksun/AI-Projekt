@@ -24,6 +24,9 @@ public class IDSPusher implements Solver
     public static int generatedNodes = 0;
     private static int remainingDepth;
     private static Board board;
+    private static int failedGoalTests;
+    private static int numLeafNodes;
+    private static int lastLeafCount;
 
     public int getIterationsCount()
     {
@@ -57,6 +60,8 @@ public class IDSPusher implements Solver
         }
 
         if (remainingDepth <= 0) {
+            failedGoalTests += board.getRemainingBoxes();
+            numLeafNodes++;
             return SearchInfo.Inconclusive;
         }
 
@@ -240,13 +245,17 @@ public class IDSPusher implements Solver
         System.out.println("lowerBound(): " + lowerBound + " took "
                 + (System.currentTimeMillis() - startTime) + " ms");
         System.out.println("IDS depth limit (progress): ");
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += 3) {
+        
+        int step = 3;
+        lastLeafCount = -1;
+        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += step) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
             remainingDepth = maxDepth;
             board = (Board) startBoard.clone();
             visitedBoards.add(board.getZobristKey());
+            failedGoalTests = 0;
 
             final SearchInfo result = dfs();
             if (result.solution != null) {
@@ -257,6 +266,17 @@ public class IDSPusher implements Solver
                 System.out.println("no solution!");
                 return null;
             }
+            
+            // If we have many boxes in the goals we can take a larger step
+            int nonGoalPerNode = failedGoalTests / numLeafNodes;
+            int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
+            
+            // If we have pruned so many nodes we have less leaf nodes this
+            // time we take a larger step
+            int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+            
+            step = Math.max(3, Math.max(goalStep, depthChangeStep));
+            lastLeafCount = numLeafNodes;
         }
 
         System.out.println("maximum depth reached!");
