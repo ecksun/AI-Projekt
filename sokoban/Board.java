@@ -548,6 +548,33 @@ public class Board implements Cloneable
             clearFlag(VISITED);
         }
     }
+    
+    @Deprecated
+    public void reverseMove(Direction dir)
+    {
+        int move[] = moves[dir.reverse().ordinal()];
+        
+        // New player position.
+        int newPlayerRow = playerRow + move[0];
+        int newPlayerCol = playerCol + move[1];
+        
+        // Position for box that should be checked for if a pull is being performed
+        int boxRow = playerRow - move[0];
+        int boxCol = playerCol - move[1];
+        
+        if (is(cells[boxRow][boxCol], BOX)) {
+            // Now pull that box to playerPos
+            removeBox(new Position(boxRow, boxCol));
+            addBox(new Position(playerRow, playerCol));
+            
+            // TODO: fix remaining boxes
+            clearFlag(VISITED);
+        }
+        
+        // Update player position
+        playerRow = newPlayerRow;
+        playerCol = newPlayerCol;
+    }
 
     /**
      * Move the player on the position from to the position to.

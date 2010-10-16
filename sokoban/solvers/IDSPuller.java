@@ -130,6 +130,8 @@ public class IDSPuller implements Solver
                     // Evaluate result
                     switch (result.status) {
                         case Solution:
+//                            System.out.println("board: ");
+//                            System.out.println(board);
                             // We have found a solution. Find the reverse
                             // path of the move and add it to the solution.
                             result.solution.addLast(dir);
@@ -235,7 +237,7 @@ public class IDSPuller implements Solver
         return null;
     }
     
-    private void reverseBoard(final Board board) {
+    public void reverseBoard(final Board board) {
         // Store starting positions
         playerStart = board.positions[board.getPlayerRow()][board.getPlayerCol()];
         boxStart = new boolean[board.height][board.width];
