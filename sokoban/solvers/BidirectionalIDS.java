@@ -89,9 +89,11 @@ public class BidirectionalIDS implements Solver
             else if (pusherFailed) {
                 runPuller = true;
             }
+            else if (runPuller && 2*pusher.numLeafNodes < puller.numLeafNodes) {
+                runPuller = false;
+            }
             else {
-                // TODO choose the solver with the least leaf nodes?
-                runPuller = !runPuller;
+                runPuller = true;
             }
         }
     }

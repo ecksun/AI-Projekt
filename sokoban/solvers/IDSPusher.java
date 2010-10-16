@@ -20,7 +20,7 @@ public class IDSPusher extends IDSCommon implements Solver
     private int remainingDepth;
 
     private int failedGoalTests;
-    private int numLeafNodes;
+    public int numLeafNodes;
     private int lastLeafCount;
     private int maxDepth;
 

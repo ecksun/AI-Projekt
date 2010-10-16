@@ -22,7 +22,7 @@ public class IDSPuller extends IDSCommon implements Solver
     private int depth, maxDepth;
     
     private int failedGoalTests;
-    private int numLeafNodes;
+    public int numLeafNodes;
     private int lastLeafCount;
 
     // Extra information for the puller
