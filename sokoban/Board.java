@@ -570,24 +570,34 @@ public class Board implements Cloneable
     public void moveBox(Position from, Position to)
     {
         // Remove box from previous position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, from.row,
-                from.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row,
-                from.column);
-
+        removeBox(from);
+        
         // Move box to new position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row,
-                to.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
-
-        cells[from.row][from.column] &= ~BOX;
-        cells[to.row][to.column] |= BOX;
-
-        if (is(cells[from.row][from.column], GOAL))
+        addBox(to);
+        
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+    }
+    
+    public void removeBox(Position box) {
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, box.row,
+                box.column);    
+        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, box.row,
+                box.column);
+        cells[box.row][box.column] &= ~BOX;
+        if (is(cells[box.row][box.column], GOAL))
             remainingBoxes++;
-        if (is(cells[to.row][to.column], GOAL))
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+    }
+    
+    public void addBox(Position box) {
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, box.row,
+                box.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, box.row, box.column);
+        cells[box.row][box.column] |= BOX;
+        if (is(cells[box.row][box.column], GOAL))
             remainingBoxes--;
-
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
