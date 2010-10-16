@@ -274,7 +274,7 @@ public class IDSPuller extends IDSCommon implements Solver
     public int nextDepth(int lowerBound) {
         //System.out.println("fGT "+failedGoalTests+"   nLN "+numLeafNodes+" ("+lastLeafCount+")  boxC "+board.boxCount+"  lB "+lowerBound);
         // If we have many boxes in the goals we can take a larger step
-        int nonGoalPerNode = failedGoalTests / numLeafNodes;
+        int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
         //System.out.println("nonGoalPerNode: "+nonGoalPerNode);
         int goalStep = lowerBound / Math.max(board.boxCount - nonGoalPerNode + 1, 1);
         

@@ -305,7 +305,7 @@ public class IDSPusher extends IDSCommon implements Solver
     
     public int nextDepth(int lowerBound) {
         // If we have many boxes in the goals we can take a larger step
-        int nonGoalPerNode = failedGoalTests / (numLeafNodes + 1);
+        int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
         int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
         
         // If we have pruned so many nodes we have less leaf nodes this
