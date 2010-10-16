@@ -83,12 +83,6 @@ public class IDSPusher implements Solver
                                 Board.REJECT_BOX)) {
 
                     final int move[] = Board.moves[dir.ordinal()];
-                    if (inTunnel(dir, boxTo)
-                            && !Board.is(
-                                    cells[boxTo.row + move[0]][boxTo.column
-                                            + move[1]],
-                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
-                    }
 
                     // Tunnel detection:
                     // If found, push as many steps in same direction as
