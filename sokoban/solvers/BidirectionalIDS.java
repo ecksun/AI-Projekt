@@ -58,7 +58,8 @@ public class BidirectionalIDS implements Solver
             }
 
             if (pullerFailed && pusherFailed) {
-                break;
+                System.out.println("no solution!");
+                return null;
             }
 
             // TODO: implement collision check in pusher and activate this line
