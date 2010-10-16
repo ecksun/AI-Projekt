@@ -36,6 +36,8 @@ public class IDSPusher extends IDSCommon implements Solver
 
     public IDSPusher()
     {
+        otherStatesMap = new HashMap<Long, BoxPosDir>();
+        ourStatesMap = new HashMap<Long, BoxPosDir>();
     }
 
     /**

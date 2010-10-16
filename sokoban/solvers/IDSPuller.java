@@ -42,6 +42,12 @@ public class IDSPuller extends IDSCommon implements Solver
         this.startBoard = (Board) startBoard.clone();
         reverseBoard(this.startBoard);
     }
+    
+    public IDSPuller()
+    {
+        otherStatesMap = new HashMap<Long, BoxPosDir>();
+        ourStatesMap = new HashMap<Long, BoxPosDir>();
+    }
 
     /**
      * Returns the result of the DFS with the specified maximum depth.
