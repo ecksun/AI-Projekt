@@ -24,7 +24,7 @@ public final class Zobrist
     public static long calculateHashTable(Board board)
     {
         // hash = rand.nextLong();
-        rand = new Random(0);
+        rand = new Random();
 
         // TODO might be faster to change the indexes here
         hash = new long[2][board.height][board.width];
