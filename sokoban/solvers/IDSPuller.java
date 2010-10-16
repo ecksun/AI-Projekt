@@ -24,8 +24,7 @@ public class IDSPuller extends IDSCommon implements Solver
     private boolean[][] boxStart;
     private Position playerStart;
 
-    public IDSPuller(Board startBoard,
-            HashSet<Long> failedBoards,
+    public IDSPuller(Board startBoard, HashSet<Long> failedBoards,
             HashMap<Long, BoxPosDir> pusherStatesMap,
             HashMap<Long, BoxPosDir> pullerStatesMap)
     {
@@ -33,7 +32,6 @@ public class IDSPuller extends IDSCommon implements Solver
         startBoard = (Board) startBoard.clone();
         reverseBoard(startBoard);
     }
-
 
     /**
      * Returns the result of the DFS with the specified maximum depth.
@@ -54,7 +52,7 @@ public class IDSPuller extends IDSCommon implements Solver
         forceDirection = false;
         return dfs();
     }
-    
+
     private boolean forceDirection = false;
     private Direction forcedDirection;
 
@@ -89,7 +87,7 @@ public class IDSPuller extends IDSCommon implements Solver
         long hash = board.getZobristKey();
 
         final Position source = board.positions[board.getPlayerRow()][board
-                                                                      .getPlayerCol()];
+                .getPlayerCol()];
         depth++;
 
         final byte[][] cells = board.cells;
@@ -98,7 +96,7 @@ public class IDSPuller extends IDSCommon implements Solver
                 if (forceDirection && dir != forcedDirection) {
                     continue;
                 }
-                
+
                 final Position boxFrom = board.getPosition(boxTo,
                         Board.moves[dir.ordinal()]);
                 final Position playerTo = board.getPosition(boxTo,
@@ -124,11 +122,8 @@ public class IDSPuller extends IDSCommon implements Solver
                     SearchInfo result = SearchInfo.Failed;
                     if (visitedBoards.add(board.getZobristKey())) {
                         // This state hasn't been visited before
-                        ourStatesMap.put(board.getZobristKey(), 
-                                
-                                new BoxPosDir(dir, boxTo, playerTo)
-                        
-                        );
+                        ourStatesMap.put(board.getZobristKey(), new BoxPosDir(
+                                dir, boxTo, playerTo));
                         result = dfs();
                     }
 
@@ -189,7 +184,7 @@ public class IDSPuller extends IDSCommon implements Solver
             boxes.add(nextState.box);
             forceDirection = true;
             forcedDirection = nextState.dir;
-            
+
             return boxes;
         }
         else if (depth == 1) {
