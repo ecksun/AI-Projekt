@@ -165,8 +165,11 @@ public class IDSPuller extends IDSCommon implements Solver
                             // path of the move and add it to the solution.
                             result.solution.addLast(dir);
                             if (depth > 1) {
-                                result.solution.addAll(board.findPath(boxTo,
-                                        source));
+                                Deque<Direction> path = board.findPath(boxTo,
+                                        source);
+                                if (path != null) {
+                                    result.solution.addAll(path);
+                                }
                             }
                             depth--;
                             return result;

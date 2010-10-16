@@ -777,7 +777,7 @@ public class Board implements Cloneable
                 }
             }
         }
-        return solution;
+        return null;
     }
 
     /**

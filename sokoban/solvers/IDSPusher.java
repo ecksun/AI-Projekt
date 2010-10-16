@@ -1,5 +1,6 @@
 package sokoban.solvers;
 
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -175,8 +176,11 @@ public class IDSPusher extends IDSCommon implements Solver
 
                             // Add path from previous player position to
                             // reachable position.
-                            result.solution.addAll(0, board.findPath(source,
-                                    player));
+                            Deque<Direction> path = board.findPath(source,
+                                    player);
+                            if (path != null) {
+                                result.solution.addAll(0, path);
+                            }
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
