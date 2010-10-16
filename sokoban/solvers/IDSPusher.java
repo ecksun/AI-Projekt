@@ -62,11 +62,7 @@ public class IDSPusher extends IDSCommon implements Solver
 
         final long hash = board.getZobristKey();
 
-        if (otherStatesMap.containsKey(hash)) {
-            // TODO: Found a collision, now backtrack and return result!
-            System.out.println("collision from pusher!");
-            return null;
-        }
+        BoxPosDir collision = otherStatesMap.get(hash);
 
         if (remainingDepth <= 0) {
             return SearchInfo.Inconclusive;
@@ -82,6 +78,15 @@ public class IDSPusher extends IDSCommon implements Solver
         final byte[][] cells = board.cells;
         for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
+                if (collision != null) {
+                    // We reached a state from the other end (IDSPuller)
+                    if (dir != collision.dir) {
+                        // This is successor state isn't on the path from
+                        // the other end.
+                        continue;
+                    }
+                }
+                
                 final Position boxFrom = board.getPosition(player,
                         Board.moves[dir.ordinal()]);
                 Position boxTo = board.getPosition(boxFrom, Board.moves[dir
