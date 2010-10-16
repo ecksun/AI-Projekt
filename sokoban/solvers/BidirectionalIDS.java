@@ -20,40 +20,60 @@ public class BidirectionalIDS implements Solver
     {
         HashSet<Long> failedBoardsPuller = new HashSet<Long>();
         HashSet<Long> failedBoardsPusher = new HashSet<Long>();
-        HashMap<Long, BoxPosDir> pullerStatesMap = new HashMap<Long, BoxPosDir>(); 
+        HashMap<Long, BoxPosDir> pullerStatesMap = new HashMap<Long, BoxPosDir>();
         HashMap<Long, BoxPosDir> pusherStatesMap = new HashMap<Long, BoxPosDir>();
 
-        pusher = new IDSPusher(startBoard, failedBoardsPuller, pusherStatesMap, pullerStatesMap);
-        puller = new IDSPuller(startBoard, failedBoardsPusher, pullerStatesMap, pusherStatesMap);
+        pusher = new IDSPusher(startBoard, failedBoardsPuller, pusherStatesMap,
+                pullerStatesMap);
+        puller = new IDSPuller(startBoard, failedBoardsPusher, pullerStatesMap,
+                pusherStatesMap);
 
         boolean runPuller = true;
         int lowerBound = IDSCommon.lowerBound(startBoard);
-        // TODO implement collision check in pusher and update accordingly here (remove line)
+        // TODO implement collision check in pusher and update accordingly here
+        // (remove line)
         SearchInfo result;
-                
+
         // IDS loop
         boolean pullerFailed = false;
         boolean pusherFailed = false;
-        for (int maxDepth = lowerBound; maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth += 3) {
+
+        int pullerDepth = lowerBound;
+        int pusherDepth = lowerBound;
+
+        while (true) {
+            result = SearchInfo.Failed;
 
             // Puller
-            if (runPuller) {
-                result = puller.dfs(maxDepth);
-                System.out.println("puller: "+result.status);
+            if (runPuller && pullerDepth < IDSCommon.DEPTH_LIMIT) {
+                System.out.print("puller (depth " + pullerDepth + "): ");
+                result = puller.dfs(pullerDepth);
+                pullerDepth = puller.nextDepth(lowerBound);
+                System.out.println(result.status);
             }
+
             // Pusher
-            else {
-                result = pusher.dfs(maxDepth);
-                System.out.println("pusher: "+result.status);
+            if (!runPuller && pullerDepth < IDSCommon.DEPTH_LIMIT) {
+                System.out.print("pusher (depth " + pusherDepth + "): ");
+                result = pusher.dfs(pusherDepth);
+                pusherDepth = pusher.nextDepth(lowerBound);
+                System.out.println(result.status);
             }
-            
+
             if (result.solution != null) {
                 System.out.println();
                 return Board.solutionToString(result.solution);
             }
+            else if (pullerDepth >= IDSCommon.DEPTH_LIMIT
+                    && pullerDepth >= IDSCommon.DEPTH_LIMIT) {
+                System.out.println("Maximum depth reached!");
+                return null;
+            }
             else if (result.status == SearchStatus.Failed) {
-                if (runPuller) pullerFailed = true;
-                if (!runPuller) pusherFailed = true;
+                if (runPuller)
+                    pullerFailed = true;
+                if (!runPuller)
+                    pusherFailed = true;
             }
 
             if (pullerFailed && pusherFailed) {
@@ -69,15 +89,11 @@ public class BidirectionalIDS implements Solver
             else if (pusherFailed) {
                 runPuller = true;
             }
-            else
-            {
+            else {
                 // TODO choose the solver with the least leaf nodes?
                 runPuller = !runPuller;
             }
         }
-
-        System.out.println("Maximum depth reached!");
-        return null;
     }
 
     @Override

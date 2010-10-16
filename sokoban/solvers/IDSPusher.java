@@ -16,13 +16,12 @@ import sokoban.Board.Direction;
 public class IDSPusher extends IDSCommon implements Solver
 {
 
-    private static int remainingDepth;
+    private int remainingDepth;
 
-    private static Board board;
-    private static int failedGoalTests;
-    private static int numLeafNodes;
-    private static int lastLeafCount;
-
+    private int failedGoalTests;
+    private int numLeafNodes;
+    private int lastLeafCount;
+    private int maxDepth;
 
     public IDSPusher(Board startBoard,
             HashSet<Long> failedBoards,
@@ -30,6 +29,9 @@ public class IDSPusher extends IDSCommon implements Solver
             HashMap<Long, BoxPosDir> pullerStatesMap)
     {
         super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
+
+        numLeafNodes = 0;
+        lastLeafCount = -1;
     }
 
     public IDSPusher()
@@ -44,10 +46,15 @@ public class IDSPusher extends IDSCommon implements Solver
      */
     public SearchInfo dfs(int maxDepth)
     {   
-        visitedBoards = new HashSet<Long>(failedBoards);
         remainingDepth = maxDepth;
+        failedGoalTests = 0;
+        numLeafNodes = 0;
+        this.maxDepth = maxDepth; 
+        
         board = (Board) startBoard.clone();
+        visitedBoards = new HashSet<Long>(failedBoards);
         visitedBoards.add(board.getZobristKey());
+        
         return dfs();
     }
 
@@ -269,9 +276,8 @@ public class IDSPusher extends IDSCommon implements Solver
                 + (System.currentTimeMillis() - startTime) + " ms");
         System.out.println("IDS depth limit (progress): ");
         
-        int step = 3;
         lastLeafCount = -1;
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += step) {
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; nextDepth(lowerBound)) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
@@ -289,21 +295,26 @@ public class IDSPusher extends IDSCommon implements Solver
                 System.out.println("no solution!");
                 return null;
             }
-            
-            // If we have many boxes in the goals we can take a larger step
-            int nonGoalPerNode = failedGoalTests / numLeafNodes;
-            int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
-            
-            // If we have pruned so many nodes we have less leaf nodes this
-            // time we take a larger step
-            int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
-            
-            step = Math.max(3, Math.max(goalStep, depthChangeStep));
-            lastLeafCount = numLeafNodes;
         }
 
         System.out.println("maximum depth reached!");
         return null;
+    }
+    
+    public int nextDepth(int lowerBound) {
+        // If we have many boxes in the goals we can take a larger step
+        int nonGoalPerNode = failedGoalTests / (numLeafNodes + 1);
+        int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
+        
+        // If we have pruned so many nodes we have less leaf nodes this
+        // time we take a larger step
+        int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+        
+        lastLeafCount = numLeafNodes;
+        int step = Math.max(3, Math.max(goalStep, depthChangeStep));
+        
+        maxDepth += step;
+        return maxDepth;
     }
 
     /**

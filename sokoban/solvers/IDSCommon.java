@@ -17,7 +17,7 @@ public abstract class IDSCommon implements Solver
     /**
      * The number of generated nodes
      */
-    public static int generatedNodes = 0;
+    public int generatedNodes = 0;
 
     protected Board board;
     protected Board startBoard;

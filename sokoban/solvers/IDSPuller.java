@@ -5,6 +5,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.omg.PortableInterceptor.NON_EXISTENT;
+
 import sokoban.Board;
 import sokoban.Position;
 import sokoban.SearchInfo;
@@ -17,13 +19,11 @@ import sokoban.Board.Direction;
  */
 public class IDSPuller extends IDSCommon implements Solver
 {
-    private static int depth, maxDepth;
-
-    private static Board board;
+    private int depth, maxDepth;
     
-    private static int failedGoalTests;
-    private static int numLeafNodes;
-    private static int lastLeafCount;
+    private int failedGoalTests;
+    private int numLeafNodes;
+    private int lastLeafCount;
 
     // Extra information for the puller
     private int boxesNotInStart, initialBoxesNotInStart;
@@ -35,6 +35,10 @@ public class IDSPuller extends IDSCommon implements Solver
             HashMap<Long, BoxPosDir> pullerStatesMap)
     {
         super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
+
+        numLeafNodes = 0;
+        lastLeafCount = -1;
+
         startBoard = (Board) startBoard.clone();
         reverseBoard(startBoard);
     }
@@ -48,14 +52,18 @@ public class IDSPuller extends IDSCommon implements Solver
      */
     public SearchInfo dfs(int maxDepth)
     {
-        visitedBoards = new HashSet<Long>(failedBoards);
         depth = 0;
-        board = (Board) startBoard.clone();
-        reverseBoard(board);
+        this.maxDepth = maxDepth;
         boxesNotInStart = initialBoxesNotInStart;
-        visitedBoards.add(board.getZobristKey());
-        IDSPuller.maxDepth = maxDepth;
+        failedGoalTests = 0;
+        numLeafNodes = 0;
         forceDirection = false;
+        
+        board = (Board) startBoard.clone();
+        visitedBoards = new HashSet<Long>(failedBoards);
+        visitedBoards.add(board.getZobristKey());
+        board = (Board) startBoard.clone();
+        
         return dfs();
     }
 
@@ -231,9 +239,8 @@ public class IDSPuller extends IDSCommon implements Solver
 
         reverseBoard(startBoard);
         
-        int step = 3;
         lastLeafCount = -1;
-        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += step) {
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; nextDepth(lowerBound)) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
@@ -252,21 +259,28 @@ public class IDSPuller extends IDSCommon implements Solver
                 System.out.println("no solution!");
                 return null;
             }
-            
-            // If we have many boxes in the goals we can take a larger step
-            int nonGoalPerNode = failedGoalTests / numLeafNodes;
-            int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
-            
-            // If we have pruned so many nodes we have less leaf nodes this
-            // time we take a larger step
-            int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
-            
-            step = Math.max(3, Math.max(goalStep, depthChangeStep));
-            lastLeafCount = numLeafNodes;
         }
 
         System.out.println("maximum depth reached!");
         return null;
+    }
+    
+    public int nextDepth(int lowerBound) {
+        //System.out.println("fGT "+failedGoalTests+"   nLN "+numLeafNodes+" ("+lastLeafCount+")  boxC "+board.boxCount+"  lB "+lowerBound);
+        // If we have many boxes in the goals we can take a larger step
+        int nonGoalPerNode = failedGoalTests / Math.max(1, numLeafNodes);
+        //System.out.println("nonGoalPerNode: "+nonGoalPerNode);
+        int goalStep = lowerBound / Math.max(board.boxCount - nonGoalPerNode + 1, 1);
+        
+        // If we have pruned so many nodes we have less leaf nodes this
+        // time we take a larger step
+        int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+        
+        lastLeafCount = numLeafNodes;
+        int step = Math.max(3, Math.max(goalStep, depthChangeStep));
+
+        maxDepth += step;
+        return maxDepth;
     }
 
     private void reverseBoard(final Board board)
