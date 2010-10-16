@@ -29,20 +29,22 @@ public class BidirectionalIDS implements Solver
         boolean runPuller = true;
         int lowerBound = IDSCommon.lowerBound(startBoard);
         // TODO implement collision check in pusher and update accordingly here (remove line)
-//        SearchInfo result;
-        SearchInfo result = pusher.dfs(lowerBound);
+        SearchInfo result;
                 
         // IDS loop
-        for (int maxDepth = lowerBound; maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth++) {
+        boolean pullerFailed = false;
+        boolean pusherFailed = false;
+        for (int maxDepth = lowerBound; maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth += 3) {
 
             // Puller
-            runPuller = true;
             if (runPuller) {
                 result = puller.dfs(maxDepth);
+                System.out.println("puller: "+result.status);
             }
             // Pusher
             else {
                 result = pusher.dfs(maxDepth);
+                System.out.println("pusher: "+result.status);
             }
             
             if (result.solution != null) {
@@ -50,8 +52,13 @@ public class BidirectionalIDS implements Solver
                 return Board.solutionToString(result.solution);
             }
             else if (result.status == SearchStatus.Failed) {
-                System.out.println("no solution!");
-                return null;    
+                if (runPuller) pullerFailed = true;
+                if (!runPuller) pusherFailed = true;
+                System.out.println("\nSolver failed: "+(runPuller ? "Puller" : "Pusher"));
+            }
+
+            if (pullerFailed && pusherFailed) {
+                break;
             }
 
             // TODO: implement collision check in pusher and activate this line
