@@ -1,5 +1,6 @@
 package sokoban.solvers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 import sokoban.Board;
@@ -14,51 +15,47 @@ public class BidirectionalIDS implements Solver
     private IDSPuller puller;
     private IDSPusher pusher;
 
-    private HashSet<Long> failedBoards;
-
     @Override
     public String solve(final Board startBoard)
     {
-        failedBoards = new HashSet<Long>();
+        HashSet<Long> failedBoardsPuller = new HashSet<Long>();
+        HashSet<Long> failedBoardsPusher = new HashSet<Long>();
+        HashMap<Long, BoxPosDir> pullerStatesMap = new HashMap<Long, BoxPosDir>(); 
+        HashMap<Long, BoxPosDir> pusherStatesMap = new HashMap<Long, BoxPosDir>();
 
-        puller = new IDSPuller(failedBoards);
-        pusher = new IDSPusher(failedBoards);
+        pusher = new IDSPusher(startBoard, failedBoardsPuller, pusherStatesMap, pullerStatesMap);
+        puller = new IDSPuller(startBoard, failedBoardsPusher, pullerStatesMap, pusherStatesMap);
 
         boolean runPuller = true;
-
+        int lowerBound = IDSCommon.lowerBound(startBoard);
+        // TODO implement collision check in pusher and update accordingly here (remove line)
+//        SearchInfo result;
+        SearchInfo result = pusher.dfs(lowerBound);
+                
         // IDS loop
-        for (int maxDepth = IDSCommon.lowerBound(startBoard); maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth++) {
-
-            final SearchInfo result;
-
-            // TODO: Interlace visitedBoards in puller and pusher.
-            // Maybe by supplying a common such data structure to the dfs()
-            // method of each one?
-
-            // TODO: Give maxDepth to the two dfs()'s.
+        for (int maxDepth = lowerBound; maxDepth < IDSCommon.DEPTH_LIMIT; maxDepth++) {
 
             // Puller
+            runPuller = true;
             if (runPuller) {
-                result = puller.dfs();
-                runPuller = !runPuller;
+                result = puller.dfs(maxDepth);
             }
             // Pusher
             else {
-                result = pusher.dfs();
+                result = pusher.dfs(maxDepth);
             }
-
+            
             if (result.solution != null) {
                 System.out.println();
                 return Board.solutionToString(result.solution);
             }
             else if (result.status == SearchStatus.Failed) {
                 System.out.println("no solution!");
-                return null;
+                return null;    
             }
-            // else if (result.status == SearchStatus.Collision) {
-            // Backtrack the solution.
-            // }
 
+            // TODO: implement collision check in pusher and activate this line
+            runPuller = !runPuller;
         }
 
         System.out.println("Maximum depth reached!");
@@ -69,7 +66,7 @@ public class BidirectionalIDS implements Solver
     public int getIterationsCount()
     {
         // TODO
-        return 0;
+        return pusher.getIterationsCount() + puller.getIterationsCount();
     }
 
 }

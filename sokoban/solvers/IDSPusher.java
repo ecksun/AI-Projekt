@@ -1,5 +1,6 @@
 package sokoban.solvers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 import sokoban.Board;
@@ -14,22 +15,43 @@ import sokoban.Board.Direction;
  */
 public class IDSPusher extends IDSCommon implements Solver
 {
-    
+
     private static int remainingDepth;
 
-    public IDSPusher(HashSet<Long> failedBoards)
+
+    public IDSPusher(Board startBoard,
+            HashSet<Long> failedBoards,
+            HashMap<Long, BoxPosDir> pusherStatesMap,
+            HashMap<Long, BoxPosDir> pullerStatesMap)
     {
-        super(failedBoards);
+        super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
     }
-   
-    
+
+    public IDSPusher()
+    {
+    }
+
+    /**
+     * Returns the result of the DFS with the specified maximum depth.
+     * 
+     * @param maxDepth The maximum depth allowed for this DFS.
+     * @return A SearchInfo result.
+     */
+    public SearchInfo dfs(int maxDepth)
+    {   
+        visitedBoards = new HashSet<Long>(failedBoards);
+        remainingDepth = maxDepth;
+        board = (Board) startBoard.clone();
+        visitedBoards.add(board.getZobristKey());
+        return dfs();
+    }
+
     /**
      * Recursive Depth-First algorithm
      * 
-     * @param maxDepth The maximum depth.
      * @return
      */
-    SearchInfo dfs()
+    private SearchInfo dfs()
     {
         generatedNodes++;
 
@@ -38,14 +60,20 @@ public class IDSPusher extends IDSCommon implements Solver
             return SearchInfo.emptySolution();
         }
 
+        final long hash = board.getZobristKey();
+
+        if (otherStatesMap.containsKey(hash)) {
+            // TODO: Found a collision, now backtrack and return result!
+            System.out.println("collision from pusher!");
+            return null;
+        }
+
         if (remainingDepth <= 0) {
             return SearchInfo.Inconclusive;
         }
 
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
-
-        final long hash = board.getZobristKey();
 
         final Position source = board.positions[board.getPlayerRow()][board
                 .getPlayerCol()];
@@ -70,7 +98,8 @@ public class IDSPusher extends IDSCommon implements Solver
                     // If found, push as many steps in same direction as
                     // possible.
                     int numberOfTunnelMoves = 0;
-                    while (inTunnel(dir, boxTo)
+                    /* TODO FIX TUNNEL
+                     * while (inTunnel(dir, boxTo)
                             && !Board.is(
                                     cells[boxTo.row + move[0]][boxTo.column
                                             + move[1]],
@@ -79,27 +108,32 @@ public class IDSPusher extends IDSCommon implements Solver
                         numberOfTunnelMoves++;
                         // Update boxTo position one step.
                         boxTo = board.getPosition(boxTo, move);
-                    }
+                    }*/
 
                     final Position playerTo = board.getPosition(boxTo,
                             Board.moves[dir.reverse().ordinal()]);
 
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
-                    board.movePlayer(source, playerTo);
+                    board.movePlayer(playerTo);
 
                     SearchInfo result = SearchInfo.Failed;
                     // Check if we got a freeze deadlock
                     if (!freezeDeadlock(boxTo, DEADLOCK_BOTH,
                             new HashSet<Position>())) {
                         if (visitedBoards.add(board.getZobristKey())) {
+
+                            ourStatesMap.put(board.getZobristKey(),
+                                    new BoxPosDir(dir, boxFrom, source)
+                            );
+                            
                             result = dfs();
                         }
                     }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
-                    board.movePlayer(playerTo, source);
+                    board.movePlayer(source);
 
                     // Evaluate result
                     switch (result.status) {
@@ -109,11 +143,11 @@ public class IDSPusher extends IDSCommon implements Solver
                             board.clearFlag(Board.VISITED);
 
                             // Add tunnel path directions, if any.
-                            for (int i = 0; i < numberOfTunnelMoves; i++) {
+                            /*for (int i = 0; i < numberOfTunnelMoves; i++) {
                                 // We always walk in the same direction in a
                                 // tunnel.
                                 result.solution.addFirst(dir);
-                            }
+                            }*/
 
                             // Add standard direction for this state.
                             result.solution.addFirst(dir);
@@ -261,6 +295,7 @@ public class IDSPusher extends IDSCommon implements Solver
 
     private boolean freezeDeadlock(final Position box, final byte type,
             final HashSet<Position> visited)
+
     {
 
         visited.add(box);
@@ -268,6 +303,7 @@ public class IDSPusher extends IDSCommon implements Solver
         if (Board.is(board.cells[box.row][box.column], Board.GOAL)) {
             return false;
         }
+        
         // TODO: Do not move the box before checking freeze deadlock, creates
         // deadlock with it self.
         if (type == DEADLOCK_BOTH) {
@@ -306,12 +342,14 @@ public class IDSPusher extends IDSCommon implements Solver
 
             // If we are both blocked horizontal and vertical, return deadlock
             if (blockedVertical && blockedHorizontal) {
+
                 return true;
                 // Only horizontal
             }
             else if (!blockedVertical && blockedHorizontal) {
                 if (Board.is(board.cells[box.row + 1][box.column], Board.BOX)) {
                     final Position tempPos = board.positions[box.row + 1][box.column];
+
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL,
                                 visited);
@@ -338,6 +376,7 @@ public class IDSPusher extends IDSCommon implements Solver
 
                 if (Board.is(board.cells[box.row][box.column - 1], Board.BOX)) {
                     final Position tempPos = board.positions[box.row][box.column - 1];
+
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_VERTICAL,
                                 visited);
