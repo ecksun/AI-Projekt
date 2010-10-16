@@ -125,6 +125,7 @@ public class Board implements Cloneable
     private Collection<Position> reachableBoxes;
     private boolean boxesNeedsUpdate;
     private boolean boxesCanBeFastUpdated;
+    private Position incrementalReachabilityUpdate;
 
     /**
      * The topmost, leftmost square the player can reach. Please update with
@@ -602,20 +603,38 @@ public class Board implements Cloneable
          */
         boolean reachabilityMayHaveChanged = false;
         
-        if (mightBlockReachability(from) || mightBlockReachability(to)) {
-            // The reachability information needs a full update
-            topLeftNeedsUpdate = true;
-            boxesCanBeFastUpdated = false;
-        } else {
+        boolean fromMightBlock = mightBlockReachability(from);
+        boolean toMightBlock = mightBlockReachability(to);
+        
+        boxesCanBeFastUpdated = false;
+        incrementalReachabilityUpdate = null;
+        
+        if (!fromMightBlock && !toMightBlock) {
             // The From square is now empty and reachable
             cells[from.row][from.column] |= REACHABLE;
             boxesCanBeFastUpdated = true;
+            incrementalReachabilityUpdate = from;
         }
-        
+        else if (fromMightBlock && !toMightBlock
+                && hasReachableNeighbor(from)) {
+            // Moving to a strictly less or equally blocking position
+            topLeftNeedsUpdate = true;
+            incrementalReachabilityUpdate = from;
+        }
+        // Else the reachability information needs a full update
+
+        topLeftNeedsUpdate = true;
         boxesNeedsUpdate = true;
         
         // Put the box back
         cells[to.row][to.column] |= BOX;
+    }
+
+    private boolean hasReachableNeighbor(Position pos) {
+        int neighbors = (cells[pos.row-1][pos.column]
+            | cells[pos.row+1][pos.column] | cells[pos.row][pos.column-1]
+            | cells[pos.row][pos.column+1]);
+        return (neighbors & REACHABLE) != 0;
     }
 
     /**
@@ -996,16 +1015,26 @@ public class Board implements Cloneable
     public void updateReachability(boolean updateBoxes)
     {
         updateBoxes = updateBoxes && boxesNeedsUpdate;
-
-        clearFlag(REACHABLE);
+        
         if (updateBoxes) {
             reachableBoxes = new ArrayList<Position>(boxCount);
             boxesNeedsUpdate = false;
         }
 
         // TODO: Should this be local?
-        topLeftReachable = updateReachabilityDFS(playerRow, playerCol,
+        if (!updateBoxes && incrementalReachabilityUpdate != null) {
+            System.out.println("update R at "+incrementalReachabilityUpdate+" value "+
+                cell[incrementalReachabilityUpdate.row][incrementalReachabilityUpdate.column]);
+            topLeftReachable = updateReachabilityDFS(
+                incrementalReachabilityUpdate.row,
+                incrementalReachabilityUpdate.column,
                 updateBoxes);
+        } else {
+            // Full update
+            clearFlag(REACHABLE);
+            topLeftReachable = updateReachabilityDFS(playerRow, playerCol,
+                updateBoxes);
+        }
         topLeftNeedsUpdate = false;
     }
 
