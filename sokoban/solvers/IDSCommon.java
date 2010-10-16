@@ -1,14 +1,16 @@
 package sokoban.solvers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import sokoban.Board;
 import sokoban.Position;
+import sokoban.SearchInfo;
 
-public class IDSCommon implements Solver
+public abstract class IDSCommon implements Solver
 {
 
     public static final int DEPTH_LIMIT = 1000;
@@ -17,8 +19,17 @@ public class IDSCommon implements Solver
      */
     public static int generatedNodes = 0;
 
-    protected static Board board;
+    protected Board board;
+    protected Board startBoard;
 
+    /**
+     * In bidirectional search, this map is shared between the pushing solver
+     * and the pulling solver, in order to check for collisions.
+     */
+    protected HashMap<Long, BoxPosDir> ourStatesMap;
+    protected HashMap<Long, BoxPosDir> otherStatesMap;
+
+    
     @Override
     public int getIterationsCount()
     {
@@ -36,26 +47,27 @@ public class IDSCommon implements Solver
      */
     protected HashSet<Long> failedBoards;
 
-
     /**
-     * Constructs a new IDSPuller that will be using the given failedBoards
-     * set.
-     * 
+     * Common constructor.
+     *  
      * @param failedBoards The set of failed boards to use.
      */
-    public IDSCommon(HashSet<Long> failedBoards)
+    public IDSCommon(Board startBoard, HashSet<Long> failedBoards, HashMap<Long, BoxPosDir> ours, HashMap<Long, BoxPosDir> others)
     {
+        this.startBoard = startBoard;
         this.failedBoards = failedBoards;
-    }
-    
-    @Override
-    public String solve(Board board)
-    {
-        // TODO: IDS
-        
-        return null;
+        this.ourStatesMap = ours;
+        this.otherStatesMap = others;
     }
 
+    /**
+     * Empty common constructor.
+     */
+    public IDSCommon() {
+    }
+    
+    public abstract SearchInfo dfs(int maxDepth);
+    
     protected static int lowerBound(final Board board)
     {
         final ArrayList<Position> boxes = new ArrayList<Position>();

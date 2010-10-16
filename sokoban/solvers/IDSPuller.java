@@ -2,6 +2,7 @@ package sokoban.solvers;
 
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import sokoban.Board;
@@ -23,20 +24,46 @@ public class IDSPuller extends IDSCommon implements Solver
     private boolean[][] boxStart;
     private Position playerStart;
 
-    
-    public IDSPuller(HashSet<Long> failedBoards)
+    public IDSPuller(Board startBoard,
+            HashSet<Long> failedBoards,
+            HashMap<Long, BoxPosDir> pusherStatesMap,
+            HashMap<Long, BoxPosDir> pullerStatesMap)
     {
-        super(failedBoards);
+        super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
+        startBoard = (Board) startBoard.clone();
+        reverseBoard(startBoard);
     }
-   
+
+
+    /**
+     * Returns the result of the DFS with the specified maximum depth.
+     * 
+     * @param maxDepth The maximum depth allowed for this DFS.
+     * @param startBoard The start board.
+     * @return A SearchInfo result.
+     */
+    public SearchInfo dfs(int maxDepth)
+    {
+        visitedBoards = new HashSet<Long>(failedBoards);
+        depth = 0;
+        board = (Board) startBoard.clone();
+        reverseBoard(board);
+        boxesNotInStart = initialBoxesNotInStart;
+        visitedBoards.add(board.getZobristKey());
+        IDSPuller.maxDepth = maxDepth;
+        forceDirection = false;
+        return dfs();
+    }
+    
+    private boolean forceDirection = false;
+    private Direction forcedDirection;
 
     /**
      * Recursive Depth-First algorithm
      * 
-     * @param maxDepth The maximum depth.
      * @return
      */
-    SearchInfo dfs()
+    private SearchInfo dfs()
     {
         generatedNodes++;
 
@@ -62,23 +89,21 @@ public class IDSPuller extends IDSCommon implements Solver
         long hash = board.getZobristKey();
 
         final Position source = board.positions[board.getPlayerRow()][board
-                .getPlayerCol()];
+                                                                      .getPlayerCol()];
         depth++;
 
         final byte[][] cells = board.cells;
         for (final Position boxTo : findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
+                if (forceDirection && dir != forcedDirection) {
+                    continue;
+                }
+                
                 final Position boxFrom = board.getPosition(boxTo,
                         Board.moves[dir.ordinal()]);
                 final Position playerTo = board.getPosition(boxTo,
                         Board.moves[dir.reverse().ordinal()]);
-                /*
-                 * System.out.println(board+"\n\n"+boxesNotInStart+"   "+
-                 * boxFrom+"("+cells[boxFrom.row][boxFrom.column]+")  "+
-                 * boxTo+"("+cells[boxTo.row][boxTo.column]+")  "+
-                 * playerTo+"("+cells[playerTo.row][playerTo.column]+")");
-                 */
-                // System.out.println(remainingDepth+": "+board);
+
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board.is(cells[boxTo.row][boxTo.column],
                                 Board.REJECT_BOX)
@@ -88,7 +113,7 @@ public class IDSPuller extends IDSCommon implements Solver
 
                     // Move the player and pull the box
                     board.moveBox(boxFrom, boxTo);
-                    board.movePlayer(source, playerTo);
+                    board.movePlayer(playerTo);
 
                     if (boxStart[boxFrom.row][boxFrom.column])
                         boxesNotInStart++;
@@ -99,12 +124,17 @@ public class IDSPuller extends IDSCommon implements Solver
                     SearchInfo result = SearchInfo.Failed;
                     if (visitedBoards.add(board.getZobristKey())) {
                         // This state hasn't been visited before
+                        ourStatesMap.put(board.getZobristKey(), 
+                                
+                                new BoxPosDir(dir, boxTo, playerTo)
+                        
+                        );
                         result = dfs();
                     }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
-                    board.movePlayer(playerTo, source);
+                    board.movePlayer(source);
 
                     if (boxStart[boxFrom.row][boxFrom.column])
                         boxesNotInStart--;
@@ -150,7 +180,20 @@ public class IDSPuller extends IDSCommon implements Solver
 
     private Collection<Position> findReachableBoxSquares()
     {
-        if (depth == 1) {
+        long hash = board.getZobristKey();
+        if (otherStatesMap.containsKey(hash)) {
+            Collection<Position> boxes = new HashSet<Position>(1);
+            BoxPosDir nextState = otherStatesMap.get(hash);
+
+            // Add next reachable square and force the correct direction.
+            boxes.add(nextState.box);
+            forceDirection = true;
+            forcedDirection = nextState.dir;
+            
+            return boxes;
+        }
+        else if (depth == 1) {
+            forceDirection = false;
             Collection<Position> boxes = new HashSet<Position>(board.boxCount);
             for (int row = 1; row < board.height - 1; row++) {
                 for (int col = 1; col < board.width - 1; col++) {
@@ -171,6 +214,7 @@ public class IDSPuller extends IDSCommon implements Solver
             return boxes;
         }
         else {
+            forceDirection = false;
             return board.findReachableBoxSquares();
         }
     }
@@ -222,7 +266,7 @@ public class IDSPuller extends IDSCommon implements Solver
                     if (Board.is(board.cells[row][column], Board.GOAL)) {
                         initialBoxesNotInStart--;
                     }
-                    board.cells[row][column] &= ~Board.BOX;
+                    board.removeBox(board.positions[row][column]);
                     boxStart[row][column] = true;
                 }
             }
@@ -232,7 +276,7 @@ public class IDSPuller extends IDSCommon implements Solver
         for (int row = 0; row < board.height; row++) {
             for (int column = 0; column < board.width; column++) {
                 if (Board.is(board.cells[row][column], Board.GOAL)) {
-                    board.cells[row][column] |= Board.BOX;
+                    board.addBox(board.positions[row][column]);
                 }
             }
         }
