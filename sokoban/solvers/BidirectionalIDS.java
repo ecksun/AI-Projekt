@@ -36,12 +36,19 @@ public class BidirectionalIDS implements Solver
         boolean pullerFailed = false;
         boolean pusherFailed = false;
 
-        int pullerDepth = lowerBound;
-        int pusherDepth = lowerBound;
+        int pullerDepth = lowerBound/2;
+        int pusherDepth = lowerBound/2;
 
         while (true) {
             result = SearchInfo.Failed;
 
+            if (pullerDepth >= IDSCommon.DEPTH_LIMIT) {
+                runPuller = false;
+            }
+            if (pusherDepth >= IDSCommon.DEPTH_LIMIT) {
+                runPuller = true;
+            }
+            
             // Puller
             if (runPuller && pullerDepth < IDSCommon.DEPTH_LIMIT) {
                 System.out.print("puller (depth " + pullerDepth + "): ");

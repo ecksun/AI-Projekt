@@ -150,9 +150,9 @@ public class IDSPusher extends IDSCommon implements Solver
                             new HashSet<Position>())) {
                         if (visitedBoards.add(board.getZobristKey())) {
 
-                            /*ourStatesMap.put(board.getZobristKey(),
+                            ourStatesMap.put(board.getZobristKey(),
                                     new BoxPosDir(dir, boxFrom, source)
-                            );*/
+                            );
                             
                             result = dfs();
                         }
