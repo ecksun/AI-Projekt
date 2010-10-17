@@ -62,7 +62,7 @@ public class BidirectionalIDS implements Solver
                 System.out.println();
                 return Board.solutionToString(result.solution);
             }
-            else if (pullerDepth >= IDSCommon.DEPTH_LIMIT
+            else if (pusherDepth >= IDSCommon.DEPTH_LIMIT
                     && pullerDepth >= IDSCommon.DEPTH_LIMIT) {
                 System.out.println("Maximum depth reached!");
                 return null;
