@@ -30,8 +30,6 @@ public class BidirectionalIDS implements Solver
 
         boolean runPuller = true;
         int lowerBound = IDSCommon.lowerBound(startBoard);
-        // TODO implement collision check in pusher and update accordingly here
-        // (remove line)
         SearchInfo result;
 
         // IDS loop
