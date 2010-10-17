@@ -894,18 +894,18 @@ public class Board implements Cloneable
         int minimum = (startRow * width) + startCol;
         boolean boxNearby = false;
         for (int dir = 0; dir < 4; ++dir) {
-            int row = startRow + moves[dir][0];
-            int col = startCol + moves[dir][1];
-
-            if ((cells[row][col] & (BOX | REACHABLE)) == BOX) {
-                // Add to reachable list
-                boxNearby = true;
-            }
-
-            if (!is(cells[row][col], (byte) (WALL | REACHABLE | BOX))) {
-                int pos = updateReachabilityDFS(row, col, updateBoxes);
+            final int row = startRow + moves[dir][0];
+            final int col = startCol + moves[dir][1];
+            final int cell = cells[row][col] & (WALL | REACHABLE | BOX);
+            
+            if (cell == 0) {
+                final int pos = updateReachabilityDFS(row, col, updateBoxes);
                 if (pos < minimum)
                     minimum = pos;
+            }
+            else if (cell == BOX) {
+                // Add to reachable list
+                boxNearby = true;
             }
         }
 
