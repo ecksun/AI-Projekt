@@ -14,7 +14,7 @@ run () {
 if [ -n "${3}" ]; then
     COMMAND="${3}"
 else
-    COMMAND="java sokoban.Main IDSPusher"
+    COMMAND="java -cp . sokoban.Main IDSPusher"
 fi
 
 if [ -n "$4" ]; then

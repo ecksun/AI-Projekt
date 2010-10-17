@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Queue;
 
 import sokoban.ReachableBox;
 
@@ -569,24 +570,34 @@ public class Board implements Cloneable
     public void moveBox(Position from, Position to)
     {
         // Remove box from previous position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, from.row,
-                from.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, from.row,
-                from.column);
-
+        removeBox(from);
+        
         // Move box to new position
-        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, to.row,
-                to.column);
-        zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, to.row, to.column);
-
-        cells[from.row][from.column] &= ~BOX;
-        cells[to.row][to.column] |= BOX;
-
-        if (is(cells[from.row][from.column], GOAL))
+        addBox(to);
+        
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+    }
+    
+    public void removeBox(Position box) {
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, box.row,
+                box.column);    
+        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, box.row,
+                box.column);
+        cells[box.row][box.column] &= ~BOX;
+        if (is(cells[box.row][box.column], GOAL))
             remainingBoxes++;
-        if (is(cells[to.row][to.column], GOAL))
+        boxesNeedsUpdate = true;
+        topLeftNeedsUpdate = true;
+    }
+    
+    public void addBox(Position box) {
+        zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, box.row,
+                box.column);
+        zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, box.row, box.column);
+        cells[box.row][box.column] |= BOX;
+        if (is(cells[box.row][box.column], GOAL))
             remainingBoxes--;
-
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
@@ -705,6 +716,25 @@ public class Board implements Cloneable
         return findPath(positions[playerRow][playerCol], goal);
     }
 
+    private class SearchNode
+    {
+        public final SearchNode parent;
+        public final Object object;
+        public final Object info;
+
+        public SearchNode(Object object, SearchNode parent)
+        {
+            this(object, parent, null);
+        }
+
+        public SearchNode(Object object, SearchNode parent, Object info)
+        {
+            this.object = object;
+            this.parent = parent;
+            this.info = info;
+        }
+    }
+
     /**
      * Finds a path from the start position to the goal position recursively.
      * 
@@ -716,47 +746,39 @@ public class Board implements Cloneable
     public Deque<Direction> findPath(Position start, Position goal)
     {
         clearFlag(VISITED);
-        return findPathRecursive(start, goal);
-    }
+        
+        Deque<Direction> solution = new LinkedList<Direction>();
+        
+        Queue<SearchNode> queue = new LinkedList<SearchNode>();
+        queue.add(new SearchNode(start, null));
+        
+        while (!queue.isEmpty()) {
+            SearchNode node = queue.poll();
+            
+            cells[((Position)node.object).row][((Position)node.object).column] |= VISITED;
 
-    /**
-     * Finds a path from the start position to the goal position recursively.
-     * 
-     * This methods is ONLY to be used in the search and NEEDS the VISITED flag
-     * to be cleared beforehand
-     * 
-     * TODO try bfs
-     * 
-     * @param start Starting position.
-     * @param goal Goal position.
-     * @return A list of directions to go from start to goal.
-     */
-    private Deque<Direction> findPathRecursive(Position start, Position goal)
-    {
-        // TODO: might want to skip .equals() in favour for performance
-        if (start.equals(goal)) {
-            return new LinkedList<Direction>();
-        }
-
-        cells[start.row][start.column] |= VISITED;
-
-        for (Direction dir : Direction.values()) {
-            Position newPosition = getPosition(start, moves[dir.ordinal()]);
-
-            // We do not move any boxes while going this path.
-            if (!is(cells[newPosition.row][newPosition.column], (byte) (WALL
-                    | BOX | VISITED))) {
-
-                Deque<Direction> solution = findPathRecursive(newPosition, goal);
-
-                if (solution != null) {
-                    solution.addFirst(dir);
+            for (Direction dir : Direction.values()) {
+                Position newPosition = getPosition(((Position)node.object), moves[dir.ordinal()]);
+                if (newPosition.equals(goal)) {
+                    solution.add(dir);
+                    while (node != null) {
+                        if (node.info != null) {
+                            solution.addFirst((Direction) node.info);
+                        }
+                        node = node.parent;
+                    }
                     return solution;
+                }
+
+                // We do not move any boxes while going this path.
+                if (!is(cells[newPosition.row][newPosition.column], (byte) (WALL
+                        | BOX | VISITED))) {
+
+                    queue.add(new SearchNode(newPosition, node, dir));
                 }
             }
         }
-
-        return null;
+        return solution;
     }
 
     /**
