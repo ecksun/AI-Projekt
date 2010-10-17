@@ -18,5 +18,5 @@ fi
 
 javac -sourcepath . sokoban/Main.java sokoban/solvers/*.java
 # java -classpath . -Xms$minHEAP -Xmx$maxHEAP -Xss$stackSize -XX:+AggressiveOpts -XX:CompileThreshold=10 sokoban.Main $SOLVER $BOARD
-java -classpath . -Xms$minHEAP -Xmx$maxHEAP -Xss$stackSize -Xprof sokoban.Main $SOLVER $BOARD
+java -classpath . -Xms$minHEAP -Xmx$maxHEAP -Xss$stackSize sokoban.Main $SOLVER $BOARD
 
