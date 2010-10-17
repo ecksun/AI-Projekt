@@ -8,7 +8,7 @@ import sokoban.SearchInfo;
 import sokoban.SearchStatus;
 
 /**
- * This solver performs a bidirectional (TODO iterative deepening DFS?) search.
+ * This solver performs a bidirectional search using the IDSPusher and IDSPuller.
  */
 public class BidirectionalIDS implements Solver
 {
