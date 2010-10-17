@@ -1,5 +1,8 @@
 package sokoban;
 
+/**
+ * A enum describe the possible outcomes of a search.
+ */
 public enum SearchStatus {
     /**
      * The search reached the maximum depth, and no solution was found,
@@ -17,5 +20,5 @@ public enum SearchStatus {
      * no point in trying it again with a greater search depth.
      */
     Failed,
-    
+
 };

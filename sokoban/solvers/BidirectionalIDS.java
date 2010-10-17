@@ -8,7 +8,8 @@ import sokoban.SearchInfo;
 import sokoban.SearchStatus;
 
 /**
- * This solver performs a bidirectional search using the IDSPusher and IDSPuller.
+ * This solver performs a bidirectional search using the IDSPusher and
+ * IDSPuller.
  */
 public class BidirectionalIDS implements Solver
 {
@@ -18,10 +19,10 @@ public class BidirectionalIDS implements Solver
     @Override
     public String solve(final Board startBoard)
     {
-        HashSet<Long> failedBoardsPuller = new HashSet<Long>();
-        HashSet<Long> failedBoardsPusher = new HashSet<Long>();
-        HashMap<Long, BoxPosDir> pullerStatesMap = new HashMap<Long, BoxPosDir>();
-        HashMap<Long, BoxPosDir> pusherStatesMap = new HashMap<Long, BoxPosDir>();
+        final HashSet<Long> failedBoardsPuller = new HashSet<Long>();
+        final HashSet<Long> failedBoardsPusher = new HashSet<Long>();
+        final HashMap<Long, BoxPosDir> pullerStatesMap = new HashMap<Long, BoxPosDir>();
+        final HashMap<Long, BoxPosDir> pusherStatesMap = new HashMap<Long, BoxPosDir>();
 
         pusher = new IDSPusher(startBoard, failedBoardsPuller, pusherStatesMap,
                 pullerStatesMap);
@@ -29,15 +30,15 @@ public class BidirectionalIDS implements Solver
                 pusherStatesMap);
 
         boolean runPuller = true;
-        int lowerBound = IDSCommon.lowerBound(startBoard);
+        final int lowerBound = IDSCommon.lowerBound(startBoard);
         SearchInfo result;
 
         // IDS loop
         boolean pullerFailed = false;
         boolean pusherFailed = false;
 
-        int pullerDepth = lowerBound/2;
-        int pusherDepth = lowerBound/2;
+        int pullerDepth = lowerBound / 2;
+        int pusherDepth = lowerBound / 2;
 
         while (true) {
             result = SearchInfo.Failed;
@@ -48,7 +49,7 @@ public class BidirectionalIDS implements Solver
             if (pusherDepth >= IDSCommon.DEPTH_LIMIT) {
                 runPuller = true;
             }
-            
+
             // Puller
             if (runPuller && pullerDepth < IDSCommon.DEPTH_LIMIT) {
                 System.out.print("puller (depth " + pullerDepth + "): ");
@@ -75,10 +76,12 @@ public class BidirectionalIDS implements Solver
                 return null;
             }
             else if (result.status == SearchStatus.Failed) {
-                if (runPuller)
+                if (runPuller) {
                     pullerFailed = true;
-                if (!runPuller)
+                }
+                if (!runPuller) {
                     pusherFailed = true;
+                }
             }
 
             if (pullerFailed && pusherFailed) {
@@ -94,7 +97,7 @@ public class BidirectionalIDS implements Solver
             else if (pusherFailed) {
                 runPuller = true;
             }
-            else if (runPuller && 2*pusher.numLeafNodes < puller.numLeafNodes) {
+            else if (runPuller && 2 * pusher.numLeafNodes < puller.numLeafNodes) {
                 runPuller = false;
             }
             else {

@@ -7,13 +7,26 @@ import java.util.List;
  */
 public class ReachableBox
 {
+    /**
+     * The position of the box
+     */
     public Position position;
+
+    /**
+     * The path to take to the box
+     */
     public List<Board.Direction> path;
-    
-    public ReachableBox(Position position, List<Board.Direction> path)
+
+    /**
+     * Create a new reachablebox with the provided position and path
+     * 
+     * @param position The position
+     * @param path The path
+     */
+    public ReachableBox(final Position position,
+            final List<Board.Direction> path)
     {
         this.position = position;
         this.path = path;
     }
 }
-

@@ -8,12 +8,32 @@ import java.util.LinkedList;
  */
 public final class SearchInfo
 {
+    /**
+     * The status of this search
+     */
     public final SearchStatus status;
+
+    /**
+     * The solution
+     */
     public final LinkedList<Board.Direction> solution;
 
-    public static SearchInfo Inconclusive = new SearchInfo(SearchStatus.Inconclusive);
+    /**
+     * Field describing that the search was inconclusive
+     */
+    public static SearchInfo Inconclusive = new SearchInfo(
+            SearchStatus.Inconclusive);
+
+    /**
+     * Field indicating the search failed
+     */
     public static SearchInfo Failed = new SearchInfo(SearchStatus.Failed);
 
+    /**
+     * Create a new SearchInfo with the specified searchstatus
+     * 
+     * @param status The status of this search
+     */
     public SearchInfo(final SearchStatus status)
     {
         this.status = status;
@@ -26,6 +46,11 @@ public final class SearchInfo
         solution = new LinkedList<Board.Direction>();
     }
 
+    /**
+     * Create a new empty SearchInfo, which will be a solution
+     * 
+     * @return the new SearchInfo
+     */
     public static SearchInfo emptySolution()
     {
         return new SearchInfo();

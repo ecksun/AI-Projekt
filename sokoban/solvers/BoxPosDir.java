@@ -15,7 +15,16 @@ public class BoxPosDir
     final Position box;
     final Position player;
 
-    public BoxPosDir(Direction dir, Position box, Position player) {
+    /**
+     * Create a new BoxPosDir
+     * 
+     * @param dir The directoin
+     * @param box The box
+     * @param player The player
+     */
+    public BoxPosDir(final Direction dir, final Position box,
+            final Position player)
+    {
         this.dir = dir;
         this.box = box;
         this.player = player;

@@ -6,8 +6,6 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import sokoban.ReachableBox;
-
 /**
  *
  */
@@ -75,14 +73,37 @@ public class Board implements Cloneable
     public static final int moves[][] = { { -1, 0 }, { 1, 0 }, { 0, -1 },
             { 0, 1 } };
 
+    /**
+     * Enum describing the possible directions.
+     */
     public enum Direction {
-        UP, DOWN, LEFT, RIGHT;
+        /**
+         * The upwards direction
+         */
+        UP,
+        /**
+         * The downwards direction
+         */
+        DOWN,
+        /**
+         * The left direction
+         */
+        LEFT,
+        /**
+         * The right direction
+         */
+        RIGHT;
 
         private static final Direction[] reverse = { DOWN, UP, RIGHT, LEFT };
 
+        /**
+         * Get the opposit direction
+         * 
+         * @return The opposit direction
+         */
         public Direction reverse()
         {
-            return reverse[this.ordinal()];
+            return reverse[ordinal()];
         }
     }
 
@@ -120,6 +141,9 @@ public class Board implements Cloneable
      */
     private int playerRow;
 
+    /**
+     * The number of boxes
+     */
     public int boxCount;
     private int remainingBoxes;
 
@@ -146,7 +170,7 @@ public class Board implements Cloneable
      * 
      * @param boardString A string representation of the board to construct.
      */
-    public Board(String boardString)
+    public Board(final String boardString)
     {
         this(boardString.getBytes());
     }
@@ -156,7 +180,7 @@ public class Board implements Cloneable
      * 
      * @param boardBytes An array of character bytes that describes the board.
      */
-    public Board(byte[] boardBytes)
+    public Board(final byte[] boardBytes)
     {
         int boardWidth = 0;
         int boardHeight = 1; // board input string doesn't end with '\n'
@@ -218,11 +242,11 @@ public class Board implements Cloneable
             }
         }
 
-        this.width = boardWidth;
-        this.height = boardHeight;
-        this.playerCol = boardPlayerCol;
-        this.playerRow = boardPlayerRow;
-        this.zobristKey = Zobrist.calculateHashTable(this);
+        width = boardWidth;
+        height = boardHeight;
+        playerCol = boardPlayerCol;
+        playerRow = boardPlayerRow;
+        zobristKey = Zobrist.calculateHashTable(this);
 
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
@@ -241,7 +265,7 @@ public class Board implements Cloneable
      *            move[1]==column.
      * @return The position corresponding to this position, after the movement
      */
-    public Position getPosition(Position pos, int[] move)
+    public Position getPosition(final Position pos, final int[] move)
     {
         if (!contains(pos.row + move[0], pos.column + move[1])) {
             return new Position(pos.row + move[0], pos.column + move[1]);
@@ -286,7 +310,7 @@ public class Board implements Cloneable
      * @param mask The mask to check against
      * @return true if the square and the mask matches, false otherwise
      */
-    public static boolean is(byte square, byte mask)
+    public static boolean is(final byte square, final byte mask)
     {
         return (square & mask) != 0;
     }
@@ -302,8 +326,9 @@ public class Board implements Cloneable
             for (int col = 0; col < width; col++) {
                 if (is(cells[row][col], BOX)) {
                     boxCount++;
-                    if (!is(cells[row][col], GOAL))
+                    if (!is(cells[row][col], GOAL)) {
                         remainingBoxes++;
+                    }
                 }
             }
         }
@@ -317,7 +342,7 @@ public class Board implements Cloneable
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder(width * height + height);
+        final StringBuilder sb = new StringBuilder(width * height + height);
         for (int i = 0; i < height - 1; ++i) {
             for (int j = 0; j < width; ++j) {
                 sb.append(cellToChar(i, j));
@@ -336,7 +361,7 @@ public class Board implements Cloneable
      *            The internal byte representation of a cell.
      * @return The character that is represented by the given internal value.
      */
-    private char valueToChar(byte value)
+    private char valueToChar(final byte value)
     {
         switch (value & Board.INPUT_CELL_MASK) {
             case Board.WALL:
@@ -363,16 +388,18 @@ public class Board implements Cloneable
      * @return The Sokoban char for the specified cell according to
      *         http://www.sokobano.de/wiki/index.php?title=Level_format.
      */
-    public char cellToChar(int row, int col)
+    public char cellToChar(final int row, final int col)
     {
-        byte cell = cells[row][col];
+        final byte cell = cells[row][col];
 
         // Check for some errors first
-        if (is(cell, BOX_TRAP) && is(cell, GOAL))
+        if (is(cell, BOX_TRAP) && is(cell, GOAL)) {
             return 'E'; // Goal on trap = error!
+        }
 
-        if (is(cell, BOX_TRAP) && is(cell, BOX))
+        if (is(cell, BOX_TRAP) && is(cell, BOX)) {
             return 'e'; // Box in trap = error!
+        }
 
         // No errors detected in this cell
         if (playerRow == row && playerCol == col) {
@@ -391,10 +418,10 @@ public class Board implements Cloneable
      * @param solution A list of board directions
      * @return The solution as a string
      */
-    public static String solutionToString(Deque<Board.Direction> solution)
+    public static String solutionToString(final Deque<Board.Direction> solution)
     {
-        StringBuilder sb = new StringBuilder(2 * solution.size());
-        for (Board.Direction move : solution) {
+        final StringBuilder sb = new StringBuilder(2 * solution.size());
+        for (final Board.Direction move : solution) {
             sb.append(moveChars[move.ordinal()]);
             sb.append(' ');
         }
@@ -411,17 +438,19 @@ public class Board implements Cloneable
             for (int col = 1; col < width - 1; col++) {
                 // Goal squares usually aren't traps
                 // (if the right block is placed there)
-                if (is(cells[row][col], GOAL))
+                if (is(cells[row][col], GOAL)) {
                     continue;
+                }
 
-                boolean horizontalBlocked = is(cells[row - 1][col], WALL)
+                final boolean horizontalBlocked = is(cells[row - 1][col], WALL)
                         || is(cells[row + 1][col], WALL);
-                boolean verticalBlocked = is(cells[row][col - 1], WALL)
+                final boolean verticalBlocked = is(cells[row][col - 1], WALL)
                         || is(cells[row][col + 1], WALL);
 
                 // This is a corner
-                if (horizontalBlocked && verticalBlocked)
+                if (horizontalBlocked && verticalBlocked) {
                     cells[row][col] |= BOX_TRAP;
+                }
             }
         }
 
@@ -432,14 +461,16 @@ public class Board implements Cloneable
             for (int row = 1; row < height - 1; row++) {
                 for (int col = 1; col < width - 1; col++) {
                     // Always start at a box trap
-                    if (!is(cells[row][col], BOX_TRAP))
+                    if (!is(cells[row][col], BOX_TRAP)) {
                         continue;
+                    }
 
                     // Look to the right
                     for (int right = col + 1; right < width - 1; right++) {
                         // Stop at goals
-                        if (is(cells[row][right], GOAL))
+                        if (is(cells[row][right], GOAL)) {
                             break;
+                        }
 
                         // Stop and mark cells if there's either wall or a trap
                         // cell
@@ -454,15 +485,17 @@ public class Board implements Cloneable
 
                         // Check if there's a way to move out the block
                         if (!is(cells[row - 1][right], WALL)
-                                && !is(cells[row + 1][right], WALL))
+                                && !is(cells[row + 1][right], WALL)) {
                             break;
+                        }
                     }
 
                     // Look below
                     for (int down = row + 1; down < height - 1; down++) {
                         // Stop at goals
-                        if (is(cells[down][col], GOAL))
+                        if (is(cells[down][col], GOAL)) {
                             break;
+                        }
 
                         // Stop and mark cells if there's either wall or a trap
                         // cell
@@ -477,8 +510,9 @@ public class Board implements Cloneable
 
                         // Check if there's a way to move out the block
                         if (!is(cells[down][col - 1], WALL)
-                                && !is(cells[down][col + 1], WALL))
+                                && !is(cells[down][col + 1], WALL)) {
                             break;
+                        }
                     }
                 }
             }
@@ -489,22 +523,23 @@ public class Board implements Cloneable
     /**
      * Returns a deep copy of this board.
      */
+    @Override
     public Object clone()
     {
         try {
-            Board copy = (Board) super.clone();
+            final Board copy = (Board) super.clone();
 
             // Deep copy cells
             copy.cells = new byte[height][width];
             for (int row = 0; row < height; ++row) {
                 // Fastest way according to the following web page:
                 // http://www.javapractices.com/topic/TopicAction.do?Id=3
-                System.arraycopy(this.cells[row], 0, copy.cells[row], 0, width);
+                System.arraycopy(cells[row], 0, copy.cells[row], 0, width);
             }
 
             return copy;
         }
-        catch (CloneNotSupportedException e) {
+        catch (final CloneNotSupportedException e) {
             throw new Error(
                     "This should not occur since we implement Cloneable");
         }
@@ -515,17 +550,17 @@ public class Board implements Cloneable
      * 
      * @param dir The direction to move the player in
      */
-    public void move(Direction dir)
+    public void move(final Direction dir)
     {
-        int move[] = moves[dir.ordinal()];
+        final int move[] = moves[dir.ordinal()];
 
         // The cell that the player moves to
-        int row = playerRow + move[0];
-        int col = playerCol + move[1];
+        final int row = playerRow + move[0];
+        final int col = playerCol + move[1];
 
         // The cell that the box (if any) moves to
-        int row2 = playerRow + 2 * move[0];
-        int col2 = playerCol + 2 * move[1];
+        final int row2 = playerRow + 2 * move[0];
+        final int col2 = playerCol + 2 * move[1];
 
         // Mark as visited
         cells[playerRow][playerCol] |= VISITED;
@@ -551,12 +586,9 @@ public class Board implements Cloneable
     /**
      * Move the player on the position from to the position to.
      * 
-     * TODO remove unused parameters
-     * 
-     * @param from
-     * @param to
+     * @param to Move the player to this position
      */
-    public void movePlayer(Position to)
+    public void movePlayer(final Position to)
     {
         playerRow = to.row;
         playerCol = to.column;
@@ -565,46 +597,65 @@ public class Board implements Cloneable
     /**
      * Moves a box and updates remainingBoxes. This method ignores the
      * player position. Updates Zobrist hash.
+     * 
+     * @param from Move the box from this position
+     * @param to Move the box to this position
      */
-    public void moveBox(Position from, Position to)
+    public void moveBox(final Position from, final Position to)
     {
         // Remove box from previous position
         removeBox(from);
-        
+
         // Move box to new position
         addBox(to);
-        
+
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
-    
-    public void removeBox(Position box) {
+
+    /**
+     * Remove the box from the specified position
+     * 
+     * @param box The position of the box
+     */
+    public void removeBox(final Position box)
+    {
         zobristKey = Zobrist.remove(zobristKey, Zobrist.BOX, box.row,
-                box.column);    
-        zobristKey = Zobrist.add(zobristKey, Zobrist.EMPTY, box.row,
                 box.column);
+        zobristKey = Zobrist
+                .add(zobristKey, Zobrist.EMPTY, box.row, box.column);
         cells[box.row][box.column] &= ~BOX;
-        if (is(cells[box.row][box.column], GOAL))
+        if (is(cells[box.row][box.column], GOAL)) {
             remainingBoxes++;
+        }
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
-    
-    public void addBox(Position box) {
+
+    /**
+     * Add the box to the specified position
+     * 
+     * @param box The position of the box
+     */
+    public void addBox(final Position box)
+    {
         zobristKey = Zobrist.remove(zobristKey, Zobrist.EMPTY, box.row,
                 box.column);
         zobristKey = Zobrist.add(zobristKey, Zobrist.BOX, box.row, box.column);
         cells[box.row][box.column] |= BOX;
-        if (is(cells[box.row][box.column], GOAL))
+        if (is(cells[box.row][box.column], GOAL)) {
             remainingBoxes--;
+        }
         boxesNeedsUpdate = true;
         topLeftNeedsUpdate = true;
     }
 
     /**
      * Removes a certain flag from all the squares.
+     * 
+     * @param flag The flag to clear
      */
-    public void clearFlag(byte flag)
+    public void clearFlag(final byte flag)
     {
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
@@ -620,40 +671,41 @@ public class Board implements Cloneable
      *       the actual player position.
      */
     @Override
-    public boolean equals(Object other)
+    public boolean equals(final Object other)
     {
-        if (!(other instanceof Board))
+        if (!(other instanceof Board)) {
             return false;
+        }
 
-        Board o = (Board) other;
+        final Board o = (Board) other;
 
-        if (getTopLeftReachable() != o.getTopLeftReachable())
+        if (getTopLeftReachable() != o.getTopLeftReachable()) {
             return false;
+        }
 
         // The outer rows/columns are always walls (or not reachable)
         for (int y = 1; y < height - 1; y++) {
             for (int x = 1; x < width - 1; x++) {
-                int cell1 = cells[y][x] & BOX;
-                int cell2 = o.cells[y][x] & BOX;
-                if (cell1 != cell2)
+                final int cell1 = cells[y][x] & BOX;
+                final int cell2 = o.cells[y][x] & BOX;
+                if (cell1 != cell2) {
                     return false;
+                }
             }
         }
 
         return true;
     }
 
+    /**
+     * Get the Zobrist key of this board
+     * 
+     * @return The key
+     */
     public long getZobristKey()
     {
         return zobristKey ^ getTopLeftReachable();
     }
-
-    // XXX: Remove later?
-    // @Override
-    // public int hashCode()
-    // {
-    // return (int) (zobristKey ^ (zobristKey >> 32));
-    // }
 
     /**
      * Returns whether or not the given position is contained in this board.
@@ -661,7 +713,7 @@ public class Board implements Cloneable
      * @param pos The position.
      * @return True if this board contains the position, otherwise false.
      */
-    public boolean contains(Position pos)
+    public boolean contains(final Position pos)
     {
         return contains(pos.row, pos.column);
     }
@@ -674,7 +726,7 @@ public class Board implements Cloneable
      * @param col The column index.
      * @return True if it exists, otherwise false.
      */
-    public boolean contains(int row, int col)
+    public boolean contains(final int row, final int col)
     {
         return row >= 0 && row < height && col >= 0 && col < width;
     }
@@ -686,7 +738,7 @@ public class Board implements Cloneable
      */
     public Collection<Position> getBoxes()
     {
-        Collection<Position> tmp = new LinkedList<Position>();
+        final Collection<Position> tmp = new LinkedList<Position>();
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 if (is(cells[row][col], BOX)) {
@@ -709,7 +761,7 @@ public class Board implements Cloneable
      * @param goal The position of the cell that we want to find a path to.
      * @return A collection
      */
-    public Deque<Direction> findPath(Position goal)
+    public Deque<Direction> findPath(final Position goal)
     {
         clearFlag(VISITED);
         return findPath(positions[playerRow][playerCol], goal);
@@ -721,12 +773,13 @@ public class Board implements Cloneable
         public final Object object;
         public final Object info;
 
-        public SearchNode(Object object, SearchNode parent)
+        public SearchNode(final Object object, final SearchNode parent)
         {
             this(object, parent, null);
         }
 
-        public SearchNode(Object object, SearchNode parent, Object info)
+        public SearchNode(final Object object, final SearchNode parent,
+                final Object info)
         {
             this.object = object;
             this.parent = parent;
@@ -737,31 +790,31 @@ public class Board implements Cloneable
     /**
      * Finds a path from the start position to the goal position recursively.
      * 
-     * @see sokoban.Board#findPathRecursive findPathRecursive
      * @param start Starting position.
      * @param goal Goal position.
      * @return A list of directions to go from start to goal.
      */
-    public Deque<Direction> findPath(Position start, Position goal)
+    public Deque<Direction> findPath(final Position start, final Position goal)
     {
         if (start.equals(goal)) {
             return new LinkedList<Direction>();
         }
-        
+
         clearFlag(VISITED);
-        
-        Deque<Direction> solution = new LinkedList<Direction>();
-        
-        Queue<SearchNode> queue = new LinkedList<SearchNode>();
+
+        final Deque<Direction> solution = new LinkedList<Direction>();
+
+        final Queue<SearchNode> queue = new LinkedList<SearchNode>();
         queue.add(new SearchNode(start, null));
-        
+
         while (!queue.isEmpty()) {
             SearchNode node = queue.poll();
-            
-            cells[((Position)node.object).row][((Position)node.object).column] |= VISITED;
 
-            for (Direction dir : Direction.values()) {
-                Position newPosition = getPosition(((Position)node.object), moves[dir.ordinal()]);
+            cells[((Position) node.object).row][((Position) node.object).column] |= VISITED;
+
+            for (final Direction dir : Direction.values()) {
+                final Position newPosition = getPosition(
+                        ((Position) node.object), moves[dir.ordinal()]);
                 if (newPosition.equals(goal)) {
                     solution.add(dir);
                     while (node != null) {
@@ -774,8 +827,8 @@ public class Board implements Cloneable
                 }
 
                 // We do not move any boxes while going this path.
-                if (!is(cells[newPosition.row][newPosition.column], (byte) (WALL
-                        | BOX | VISITED))) {
+                if (!is(cells[newPosition.row][newPosition.column],
+                        (byte) (WALL | BOX | VISITED))) {
 
                     queue.add(new SearchNode(newPosition, node, dir));
                 }
@@ -791,10 +844,12 @@ public class Board implements Cloneable
      * 
      * @deprecated Use getReachableBoxes instead
      */
+    @Deprecated
     public Collection<ReachableBox> oldFindReachableBoxSquares()
     {
         clearFlag(VISITED);
-        ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(20);
+        final ArrayList<ReachableBox> reachable = new ArrayList<ReachableBox>(
+                20);
         oldFindReachableWithDFS(reachable, playerRow, playerCol,
                 new LinkedList<Direction>());
         return reachable;
@@ -802,18 +857,17 @@ public class Board implements Cloneable
 
     /**
      * Finds all boxes that can be reached by the player.
-     * 
-     * @return A collection of ReachableBox objects
      */
-    private void oldFindReachableWithDFS(ArrayList<ReachableBox> reachable,
-            int startRow, int startCol, LinkedList<Direction> path)
+    private void oldFindReachableWithDFS(
+            final ArrayList<ReachableBox> reachable, final int startRow,
+            final int startCol, final LinkedList<Direction> path)
     {
         cells[startRow][startCol] |= VISITED;
 
         boolean boxNearby = false;
-        for (Direction dir : Direction.values()) {
-            int row = startRow + moves[dir.ordinal()][0];
-            int col = startCol + moves[dir.ordinal()][1];
+        for (final Direction dir : Direction.values()) {
+            final int row = startRow + moves[dir.ordinal()][0];
+            final int col = startCol + moves[dir.ordinal()][1];
 
             if (is(cells[row][col], BOX)) {
                 boxNearby = true;
@@ -849,6 +903,8 @@ public class Board implements Cloneable
 
     /**
      * Gets the current topLeftReachable value, and updates it if needed.
+     * 
+     * @return A hash representing the top left cell reachable for the player
      */
     public int getTopLeftReachable()
     {
@@ -866,6 +922,8 @@ public class Board implements Cloneable
      * defined as (row*width)+col. This is used for duplicate detection.
      * 
      * 2) The list of reachable boxes.
+     * 
+     * @param updateBoxes Update the list of boxes that are reachable
      */
     public void updateReachability(boolean updateBoxes)
     {
@@ -877,7 +935,6 @@ public class Board implements Cloneable
             boxesNeedsUpdate = false;
         }
 
-        // TODO: Should this be local?
         topLeftReachable = updateReachabilityDFS(playerRow, playerCol,
                 updateBoxes);
         topLeftNeedsUpdate = false;
@@ -886,8 +943,8 @@ public class Board implements Cloneable
     /**
      * Recursive part of updateReachability
      */
-    private int updateReachabilityDFS(int startRow, int startCol,
-            boolean updateBoxes)
+    private int updateReachabilityDFS(final int startRow, final int startCol,
+            final boolean updateBoxes)
     {
         cells[startRow][startCol] |= REACHABLE;
 
@@ -897,11 +954,12 @@ public class Board implements Cloneable
             final int row = startRow + moves[dir][0];
             final int col = startCol + moves[dir][1];
             final int cell = cells[row][col] & (WALL | REACHABLE | BOX);
-            
+
             if (cell == 0) {
                 final int pos = updateReachabilityDFS(row, col, updateBoxes);
-                if (pos < minimum)
+                if (pos < minimum) {
                     minimum = pos;
+                }
             }
             else if (cell == BOX) {
                 // Add to reachable list

@@ -16,13 +16,13 @@ public class BoardParser
      * Reads the given levels file and returns a list of all level boards as
      * strings.
      * 
-     * @param levelsFile
-     *            The file containing the levels.
+     * @param levelsFile The file containing the levels.
+     * @return A list of strings representing the boards.
      */
-    public static ArrayList<String> getBoardStrings(File levelsFile)
+    public static ArrayList<String> getBoardStrings(final File levelsFile)
     {
         BufferedReader in = null;
-        ArrayList<String> levels = new ArrayList<String>();
+        final ArrayList<String> levels = new ArrayList<String>();
 
         try {
             in = new BufferedReader(new FileReader(levelsFile));
@@ -30,8 +30,10 @@ public class BoardParser
             StringBuilder partialLevel = new StringBuilder();
 
             while ((line = in.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
                 if (line.startsWith(";")) {
                     if (partialLevel.length() > 0) {
                         levels.add(partialLevel.toString());
@@ -43,16 +45,16 @@ public class BoardParser
                     partialLevel.append('\n');
                 }
             }
-            
+
             // Flush (add) last board.
             levels.add(partialLevel.toString());
 
             in.close();
         }
-        catch (FileNotFoundException e) {
+        catch (final FileNotFoundException e) {
             e.printStackTrace();
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             e.printStackTrace();
         }
 

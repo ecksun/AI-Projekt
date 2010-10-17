@@ -20,14 +20,24 @@ public class IDSPusher extends IDSCommon implements Solver
     private int remainingDepth;
 
     private int failedGoalTests;
+    /**
+     * The number of leaf nodes
+     */
     public int numLeafNodes;
     private int lastLeafCount;
     private int maxDepth;
 
-    public IDSPusher(Board startBoard,
-            HashSet<Long> failedBoards,
-            HashMap<Long, BoxPosDir> pusherStatesMap,
-            HashMap<Long, BoxPosDir> pullerStatesMap)
+    /**
+     * Create a new pusher
+     * 
+     * @param startBoard The initial board
+     * @param failedBoards Contains the failed boards
+     * @param pusherStatesMap This solvers visited states
+     * @param pullerStatesMap The other solvers visited states
+     */
+    public IDSPusher(final Board startBoard, final HashSet<Long> failedBoards,
+            final HashMap<Long, BoxPosDir> pusherStatesMap,
+            final HashMap<Long, BoxPosDir> pullerStatesMap)
     {
         super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
 
@@ -35,6 +45,9 @@ public class IDSPusher extends IDSCommon implements Solver
         lastLeafCount = -1;
     }
 
+    /**
+     * Initialize the statesmaps.
+     */
     public IDSPusher()
     {
         otherStatesMap = new HashMap<Long, BoxPosDir>();
@@ -47,17 +60,18 @@ public class IDSPusher extends IDSCommon implements Solver
      * @param maxDepth The maximum depth allowed for this DFS.
      * @return A SearchInfo result.
      */
-    public SearchInfo dfs(int maxDepth)
-    {   
+    @Override
+    public SearchInfo dfs(final int maxDepth)
+    {
         remainingDepth = maxDepth;
         failedGoalTests = 0;
         numLeafNodes = 0;
         this.maxDepth = maxDepth;
-        
+
         board = (Board) startBoard.clone();
         visitedBoards = new HashSet<Long>(failedBoards);
         visitedBoards.add(board.getZobristKey());
-        
+
         return dfs();
     }
 
@@ -77,7 +91,7 @@ public class IDSPusher extends IDSCommon implements Solver
 
         final long hash = board.getZobristKey();
 
-        BoxPosDir collision = otherStatesMap.get(hash);
+        final BoxPosDir collision = otherStatesMap.get(hash);
 
         if (remainingDepth <= 0) {
             failedGoalTests += board.getRemainingBoxes();
@@ -111,31 +125,31 @@ public class IDSPusher extends IDSCommon implements Solver
 
                 final Position boxFrom = board.getPosition(player,
                         Board.moves[dir.ordinal()]);
-                Position boxTo = board.getPosition(boxFrom, Board.moves[dir
-                        .ordinal()]);
+                final Position boxTo = board.getPosition(boxFrom,
+                        Board.moves[dir.ordinal()]);
 
                 // Check if the move is possible
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
                         && !Board.is(cells[boxTo.row][boxTo.column],
                                 Board.REJECT_BOX)) {
 
-                    final int move[] = Board.moves[dir.ordinal()];
-
                     // Tunnel detection:
                     // If found, push as many steps in same direction as
                     // possible.
-                    int numberOfTunnelMoves = 0;
-                    /* TODO FIX TUNNEL
+                    /*
+                     * TODO FIX TUNNEL
+                     * int numberOfTunnelMoves = 0;
                      * while (inTunnel(dir, boxTo)
-                            && !Board.is(
-                                    cells[boxTo.row + move[0]][boxTo.column
-                                            + move[1]],
-                                    (byte) (Board.REJECT_BOX | Board.GOAL))) {
-                        // Count tunnel moves.
-                        numberOfTunnelMoves++;
-                        // Update boxTo position one step.
-                        boxTo = board.getPosition(boxTo, move);
-                    }*/
+                     * && !Board.is(
+                     * cells[boxTo.row + move[0]][boxTo.column
+                     * + move[1]],
+                     * (byte) (Board.REJECT_BOX | Board.GOAL))) {
+                     * // Count tunnel moves.
+                     * numberOfTunnelMoves++;
+                     * // Update boxTo position one step.
+                     * boxTo = board.getPosition(boxTo, move);
+                     * }
+                     */
 
                     final Position playerTo = board.getPosition(boxTo,
                             Board.moves[dir.reverse().ordinal()]);
@@ -151,9 +165,8 @@ public class IDSPusher extends IDSCommon implements Solver
                         if (visitedBoards.add(board.getZobristKey())) {
 
                             ourStatesMap.put(board.getZobristKey(),
-                                    new BoxPosDir(dir, boxFrom, source)
-                            );
-                            
+                                    new BoxPosDir(dir, boxFrom, source));
+
                             result = dfs();
                         }
                     }
@@ -170,19 +183,21 @@ public class IDSPusher extends IDSCommon implements Solver
                             board.clearFlag(Board.VISITED);
 
                             // Add tunnel path directions, if any.
-                            /*for (int i = 0; i < numberOfTunnelMoves; i++) {
-                                // We always walk in the same direction in a
-                                // tunnel.
-                                result.solution.addFirst(dir);
-                            }*/
+                            /*
+                             * for (int i = 0; i < numberOfTunnelMoves; i++) {
+                             * // We always walk in the same direction in a
+                             * // tunnel.
+                             * result.solution.addFirst(dir);
+                             * }
+                             */
 
                             // Add standard direction for this state.
                             result.solution.addFirst(dir);
 
                             // Add path from previous player position to
                             // reachable position.
-                            Deque<Direction> path = board.findPath(source,
-                                    player);
+                            final Deque<Direction> path = board.findPath(
+                                    source, player);
                             if (path != null) {
                                 result.solution.addAll(0, path);
                             }
@@ -216,6 +231,8 @@ public class IDSPusher extends IDSCommon implements Solver
      * Checks if the given box position is a placement that has no influence on
      * the board, i.e. if it is inside a tunnel.
      * 
+     * NOTE: This method is currently not working as it should.
+     * 
      * @param dir The direction in which the box was pushed in order to get
      *            where it is.
      * @param box The position of the box after it has been pushed in the given
@@ -223,6 +240,7 @@ public class IDSPusher extends IDSCommon implements Solver
      * @return True if the box is has gone into a tunnel, which has no influence
      *         on the board, and can therefore be pushed all the way outside.
      */
+    @SuppressWarnings("unused")
     private boolean inTunnel(final Direction dir, final Position box)
     {
         // #v#
@@ -286,7 +304,7 @@ public class IDSPusher extends IDSCommon implements Solver
         System.out.println("lowerBound(): " + lowerBound + " took "
                 + (System.currentTimeMillis() - startTime) + " ms");
         System.out.println("IDS depth limit (progress): ");
-        
+
         lastLeafCount = -1;
         for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; nextDepth(lowerBound)) {
             System.out.print(maxDepth + ".");
@@ -311,22 +329,33 @@ public class IDSPusher extends IDSCommon implements Solver
         System.out.println("maximum depth reached!");
         return null;
     }
-    
-    public int nextDepth(int lowerBound) {
+
+    /**
+     * Calculate the next depth to iterate to
+     * 
+     * @param lowerBound The lower bound for the board
+     * @return The new depth
+     */
+    public int nextDepth(final int lowerBound)
+    {
         // If we have many boxes in the goals we can take a larger step
-        int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
-        int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
-        
+        final int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
+        final int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
+
         // If we have pruned so many nodes we have less leaf nodes this
         // time we take a larger step
-        int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
-        
+        final int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+
         lastLeafCount = numLeafNodes;
-        int step = Math.max(3, Math.max(goalStep, depthChangeStep));
-        
+        final int step = Math.max(3, Math.max(goalStep, depthChangeStep));
+
         maxDepth += step;
         return maxDepth;
     }
+
+    private final static byte DEADLOCK_BOTH = 0;
+    private final static byte DEADLOCK_HORIZONTAL = 1;
+    private final static byte DEADLOCK_VERTICAL = 2;
 
     /**
      * Check if the move resulted in a freeze deadlock
@@ -338,10 +367,6 @@ public class IDSPusher extends IDSCommon implements Solver
      * @param to The new position
      * @return True if there is a freeze deadlock
      */
-    private final static byte DEADLOCK_BOTH = 0;
-    private final static byte DEADLOCK_HORIZONTAL = 1;
-    private final static byte DEADLOCK_VERTICAL = 2;
-
     private boolean freezeDeadlock(final Position box, final byte type,
             final HashSet<Position> visited)
 
@@ -352,9 +377,7 @@ public class IDSPusher extends IDSCommon implements Solver
         if (Board.is(board.cells[box.row][box.column], Board.GOAL)) {
             return false;
         }
-        
-        // TODO: Do not move the box before checking freeze deadlock, creates
-        // deadlock with it self.
+
         if (type == DEADLOCK_BOTH) {
             boolean blockedVertical = false;
             boolean blockedHorizontal = false;

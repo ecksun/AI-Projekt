@@ -10,9 +10,15 @@ import sokoban.Board;
 import sokoban.Position;
 import sokoban.SearchInfo;
 
+/**
+ * A class containing the common parts of the solvers.
+ */
 public abstract class IDSCommon implements Solver
 {
 
+    /**
+     * The maximum depth of the solver
+     */
     public static final int DEPTH_LIMIT = 1000;
     /**
      * The number of generated nodes
@@ -29,7 +35,6 @@ public abstract class IDSCommon implements Solver
     protected HashMap<Long, BoxPosDir> ourStatesMap;
     protected HashMap<Long, BoxPosDir> otherStatesMap;
 
-    
     @Override
     public int getIterationsCount()
     {
@@ -49,25 +54,38 @@ public abstract class IDSCommon implements Solver
 
     /**
      * Common constructor.
-     *  
+     * 
+     * @param startBoard The start board
      * @param failedBoards The set of failed boards to use.
+     * @param ours A map containing all states we have been in
+     * @param others A map containing all states the other solver has been in
      */
-    public IDSCommon(Board startBoard, HashSet<Long> failedBoards, HashMap<Long, BoxPosDir> ours, HashMap<Long, BoxPosDir> others)
+    public IDSCommon(final Board startBoard, final HashSet<Long> failedBoards,
+            final HashMap<Long, BoxPosDir> ours,
+            final HashMap<Long, BoxPosDir> others)
     {
         this.startBoard = startBoard;
         this.failedBoards = failedBoards;
-        this.ourStatesMap = ours;
-        this.otherStatesMap = others;
+        ourStatesMap = ours;
+        otherStatesMap = others;
     }
 
     /**
      * Empty common constructor.
      */
-    public IDSCommon() {
+    public IDSCommon()
+    {
+        // Not used
     }
-    
+
+    /**
+     * This is where the actual solving goes
+     * 
+     * @param maxDepth The maximum depth to search to.
+     * @return A SearchInfo detailing the result of the search.
+     */
     public abstract SearchInfo dfs(int maxDepth);
-    
+
     protected static int lowerBound(final Board board)
     {
         final ArrayList<Position> boxes = new ArrayList<Position>();
@@ -100,15 +118,12 @@ public abstract class IDSCommon implements Solver
         }
         return result;
     }
-    
+
     /**
      * Approximate the distance between two positions
      * 
      * The distance will be the absolute minimum and are guaranteed to be equal
      * to or greater then the real distance.
-     * 
-     * TODO It might be smarter to implement a search that takes the actual
-     * board into account.
      * 
      * @param a One of the positions
      * @param b The other position
@@ -118,5 +133,5 @@ public abstract class IDSCommon implements Solver
     {
         return Math.abs(a.column - b.column) + Math.abs(a.row - b.row);
     }
-    
+
 }
