@@ -1,9 +1,8 @@
 package sokoban.solvers;
 
-import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 
 import sokoban.Board;
 import sokoban.Position;
@@ -15,39 +14,56 @@ import sokoban.Board.Direction;
  * A solver that pushes boxes around with iterative deepening and
  * hashing to avoid duplicate states.
  */
-public class IDSPusher implements Solver
+public class IDSPusher extends IDSCommon implements Solver
 {
-    private final int DEPTH_LIMIT = 1000;
-    /**
-     * The number of generated nodes
-     */
-    public static int generatedNodes = 0;
-    private static int remainingDepth;
-    private static Board board;
-    private static int failedGoalTests;
-    private static int numLeafNodes;
-    private static int lastLeafCount;
 
-    public int getIterationsCount()
+    private int remainingDepth;
+
+    private int failedGoalTests;
+    public int numLeafNodes;
+    private int lastLeafCount;
+    private int maxDepth;
+
+    public IDSPusher(Board startBoard,
+            HashSet<Long> failedBoards,
+            HashMap<Long, BoxPosDir> pusherStatesMap,
+            HashMap<Long, BoxPosDir> pullerStatesMap)
     {
-        return generatedNodes;
+        super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
+
+        numLeafNodes = 0;
+        lastLeafCount = -1;
+    }
+
+    public IDSPusher()
+    {
+        otherStatesMap = new HashMap<Long, BoxPosDir>();
+        ourStatesMap = new HashMap<Long, BoxPosDir>();
     }
 
     /**
-     * Set of visited boards, including the player position
+     * Returns the result of the DFS with the specified maximum depth.
+     * 
+     * @param maxDepth The maximum depth allowed for this DFS.
+     * @return A SearchInfo result.
      */
-    private HashSet<Long> visitedBoards;
-
-    /**
-     * Boards that just lead to deadlocks or already visited boards. It
-     * doesn't make sense to visit these in later iterations.
-     */
-    private HashSet<Long> failedBoards;
+    public SearchInfo dfs(int maxDepth)
+    {   
+        remainingDepth = maxDepth;
+        failedGoalTests = 0;
+        numLeafNodes = 0;
+        this.maxDepth = maxDepth;
+        
+        board = (Board) startBoard.clone();
+        visitedBoards = new HashSet<Long>(failedBoards);
+        visitedBoards.add(board.getZobristKey());
+        
+        return dfs();
+    }
 
     /**
      * Recursive Depth-First algorithm
      * 
-     * @param maxDepth The maximum depth.
      * @return
      */
     private SearchInfo dfs()
@@ -59,6 +75,10 @@ public class IDSPusher implements Solver
             return SearchInfo.emptySolution();
         }
 
+        final long hash = board.getZobristKey();
+
+        BoxPosDir collision = otherStatesMap.get(hash);
+
         if (remainingDepth <= 0) {
             failedGoalTests += board.getRemainingBoxes();
             numLeafNodes++;
@@ -68,8 +88,6 @@ public class IDSPusher implements Solver
         // True if at least one successor tree was inconclusive.
         boolean inconclusive = false;
 
-        final long hash = board.getZobristKey();
-
         final Position source = board.positions[board.getPlayerRow()][board
                 .getPlayerCol()];
         remainingDepth--;
@@ -77,6 +95,20 @@ public class IDSPusher implements Solver
         final byte[][] cells = board.cells;
         for (final Position player : board.findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
+                if (collision != null) {
+                    // We reached a state from the other end (IDSPuller)
+                    if (dir != collision.dir) {
+                        // This is successor state isn't on the path from
+                        // the other end.
+                        continue;
+                    }
+
+                    // Since we have found a collision we now know the way to
+                    // the goal, so make sure that we do not quit because of
+                    // reaching the max depth.
+                    remainingDepth++;
+                }
+
                 final Position boxFrom = board.getPosition(player,
                         Board.moves[dir.ordinal()]);
                 Position boxTo = board.getPosition(boxFrom, Board.moves[dir
@@ -93,7 +125,8 @@ public class IDSPusher implements Solver
                     // If found, push as many steps in same direction as
                     // possible.
                     int numberOfTunnelMoves = 0;
-                    while (inTunnel(dir, boxTo)
+                    /* TODO FIX TUNNEL
+                     * while (inTunnel(dir, boxTo)
                             && !Board.is(
                                     cells[boxTo.row + move[0]][boxTo.column
                                             + move[1]],
@@ -102,27 +135,32 @@ public class IDSPusher implements Solver
                         numberOfTunnelMoves++;
                         // Update boxTo position one step.
                         boxTo = board.getPosition(boxTo, move);
-                    }
+                    }*/
 
                     final Position playerTo = board.getPosition(boxTo,
                             Board.moves[dir.reverse().ordinal()]);
 
                     // Move the player and push the box
                     board.moveBox(boxFrom, boxTo);
-                    board.movePlayer(source, playerTo);
+                    board.movePlayer(playerTo);
 
                     SearchInfo result = SearchInfo.Failed;
                     // Check if we got a freeze deadlock
                     if (!freezeDeadlock(boxTo, DEADLOCK_BOTH,
                             new HashSet<Position>())) {
                         if (visitedBoards.add(board.getZobristKey())) {
+
+                            /*ourStatesMap.put(board.getZobristKey(),
+                                    new BoxPosDir(dir, boxFrom, source)
+                            );*/
+                            
                             result = dfs();
                         }
                     }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
-                    board.movePlayer(playerTo, source);
+                    board.movePlayer(source);
 
                     // Evaluate result
                     switch (result.status) {
@@ -132,19 +170,22 @@ public class IDSPusher implements Solver
                             board.clearFlag(Board.VISITED);
 
                             // Add tunnel path directions, if any.
-                            for (int i = 0; i < numberOfTunnelMoves; i++) {
+                            /*for (int i = 0; i < numberOfTunnelMoves; i++) {
                                 // We always walk in the same direction in a
                                 // tunnel.
                                 result.solution.addFirst(dir);
-                            }
+                            }*/
 
                             // Add standard direction for this state.
                             result.solution.addFirst(dir);
 
                             // Add path from previous player position to
                             // reachable position.
-                            result.solution.addAll(0, board.findPath(source,
-                                    player));
+                            Deque<Direction> path = board.findPath(source,
+                                    player);
+                            if (path != null) {
+                                result.solution.addAll(0, path);
+                            }
                             return result;
                         case Inconclusive:
                             // Make the parent inconclusive too
@@ -246,9 +287,8 @@ public class IDSPusher implements Solver
                 + (System.currentTimeMillis() - startTime) + " ms");
         System.out.println("IDS depth limit (progress): ");
         
-        int step = 3;
         lastLeafCount = -1;
-        for (int maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += step) {
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; nextDepth(lowerBound)) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
@@ -266,72 +306,26 @@ public class IDSPusher implements Solver
                 System.out.println("no solution!");
                 return null;
             }
-            
-            // If we have many boxes in the goals we can take a larger step
-            int nonGoalPerNode = failedGoalTests / numLeafNodes;
-            int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
-            
-            // If we have pruned so many nodes we have less leaf nodes this
-            // time we take a larger step
-            int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
-            
-            step = Math.max(3, Math.max(goalStep, depthChangeStep));
-            lastLeafCount = numLeafNodes;
         }
 
         System.out.println("maximum depth reached!");
         return null;
     }
-
-    private static int lowerBound(final Board board)
-    {
-        final ArrayList<Position> boxes = new ArrayList<Position>();
-        final Queue<Position> goals = new LinkedList<Position>();
-        for (int row = 0; row < board.height; row++) {
-            for (int col = 0; col < board.width; col++) {
-                if (Board.is(board.cells[row][col], Board.BOX)) {
-                    boxes.add(board.positions[row][col]);
-                }
-                if (Board.is(board.cells[row][col], Board.GOAL)) {
-                    goals.add(board.positions[row][col]);
-                }
-            }
-        }
-        int result = 0;
-        while (!goals.isEmpty()) {
-            final Position goal = goals.poll();
-            Position minBox = null;
-            int min = Integer.MAX_VALUE;
-            for (final Position box : boxes) {
-                final int tmp = distance(goal, box);
-                if (tmp < min) {
-                    min = tmp;
-                    minBox = box;
-                }
-            }
-
-            boxes.remove(minBox);
-            result += min;
-        }
-        return result;
-    }
-
-    /**
-     * Approximate the distance between two positions
-     * 
-     * The distance will be the absolute minimum and are guaranteed to be equal
-     * to or greater then the real distance.
-     * 
-     * TODO It might be smarter to implement a search that takes the actual
-     * board into account.
-     * 
-     * @param a One of the positions
-     * @param b The other position
-     * @return The approximate distance between the two.
-     */
-    private static int distance(final Position a, final Position b)
-    {
-        return Math.abs(a.column - b.column) + Math.abs(a.row - b.row);
+    
+    public int nextDepth(int lowerBound) {
+        // If we have many boxes in the goals we can take a larger step
+        int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
+        int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
+        
+        // If we have pruned so many nodes we have less leaf nodes this
+        // time we take a larger step
+        int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+        
+        lastLeafCount = numLeafNodes;
+        int step = Math.max(3, Math.max(goalStep, depthChangeStep));
+        
+        maxDepth += step;
+        return maxDepth;
     }
 
     /**
@@ -350,6 +344,7 @@ public class IDSPusher implements Solver
 
     private boolean freezeDeadlock(final Position box, final byte type,
             final HashSet<Position> visited)
+
     {
 
         visited.add(box);
@@ -357,6 +352,7 @@ public class IDSPusher implements Solver
         if (Board.is(board.cells[box.row][box.column], Board.GOAL)) {
             return false;
         }
+        
         // TODO: Do not move the box before checking freeze deadlock, creates
         // deadlock with it self.
         if (type == DEADLOCK_BOTH) {
@@ -395,12 +391,14 @@ public class IDSPusher implements Solver
 
             // If we are both blocked horizontal and vertical, return deadlock
             if (blockedVertical && blockedHorizontal) {
+
                 return true;
                 // Only horizontal
             }
             else if (!blockedVertical && blockedHorizontal) {
                 if (Board.is(board.cells[box.row + 1][box.column], Board.BOX)) {
                     final Position tempPos = board.positions[box.row + 1][box.column];
+
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_HORIZONTAL,
                                 visited);
@@ -427,6 +425,7 @@ public class IDSPusher implements Solver
 
                 if (Board.is(board.cells[box.row][box.column - 1], Board.BOX)) {
                     final Position tempPos = board.positions[box.row][box.column - 1];
+
                     if (!visited.contains(tempPos)) {
                         return freezeDeadlock(tempPos, DEADLOCK_VERTICAL,
                                 visited);

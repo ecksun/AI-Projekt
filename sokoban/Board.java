@@ -542,7 +542,6 @@ public class Board implements Cloneable
             // Keep track of remaining boxes
             remainingBoxes += (is(cells[row][col], GOAL) ? +1 : 0)
                     + (is(cells[row2][col2], GOAL) ? -1 : 0);
-            // System.out.println("remaining boxes: "+remainingBoxes);
 
             // Clear "visited" marks
             clearFlag(VISITED);
@@ -557,7 +556,7 @@ public class Board implements Cloneable
      * @param from
      * @param to
      */
-    public void movePlayer(Position from, Position to)
+    public void movePlayer(Position to)
     {
         playerRow = to.row;
         playerCol = to.column;
@@ -745,6 +744,10 @@ public class Board implements Cloneable
      */
     public Deque<Direction> findPath(Position start, Position goal)
     {
+        if (start.equals(goal)) {
+            return new LinkedList<Direction>();
+        }
+        
         clearFlag(VISITED);
         
         Deque<Direction> solution = new LinkedList<Direction>();
@@ -778,7 +781,7 @@ public class Board implements Cloneable
                 }
             }
         }
-        return solution;
+        return null;
     }
 
     /**

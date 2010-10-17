@@ -17,4 +17,5 @@ public enum SearchStatus {
      * no point in trying it again with a greater search depth.
      */
     Failed,
+    
 };

@@ -1,11 +1,11 @@
 package sokoban.solvers;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+
+import org.omg.PortableInterceptor.NON_EXISTENT;
 
 import sokoban.Board;
 import sokoban.Position;
@@ -17,45 +17,67 @@ import sokoban.Board.Direction;
  * A solver that pulls boxes around (it finds a path from the goal to the
  * start) with iterative deepening and hashing to avoid duplicate states.
  */
-public class IDSPuller implements Solver
+public class IDSPuller extends IDSCommon implements Solver
 {
-    private final int DEPTH_LIMIT = 1000;
-    /**
-     * The number of generated nodes
-     */
-    public static int generatedNodes = 0;
-    private static int depth, maxDepth;
-    private static Board board;
+    private int depth, maxDepth;
     
-    private static int failedGoalTests;
-    private static int numLeafNodes;
-    private static int lastLeafCount;
-    
+    private int failedGoalTests;
+    public int numLeafNodes;
+    private int lastLeafCount;
+
     // Extra information for the puller
     private int boxesNotInStart, initialBoxesNotInStart;
     private boolean[][] boxStart;
     private Position playerStart;
 
-    public int getIterationsCount()
+    public IDSPuller(Board startBoard, HashSet<Long> failedBoards,
+            HashMap<Long, BoxPosDir> pusherStatesMap,
+            HashMap<Long, BoxPosDir> pullerStatesMap)
     {
-        return generatedNodes;
+        super(startBoard, failedBoards, pusherStatesMap, pullerStatesMap);
+
+        numLeafNodes = 0;
+        lastLeafCount = -1;
+
+        this.startBoard = (Board) startBoard.clone();
+        reverseBoard(this.startBoard);
+    }
+    
+    public IDSPuller()
+    {
+        otherStatesMap = new HashMap<Long, BoxPosDir>();
+        ourStatesMap = new HashMap<Long, BoxPosDir>();
     }
 
     /**
-     * Set of visited boards, including the player position
+     * Returns the result of the DFS with the specified maximum depth.
+     * 
+     * @param maxDepth The maximum depth allowed for this DFS.
+     * @param startBoard The start board.
+     * @return A SearchInfo result.
      */
-    private HashSet<Long> visitedBoards;
+    public SearchInfo dfs(int maxDepth)
+    {
+        depth = 0;
+        this.maxDepth = maxDepth;
+        failedGoalTests = 0;
+        numLeafNodes = 0;
+        forceDirection = false;
+        
+        board = (Board) startBoard.clone();
+        visitedBoards = new HashSet<Long>(failedBoards);
+        visitedBoards.add(board.getZobristKey());
+        boxesNotInStart = initialBoxesNotInStart;
+        
+        return dfs();
+    }
 
-    /**
-     * Boards that just lead to deadlocks or already visited boards. It
-     * doesn't make sense to visit these in later iterations.
-     */
-    private HashSet<Long> failedBoards;
+    private boolean forceDirection = false;
+    private Direction forcedDirection;
 
     /**
      * Recursive Depth-First algorithm
      * 
-     * @param maxDepth The maximum depth.
      * @return
      */
     private SearchInfo dfs()
@@ -64,7 +86,8 @@ public class IDSPuller implements Solver
 
         if (boxesNotInStart == 0) {
             // Found a solution, try to go back to the start
-            Position player = board.positions[board.getPlayerRow()][board.getPlayerCol()];
+            Position player = board.positions[board.getPlayerRow()][board
+                    .getPlayerCol()];
             Deque<Direction> path = board.findPath(playerStart, player);
             if (path != null) {
                 SearchInfo result = SearchInfo.emptySolution();
@@ -83,49 +106,56 @@ public class IDSPuller implements Solver
         boolean inconclusive = false;
 
         long hash = board.getZobristKey();
-        
-        final Position source = board.positions[board.getPlayerRow()][board.getPlayerCol()];
+
+        final Position source = board.positions[board.getPlayerRow()][board
+                .getPlayerCol()];
         depth++;
 
         final byte[][] cells = board.cells;
         for (final Position boxTo : findReachableBoxSquares()) {
             for (final Direction dir : Board.Direction.values()) {
+                if (forceDirection && dir != forcedDirection) {
+                    continue;
+                }
+
                 final Position boxFrom = board.getPosition(boxTo,
                         Board.moves[dir.ordinal()]);
-                final Position playerTo = board.getPosition(boxTo, Board.moves[dir
-                        .reverse().ordinal()]);
-                /*System.out.println(board+"\n\n"+boxesNotInStart+"   "+
-                    boxFrom+"("+cells[boxFrom.row][boxFrom.column]+")  "+
-                    boxTo+"("+cells[boxTo.row][boxTo.column]+")  "+
-                    playerTo+"("+cells[playerTo.row][playerTo.column]+")");*/
-                //System.out.println(remainingDepth+": "+board);
+                final Position playerTo = board.getPosition(boxTo,
+                        Board.moves[dir.reverse().ordinal()]);
+
                 if (Board.is(cells[boxFrom.row][boxFrom.column], Board.BOX)
-                        && !Board
-                                .is(cells[boxTo.row][boxTo.column], Board.REJECT_BOX)
-                        && !Board
-                                .is(cells[playerTo.row][playerTo.column], Board.REJECT_PULL)) {
+                        && !Board.is(cells[boxTo.row][boxTo.column],
+                                Board.REJECT_BOX)
+                        && !Board.is(cells[playerTo.row][playerTo.column],
+                                Board.REJECT_PULL)) {
                     // The move is possible
-                                        
+
                     // Move the player and pull the box
                     board.moveBox(boxFrom, boxTo);
-                    board.movePlayer(source, playerTo);
-                    
-                    if (boxStart[boxFrom.row][boxFrom.column]) boxesNotInStart++;
-                    if (boxStart[boxTo.row][boxTo.column]) boxesNotInStart--;
+                    board.movePlayer(playerTo);
+
+                    if (boxStart[boxFrom.row][boxFrom.column])
+                        boxesNotInStart++;
+                    if (boxStart[boxTo.row][boxTo.column])
+                        boxesNotInStart--;
 
                     // Process successor states
                     SearchInfo result = SearchInfo.Failed;
                     if (visitedBoards.add(board.getZobristKey())) {
                         // This state hasn't been visited before
+                        ourStatesMap.put(board.getZobristKey(), new BoxPosDir(
+                                dir, boxTo, playerTo));
                         result = dfs();
                     }
 
                     // Restore changes
                     board.moveBox(boxTo, boxFrom);
-                    board.movePlayer(playerTo, source);
+                    board.movePlayer(source);
 
-                    if (boxStart[boxFrom.row][boxFrom.column]) boxesNotInStart--;
-                    if (boxStart[boxTo.row][boxTo.column]) boxesNotInStart++;
+                    if (boxStart[boxFrom.row][boxFrom.column])
+                        boxesNotInStart--;
+                    if (boxStart[boxTo.row][boxTo.column])
+                        boxesNotInStart++;
 
                     // Evaluate result
                     switch (result.status) {
@@ -134,7 +164,11 @@ public class IDSPuller implements Solver
                             // path of the move and add it to the solution.
                             result.solution.addLast(dir);
                             if (depth > 1) {
-                                result.solution.addAll(board.findPath(boxTo, source));
+                                Deque<Direction> path = board.findPath(boxTo,
+                                        source);
+                                if (path != null) {
+                                    result.solution.addAll(path);
+                                }
                             }
                             depth--;
                             return result;
@@ -162,28 +196,48 @@ public class IDSPuller implements Solver
             return SearchInfo.Failed;
         }
     }
-    
-    private Collection<Position> findReachableBoxSquares() {
-        if (depth == 1) {
+
+    private Collection<Position> findReachableBoxSquares()
+    {
+        long hash = board.getZobristKey();
+        if (otherStatesMap.containsKey(hash)) {
+            Collection<Position> boxes = new HashSet<Position>(1);
+            BoxPosDir nextState = otherStatesMap.get(hash);
+
+            // Add next reachable square and force the correct direction.
+            boxes.add(nextState.box);
+            forceDirection = true;
+            forcedDirection = nextState.dir;
+
+            // Since we have found a collision we know know the way to the goal.
+            // Make sure we do not quit because of reaching the max depth.
+            maxDepth++;
+
+            return boxes;
+        }
+        else if (depth == 1) {
+            forceDirection = false;
             Collection<Position> boxes = new HashSet<Position>(board.boxCount);
-            for (int row = 1; row < board.height-1; row++) {
-                for (int col = 1; col < board.width-1; col++) {
+            for (int row = 1; row < board.height - 1; row++) {
+                for (int col = 1; col < board.width - 1; col++) {
                     if (!Board.is(board.cells[row][col], Board.BOX)) {
                         continue;
                     }
-                    
+
                     for (Direction dir : Direction.values()) {
-                        int spaceRow = row+Board.moves[dir.ordinal()][0];
-                        int spaceCol = col+Board.moves[dir.ordinal()][1];
-                        if (spaceRow > 0 && spaceRow < board.height-1
-                            && spaceCol > 0 && spaceCol < board.width-1) {
+                        int spaceRow = row + Board.moves[dir.ordinal()][0];
+                        int spaceCol = col + Board.moves[dir.ordinal()][1];
+                        if (spaceRow > 0 && spaceRow < board.height - 1
+                                && spaceCol > 0 && spaceCol < board.width - 1) {
                             boxes.add(board.positions[spaceRow][spaceCol]);
                         }
                     }
                 }
             }
             return boxes;
-        } else {
+        }
+        else {
+            forceDirection = false;
             return board.findReachableBoxSquares();
         }
     }
@@ -194,12 +248,11 @@ public class IDSPuller implements Solver
         final int lowerBound = lowerBound(startBoard);
         System.out.println("lowerBound(): " + lowerBound);
         System.out.println("IDS depth limit (progress): ");
-        
+
         reverseBoard(startBoard);
         
-        int step = 3;
         lastLeafCount = -1;
-        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; maxDepth += step) {
+        for (maxDepth = lowerBound; maxDepth < DEPTH_LIMIT; nextDepth(lowerBound)) {
             System.out.print(maxDepth + ".");
 
             visitedBoards = new HashSet<Long>(failedBoards);
@@ -218,26 +271,35 @@ public class IDSPuller implements Solver
                 System.out.println("no solution!");
                 return null;
             }
-            
-            // If we have many boxes in the goals we can take a larger step
-            int nonGoalPerNode = failedGoalTests / numLeafNodes;
-            int goalStep = lowerBound / (board.boxCount - nonGoalPerNode + 1);
-            
-            // If we have pruned so many nodes we have less leaf nodes this
-            // time we take a larger step
-            int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
-            
-            step = Math.max(3, Math.max(goalStep, depthChangeStep));
-            lastLeafCount = numLeafNodes;
         }
 
         System.out.println("maximum depth reached!");
         return null;
     }
     
-    private void reverseBoard(final Board board) {
+    public int nextDepth(int lowerBound) {
+        //System.out.println("fGT "+failedGoalTests+"   nLN "+numLeafNodes+" ("+lastLeafCount+")  boxC "+board.boxCount+"  lB "+lowerBound);
+        // If we have many boxes in the goals we can take a larger step
+        int nonGoalPerNode = failedGoalTests / Math.max(numLeafNodes, 1);
+        //System.out.println("nonGoalPerNode: "+nonGoalPerNode);
+        int goalStep = lowerBound / Math.max(board.boxCount - nonGoalPerNode + 1, 1);
+        
+        // If we have pruned so many nodes we have less leaf nodes this
+        // time we take a larger step
+        int depthChangeStep = 10 * (numLeafNodes / lastLeafCount);
+        
+        lastLeafCount = numLeafNodes;
+        int step = Math.max(3, Math.max(goalStep, depthChangeStep));
+
+        maxDepth += step;
+        return maxDepth;
+    }
+
+    private void reverseBoard(final Board board)
+    {
         // Store starting positions
-        playerStart = board.positions[board.getPlayerRow()][board.getPlayerCol()];
+        playerStart = board.positions[board.getPlayerRow()][board
+                .getPlayerCol()];
         boxStart = new boolean[board.height][board.width];
         initialBoxesNotInStart = board.boxCount;
         for (int row = 0; row < board.height; row++) {
@@ -246,72 +308,22 @@ public class IDSPuller implements Solver
                     if (Board.is(board.cells[row][column], Board.GOAL)) {
                         initialBoxesNotInStart--;
                     }
-                    board.cells[row][column] &= ~Board.BOX;
+                    board.removeBox(board.positions[row][column]);
                     boxStart[row][column] = true;
                 }
             }
         }
-        
+
         // Put the boxes in the goals
         for (int row = 0; row < board.height; row++) {
             for (int column = 0; column < board.width; column++) {
                 if (Board.is(board.cells[row][column], Board.GOAL)) {
-                    board.cells[row][column] |= Board.BOX;
+                    board.addBox(board.positions[row][column]);
                 }
             }
         }
-        
+
         board.forceReachabilityUpdate();
     }
 
-    private static int lowerBound(final Board board)
-    {
-        final ArrayList<Position> boxes = new ArrayList<Position>();
-        final Queue<Position> goals = new LinkedList<Position>();
-        for (int row = 0; row < board.height; row++) {
-            for (int col = 0; col < board.width; col++) {
-                if (Board.is(board.cells[row][col], Board.BOX)) {
-                    boxes.add(board.positions[row][col]);
-                }
-                if (Board.is(board.cells[row][col], Board.GOAL)) {
-                    goals.add(board.positions[row][col]);
-                }
-            }
-        }
-        int result = 0;
-        while (!goals.isEmpty()) {
-            final Position goal = goals.poll();
-            Position minBox = null;
-            int min = Integer.MAX_VALUE;
-            for (final Position box : boxes) {
-                final int tmp = distance(goal, box);
-                if (tmp < min) {
-                    min = tmp;
-                    minBox = box;
-                }
-            }
-
-            boxes.remove(minBox);
-            result += min;
-        }
-        return result;
-    }
-
-    /**
-     * Approximate the distance between two positions
-     * 
-     * The distance will be the absolute minimum and are guaranteed to be equal
-     * to or greater then the real distance.
-     * 
-     * TODO It might be smarter to implement a search that takes the actual
-     * board into account.
-     * 
-     * @param a One of the positions
-     * @param b The other position
-     * @return The approximate distance between the two.
-     */
-    private static int distance(final Position a, final Position b)
-    {
-        return Math.abs(a.column - b.column) + Math.abs(a.row - b.row);
-    }
 }
