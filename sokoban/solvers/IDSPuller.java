@@ -209,6 +209,10 @@ public class IDSPuller extends IDSCommon implements Solver
             forceDirection = true;
             forcedDirection = nextState.dir;
 
+            // Since we have found a collision we know know the way to the goal.
+            // Make sure we do not quit because of reaching the max depth.
+            maxDepth++;
+
             return boxes;
         }
         else if (depth == 1) {

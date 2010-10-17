@@ -102,8 +102,13 @@ public class IDSPusher extends IDSCommon implements Solver
                         // the other end.
                         continue;
                     }
+
+                    // Since we have found a collision we now know the way to
+                    // the goal, so make sure that we do not quit because of
+                    // reaching the max depth.
+                    remainingDepth++;
                 }
-                
+
                 final Position boxFrom = board.getPosition(player,
                         Board.moves[dir.ordinal()]);
                 Position boxTo = board.getPosition(boxFrom, Board.moves[dir

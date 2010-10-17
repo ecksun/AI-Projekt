@@ -8,7 +8,7 @@ import sokoban.SearchInfo;
 import sokoban.SearchStatus;
 
 /**
- * This solver performs a bidirectional (TODO iterative deepening DFS?) search.
+ * This solver performs a bidirectional search using the IDSPusher and IDSPuller.
  */
 public class BidirectionalIDS implements Solver
 {
@@ -30,8 +30,6 @@ public class BidirectionalIDS implements Solver
 
         boolean runPuller = true;
         int lowerBound = IDSCommon.lowerBound(startBoard);
-        // TODO implement collision check in pusher and update accordingly here
-        // (remove line)
         SearchInfo result;
 
         // IDS loop
